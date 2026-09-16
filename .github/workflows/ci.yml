@@ -11,12 +11,39 @@ jobs:
       copilot-requests: write
     steps:
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Resolve Copilot CLI version
+        id: copilot-version
+        run: |
+          version=$(npm view @github/copilot@latest version)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Copilot CLI cache
+        id: copilot-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/copilot-cli
+          key: copilot-cli-${{ runner.os }}-${{ runner.arch }}-node24-${{ steps.copilot-version.outputs.version }}
 
       - name: Install GitHub Copilot CLI
-        run: npm install -g @github/copilot
+        if: steps.copilot-cache.outputs.cache-hit != 'true'
+        env:
+          COPILOT_VERSION: ${{ steps.copilot-version.outputs.version }}
+        run: npm install -g --prefix "$RUNNER_TEMP/copilot-cli" "@github/copilot@$COPILOT_VERSION"
+
+      - name: Save Copilot CLI cache
+        if: steps.copilot-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ runner.temp }}/copilot-cli
+          key: ${{ steps.copilot-cache.outputs.cache-primary-key }}
+
+      - name: Add Copilot CLI to PATH
+        run: echo "$RUNNER_TEMP/copilot-cli/bin" >> "$GITHUB_PATH"
 
       - name: Run Copilot test prompt
         env:
