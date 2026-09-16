@@ -21,10 +21,12 @@ distinct PR author/reviewer identities.
   to the App token and `COPILOT_GITHUB_TOKEN` to the built-in token.
 
 Run the manual examples from **Actions → CI → Run workflow** once the workflow is
-on the default branch. The PR-review workflow runs on PR events. See
+on the default branch. PR review runs on PR events. Issue triage assesses new
+issues and clarification comments. See
 [GitHub's Copilot CLI Actions guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli-in-actions).
 
 1. [Install AI tools and run a prompt](docs/ai-tools.md)
 2. [Create a pull request](docs/create-pull-request.md) — tested successfully.
 3. [Create an issue](docs/create-issue.md) — tested successfully.
 4. [Review a pull request](docs/review-pull-request.md) — comment reviews tested successfully; approvals pending.
+5. [Triage issues before implementation](docs/issue-triage.md)

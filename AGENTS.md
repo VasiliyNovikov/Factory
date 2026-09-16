@@ -9,6 +9,7 @@
   - [PR creation](docs/create-pull-request.md)
   - [Issue creation](docs/create-issue.md)
   - [PR review](docs/review-pull-request.md)
+  - [Issue triage and label handoff](docs/issue-triage.md)
 - `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
   Copilot PR-creation test. See the linked examples for setup, permissions,
   invocation, and result verification.
@@ -17,3 +18,5 @@
   for triggering and bot-approval constraints.
 - No application toolchain, dependency manifest, or build/test/lint commands are
   configured.
+- `.github/workflows/issue-triage.yml` assesses untriaged issues and clarification
+  comments, then applies a unique tracking label followed by `triaged` when ready.
