@@ -28,3 +28,15 @@ jobs:
           --context long_context
           --prompt "Report your current model ID, reasoning effort, and context window capacity in tokens. Use only information available in your session; report unknown for anything you cannot verify. Keep the response concise and do not use any tools."
           --allow-all-tools
+
+      - name: Install OpenCode
+        run: npm install -g opencode-ai@latest
+
+      - name: Run OpenCode test prompt
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          opencode run
+          --model github-copilot/gpt-6-astra
+          --variant xhigh
+          "Report your current model ID, reasoning effort, and context window capacity in tokens. Use only information available in your session; report unknown for anything you cannot verify. Keep the response concise and do not use any tools."
