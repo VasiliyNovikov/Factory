@@ -5,8 +5,10 @@
   giving it read/write access to the repository, issues, and PRs. No application
   code is implemented yet.
 - `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
-  Copilot CLI smoke test. Auth uses built-in `GITHUB_TOKEN` with
-  `copilot-requests: write` and a recent CLI; no PAT needed. See
+  Copilot issue-creation test. Pass `GITHUB_TOKEN: ${{ github.token }}` to the
+  invocation; both Copilot and `gh` use it. Verified job permissions:
+  `contents: read` for checkout, `copilot-requests: write` for model requests,
+  and `issues: write` for issue creation. A recent CLI is required; no PAT needed. See
   [GitHub's Actions guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli-in-actions).
 - No application toolchain, dependency manifest, or build/test/lint commands are
   configured.
