@@ -4,8 +4,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  placeholder:
+  copilot:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: No-op
-        run: 'true'
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install GitHub Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Run Copilot test prompt
+        # No token is supplied yet; authentication failure should fail the job.
+        run: copilot --prompt "Reply with exactly 'Hello from CI'. Do not use any tools." --allow-all-tools
