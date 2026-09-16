@@ -12,7 +12,11 @@
   [GitHub's Actions guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli-in-actions).
 - The PR test uses `contents: write` for branch pushes and `pull-requests: write`
   for PR creation, with checkout credentials persisted. Enable **Allow GitHub
-  Actions to create and approve pull requests** in repository Actions settings.
+  Actions to create and approve pull requests** under **Settings → Actions →
+  General → Workflow permissions**; otherwise pushes succeed but PR creation is
+  rejected even with `pull-requests: write`.
+- Copilot can report a tool failure and still exit successfully. A green CI run
+  does not prove the PR exists; verify it with `gh pr view` or an explicit CI check.
 - No application toolchain, dependency manifest, or build/test/lint commands are
   configured.
 - `.github/model-config.json` supplies model and reasoning defaults to both CI
