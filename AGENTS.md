@@ -12,3 +12,7 @@
   configured.
 - `.github/model-config.json` supplies model and reasoning defaults to both CI
   tools; `longContext` applies only to Copilot CLI (`true`: long, `false`: default).
+- Run either installed CLI with `./scripts/ai.sh --harness opencode
+  --prompt "..."` (or `--harness copilot`); model settings come from the JSON.
+- Install both CLIs with `./scripts/install-tools.sh` (requires Node.js/npm;
+  CI uses Node.js 24). Missing `jq` is installed via `sudo apt-get`.
