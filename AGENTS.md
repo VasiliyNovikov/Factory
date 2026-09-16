@@ -1,27 +1,15 @@
 # Repository guidance
 
-- This is an initial scaffold for an agentic software factory experiment. The
-  unchecked items in `README.md` are goals: running GitHub Copilot CLI in CI and
-  giving it read/write access to the repository, issues, and PRs. No application
-  code is implemented yet.
+- This is an initial scaffold for an agentic software factory experiment.
+  `README.md` tracks completed CI access milestones. No application code is
+  implemented yet.
+- CI examples live in `docs/`. Keep them aligned with the scripts and workflow
+  when changing them:
+  - [AI tool setup and invocation](docs/ai-tools.md)
+  - [PR creation](docs/create-pull-request.md)
+  - [Issue creation](docs/create-issue.md)
 - `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
-  Copilot PR-creation test. Pass `GITHUB_TOKEN: ${{ github.token }}` to the
-  invocation; both Copilot and `gh` use it. Verified job permissions:
-  `contents: read` for checkout, `copilot-requests: write` for model requests,
-  and `issues: write` for issue creation. A recent CLI is required; no PAT needed. See
-  [GitHub's Actions guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli-in-actions).
-- The PR test uses `contents: write` for branch pushes and `pull-requests: write`
-  for PR creation, with checkout credentials persisted. Enable **Allow GitHub
-  Actions to create and approve pull requests** under **Settings → Actions →
-  General → Workflow permissions**; otherwise pushes succeed but PR creation is
-  rejected even with `pull-requests: write`.
-- Copilot can report a tool failure and still exit successfully. A green CI run
-  does not prove the PR exists; verify it with `gh pr view` or an explicit CI check.
+  Copilot PR-creation test. See the linked examples for setup, permissions,
+  invocation, and result verification.
 - No application toolchain, dependency manifest, or build/test/lint commands are
   configured.
-- `.github/model-config.json` supplies model and reasoning defaults to both CI
-  tools; `longContext` applies only to Copilot CLI (`true`: long, `false`: default).
-- Run either installed CLI with `./scripts/ai.sh --harness opencode
-  --prompt "..."` (or `--harness copilot`); model settings come from the JSON.
-- Install both CLIs with `./scripts/install-tools.sh` (requires Node.js/npm;
-  CI uses Node.js 24). Missing `jq` is installed via `sudo apt-get`.
