@@ -8,8 +8,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
+      contents: read
       copilot-requests: write
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Load model defaults
+        run: |
+          jq -r '{MODEL: .model, REASONING_EFFORT: .reasoningEffort, COPILOT_CONTEXT_TIER: (if .longContext then "long_context" else "default" end)} | to_entries[] | "\(.key)=\(.value)"' .github/model-config.json >> "$GITHUB_ENV"
+
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
@@ -23,9 +33,9 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
           copilot
-          --model gpt-6-astra
-          --reasoning-effort xhigh
-          --context long_context
+          --model "$MODEL"
+          --reasoning-effort "$REASONING_EFFORT"
+          --context "$COPILOT_CONTEXT_TIER"
           --prompt "Report your current model ID, reasoning effort, and context window capacity in tokens. Use only information available in your session; report unknown for anything you cannot verify. Keep the response concise and do not use any tools."
           --allow-all-tools
 
@@ -38,6 +48,6 @@ jobs:
           OPENCODE_CONFIG_CONTENT: '{"provider":{"github-copilot":{"options":{"headers":{"Copilot-Integration-Id":"copilot-developer-cli"}}}}}'
         run: >-
           opencode run
-          --model github-copilot/gpt-6-astra
-          --variant xhigh
+          --model "github-copilot/$MODEL"
+          --variant "$REASONING_EFFORT"
           "Report your current model ID, reasoning effort, and context window capacity in tokens. Use only information available in your session; report unknown for anything you cannot verify. Keep the response concise and do not use any tools."

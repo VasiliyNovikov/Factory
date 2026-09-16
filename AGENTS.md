@@ -10,3 +10,5 @@
   [GitHub's Actions guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli-in-actions).
 - No application toolchain, dependency manifest, or build/test/lint commands are
   configured.
+- `.github/model-config.json` supplies model and reasoning defaults to both CI
+  tools; `longContext` applies only to Copilot CLI (`true`: long, `false`: default).
