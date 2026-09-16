@@ -35,6 +35,7 @@ jobs:
       - name: Run OpenCode test prompt
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          OPENCODE_CONFIG_CONTENT: '{"provider":{"github-copilot":{"options":{"headers":{"Copilot-Integration-Id":"copilot-developer-cli"}}}}}'
         run: >-
           opencode run
           --model github-copilot/gpt-6-astra
