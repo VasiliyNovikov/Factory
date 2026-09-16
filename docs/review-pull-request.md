@@ -45,4 +45,11 @@ on the PR before their `pull_request` workflows start. See
 
 Check **Actions → PR review** and the PR's review timeline. The job's verification
 step confirms that a review was posted; it does not independently validate the
-quality of Copilot's findings. This example has not yet been tested in CI.
+quality of Copilot's findings. The comment-review path was tested successfully:
+Copilot identified both deliberate regressions and posted inline findings, and
+the verification step passed. The approval path has not yet been tested.
+
+To enable automatic runs and let `github-actions[bot]` approve clean PRs, follow
+the [GitHub App setup in the PR-creation example](create-pull-request.md#use-a-github-app-for-automatic-runs-and-approvals).
+The App creates PRs under a separate identity; the review workflow keeps using
+its built-in token.
