@@ -7,6 +7,8 @@ jobs:
   copilot:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      copilot-requests: write
     steps:
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -17,5 +19,6 @@ jobs:
         run: npm install -g @github/copilot
 
       - name: Run Copilot test prompt
-        # No token is supplied yet; authentication failure should fail the job.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: copilot --prompt "Reply with exactly 'Hello from CI'. Do not use any tools." --allow-all-tools

@@ -5,8 +5,8 @@
   giving it read/write access to the repository, issues, and PRs. No application
   code is implemented yet.
 - `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
-  Copilot CLI smoke test: Node.js 22, `npm install -g @github/copilot`, then
-  `copilot --prompt ... --allow-all-tools`. No authentication token is supplied;
-  the prompt step is expected to fail until authentication is configured.
+  Copilot CLI smoke test. Auth uses built-in `GITHUB_TOKEN` with
+  `copilot-requests: write` and a recent CLI; no PAT needed. See
+  [GitHub's Actions guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli-in-actions).
 - No application toolchain, dependency manifest, or build/test/lint commands are
   configured.
