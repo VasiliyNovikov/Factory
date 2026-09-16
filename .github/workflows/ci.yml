@@ -8,12 +8,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
       copilot-requests: write
     steps:
+      - name: Create PR App token
+        id: pr-app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.FACTORY_CLIENT_ID }}
+          private-key: ${{ secrets.FACTORY_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          token: ${{ steps.pr-app-token.outputs.token }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -26,6 +36,8 @@ jobs:
       - name: Create test PR with Copilot
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          COPILOT_GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.pr-app-token.outputs.token }}
           GIT_AUTHOR_NAME: factory[bot]
           GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
           GIT_COMMITTER_NAME: factory[bot]

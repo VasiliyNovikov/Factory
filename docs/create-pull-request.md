@@ -4,6 +4,10 @@ This PR-creation example was tested successfully.
 Copilot creates a unique branch, commits a small Markdown file, pushes it, and
 opens a PR titled `test` against `master`.
 
+The basic example below uses `GITHUB_TOKEN`. The repository's CI workflow uses
+the [GitHub App variant](#use-a-github-app-for-automatic-runs-and-approvals) with
+`factoryidentity` to enable automatic review runs and a separate reviewer identity.
+
 Enable **Settings → Actions → General → Workflow permissions → Allow GitHub
 Actions to create and approve pull requests**. Without this setting, the branch
 push succeeds but PR creation is rejected even with `pull-requests: write`.
@@ -75,9 +79,9 @@ apply.
    with repository permissions **Contents: Read and write** and **Pull requests:
    Read and write**. A webhook is not needed for this token-only integration.
 2. Install it on this repository.
-3. Save its Client ID as the repository Actions variable `PR_APP_CLIENT_ID`.
+3. Save its Client ID as the repository Actions variable `FACTORY_CLIENT_ID`.
 4. Generate a private key and save its PEM contents as the repository Actions
-   secret `PR_APP_PRIVATE_KEY`.
+   secret `FACTORY_PRIVATE_KEY`.
 
 ### Update the PR-creation workflow
 
@@ -89,8 +93,8 @@ persisted push credentials:
   id: pr-app-token
   uses: actions/create-github-app-token@v3
   with:
-    client-id: ${{ vars.PR_APP_CLIENT_ID }}
-    private-key: ${{ secrets.PR_APP_PRIVATE_KEY }}
+    client-id: ${{ vars.FACTORY_CLIENT_ID }}
+    private-key: ${{ secrets.FACTORY_PRIVATE_KEY }}
     permission-contents: write
     permission-pull-requests: write
 
@@ -114,6 +118,14 @@ GH_TOKEN: ${{ steps.pr-app-token.outputs.token }}
 `copilot-requests: write` in the job permissions. The
 [token action](https://github.com/actions/create-github-app-token) defaults to the
 current repository and revokes its short-lived token at the end of the job.
+
+With the App handling pushes and PR creation, the built-in token only needs:
+
+```yaml
+permissions:
+  contents: read
+  copilot-requests: write
+```
 
 Keep the review workflow's token and `github-actions[bot]` verification filter as
 configured, and keep **Allow GitHub Actions to create and approve pull requests**

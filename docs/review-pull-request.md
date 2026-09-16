@@ -38,8 +38,8 @@ Enable **Settings → Actions → General → Workflow permissions → Allow Git
 Actions to create and approve pull requests** for approvals.
 
 After the workflow is on `master`, open a non-draft PR from a branch in this
-repository. PRs created or updated using `GITHUB_TOKEN`, including the PR-creation
-example, require a user with write access to select **Approve workflows to run**
+repository. PRs created or updated using `GITHUB_TOKEN` require a user with write
+access to select **Approve workflows to run**
 on the PR before their `pull_request` workflows start. See
 [GitHub's workflow triggering guide](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow).
 

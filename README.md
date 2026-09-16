@@ -10,13 +10,15 @@ Starting with small things:
 ## CI examples
 
 The basic examples use this repository's scripts and require no PAT or custom secret.
-The optional [GitHub App setup](docs/create-pull-request.md#use-a-github-app-for-automatic-runs-and-approvals)
-uses App credentials to enable automatic runs and distinct PR author/reviewer identities.
+The PR-creation CI uses the [GitHub App setup](docs/create-pull-request.md#use-a-github-app-for-automatic-runs-and-approvals)
+with `FACTORY_CLIENT_ID` and `FACTORY_PRIVATE_KEY` to enable automatic runs and
+distinct PR author/reviewer identities.
 
 - `scripts/install-tools.sh` installs Copilot CLI, OpenCode, and missing `jq`.
 - `scripts/ai.sh` reads `.github/model-config.json` and invokes the selected CLI.
 - `GITHUB_TOKEN: ${{ github.token }}` authenticates both Copilot model requests and
-  the `gh` commands it executes.
+  the `gh` commands in the basic examples. App-based PR creation sets `GH_TOKEN`
+  to the App token and `COPILOT_GITHUB_TOKEN` to the built-in token.
 
 Run the manual examples from **Actions → CI → Run workflow** once the workflow is
 on the default branch. The PR-review workflow runs on PR events. See
