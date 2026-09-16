@@ -9,6 +9,7 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: read
+      issues: write
       copilot-requests: write
     steps:
       - name: Check out repository
@@ -24,18 +25,10 @@ jobs:
       - name: Install AI tools
         run: ./scripts/install-tools.sh
 
-      - name: Run Copilot test prompt
+      - name: Create test issue with Copilot
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
           ./scripts/ai.sh
           --harness copilot
-          --prompt "Report your current model ID, reasoning effort, and context window capacity in tokens. Use only information available in your session; report unknown for anything you cannot verify. Keep the response concise and do not use any tools."
-
-      - name: Run OpenCode test prompt
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: >-
-          ./scripts/ai.sh
-          --harness opencode
-          --prompt "Report your current model ID, reasoning effort, and context window capacity in tokens. Use only information available in your session; report unknown for anything you cannot verify. Keep the response concise and do not use any tools."
+          --prompt "Use the GitHub CLI (gh issue create) to create exactly one new issue in repository ${GITHUB_REPOSITORY} with the title 'test' and body 'Created by Copilot CLI in CI. Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}'. Actually create the issue, then report its URL. If creation fails, report the error."
