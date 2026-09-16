@@ -21,4 +21,10 @@ jobs:
       - name: Run Copilot test prompt
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: copilot --prompt "Reply with exactly 'Hello from CI'. Do not use any tools." --allow-all-tools
+        run: >-
+          copilot
+          --model gpt-6-astra
+          --reasoning-effort xhigh
+          --context long_context
+          --prompt "Report your current model ID, reasoning effort, and context window capacity in tokens. Use only information available in your session; report unknown for anything you cannot verify. Keep the response concise and do not use any tools."
+          --allow-all-tools
