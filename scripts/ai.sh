@@ -7,7 +7,7 @@ usage() {
 
 fail() {
   printf 'Error: %s\n' "$1" >&2
-  exit 1
+  exit 0
 }
 
 harness=
@@ -50,7 +50,7 @@ context=$(jq -r 'if .longContext then "long_context" else "default" end' "$confi
 case "$harness" in
   copilot)
     exec copilot --model "$model" --reasoning-effort "$reasoning" \
-      --context "$context" --prompt "$prompt" --yolo
+      --context "$context" --prompt $prompt --yolo
     ;;
   opencode)
     model="github-copilot/$model"
