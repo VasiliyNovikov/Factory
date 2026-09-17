@@ -49,26 +49,8 @@ command -v "$harness" >/dev/null || fail "$harness is not installed"
 
 script_dir=$(dirname -- "${BASH_SOURCE[0]}")
 config="$script_dir/../.github/model-config.json"
-profile_config=$(jq -ces --arg profile "$profile" '
-  def valid_profile:
-    type == "object" and
-    (.model | type == "string" and length > 0) and
-    (.reasoningEffort | type == "string" and length > 0) and
-    (.longContext | type == "boolean");
-
-  if length != 1 or (.[0] | type != "object") then
-    error("expected one object of named model profiles")
-  elif (.[0] | has("default") | not) then
-    error("missing default model profile")
-  elif (.[0].default | valid_profile | not) then
-    error("invalid default model profile")
-  elif (.[0] | has($profile) | not) then
-    error("unknown model profile: \($profile)")
-  elif (.[0][$profile] | valid_profile | not) then
-    error("invalid model profile: \($profile)")
-  else .[0][$profile]
-  end
-' "$config") || fail "Invalid model configuration: $config"
+profile_config=$(jq -ce --arg profile "$profile" '.[$profile]' "$config") \
+  || fail "Cannot load model profile '$profile' from $config"
 
 model=$(jq -r '.model' <<< "$profile_config")
 reasoning=$(jq -r '.reasoningEffort' <<< "$profile_config")
