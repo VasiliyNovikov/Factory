@@ -1,10 +1,15 @@
 # Repository guidance
 
+- Prefer small, focused changes without sacrificing correctness, quality,
+  clarity, or maintainability. Avoid unrelated changes.
+- Keep code understandable and maintainable by humans and AI: use clear
+  structure and naming, avoid unnecessary duplication, and reuse existing logic
+  where appropriate without needless abstraction.
 - This is an initial scaffold for an agentic software factory experiment.
   `README.md` tracks completed CI access milestones. No application code is
   implemented yet.
-- CI examples live in `docs/`. Keep them aligned with the scripts and workflow
-  when changing them:
+- Keep documentation concise, maintainable, and synchronized with the code,
+  scripts, and workflows it describes. CI examples live in `docs/`:
   - [AI tool setup and invocation](docs/ai-tools.md)
   - [Factory GitHub App setup](docs/github-app.md)
   - [PR creation](docs/create-pull-request.md)
