@@ -28,8 +28,10 @@ that activity requires an unfiltered, paginated repository-history scan. An olde
 run updated after the upper boundary is picked up by the next invocation instead.
 
 History queries paginate, and large time ranges split to avoid GitHub's
-1,000-result filtered-search limit. Missing history, API failures, inconsistent
-counts, or an unsplittable saturated second fail collection explicitly.
+1,000-result filtered-search limit. Every split checks its combined distinct run
+count against the parent query's total before returning. Missing history, API
+failures, inconsistent counts, or an unsplittable saturated second fail
+collection explicitly.
 If all preceding diagnostics history has been deleted, the next invocation
 establishes a new first-run boundary without analysis.
 

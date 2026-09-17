@@ -60,11 +60,11 @@ def window_runs(repository, start, end):
         if start >= end:
             raise ValueError("At least 1,000 runs in one second; cannot collect a complete window")
         middle = start + timedelta(seconds=int((end - start).total_seconds()) // 2)
-        return (
+        runs = (
             window_runs(repository, start, middle)
             + window_runs(repository, middle + timedelta(seconds=1), end)
         )
-    if first["total_count"] <= 100:
+    elif first["total_count"] <= 100:
         runs = first["workflow_runs"]
     else:
         pages = api(endpoint, actions=True, paginate=True)

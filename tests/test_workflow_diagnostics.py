@@ -50,6 +50,16 @@ def run_page(runs, total=None):
     }
 
 
+def paginated_responses(runs):
+    return [
+        run_page(runs[:100], total=len(runs)),
+        [
+            run_page(runs[offset:offset + 100], total=len(runs))
+            for offset in range(0, len(runs), 100)
+        ],
+    ]
+
+
 class ApiTests(unittest.TestCase):
     def test_actions_credentials_are_isolated_from_app_credentials(self):
         environment = {
@@ -255,43 +265,91 @@ class WindowRunTests(DiagnosticsTests):
         self.assert_window_query(self.api.call_args_list[1], START, END, paginated=True)
 
     def test_saturated_queries_split_into_disjoint_inclusive_seconds(self):
-        for total in (1000, 1001, 2000):
+        for total in (1000, 1001):
             with self.subTest(total=total):
                 self.api.reset_mock()
-                left = [make_run(100)]
-                right = [make_run(101, created_at="2026-09-16T08:00:02Z")]
+                left = [make_run(index) for index in range(500)]
+                right = [
+                    make_run(index, created_at="2026-09-16T08:00:02Z")
+                    for index in range(500, total)
+                ]
                 self.api.side_effect = [
                     run_page([], total=total),
-                    run_page(left),
-                    run_page(right),
+                    *paginated_responses(left),
+                    *paginated_responses(right),
                 ]
                 self.assertEqual(self.window(START, "2026-09-16T08:00:03Z"), left + right)
-                self.assertEqual(self.api.call_count, 3)
+                self.assertEqual(self.api.call_count, 5)
                 self.assert_window_query(
                     self.api.call_args_list[1], START, "2026-09-16T08:00:01Z"
                 )
                 self.assert_window_query(
-                    self.api.call_args_list[2],
+                    self.api.call_args_list[3],
                     "2026-09-16T08:00:02Z",
                     "2026-09-16T08:00:03Z",
                 )
 
     def test_saturated_children_are_split_recursively(self):
+        runs = [
+            make_run(index, created_at=f"2026-09-16T08:00:0{index // 500}Z")
+            for index in range(2000)
+        ]
         self.api.side_effect = [
             run_page([], total=2000),
             run_page([], total=1000),
-            run_page([make_run(100)]),
-            run_page([make_run(101)]),
-            run_page([make_run(102)]),
+            *paginated_responses(runs[:500]),
+            *paginated_responses(runs[500:1000]),
+            run_page([], total=1000),
+            *paginated_responses(runs[1000:1500]),
+            *paginated_responses(runs[1500:]),
         ]
-        self.assertEqual(
-            [run["id"] for run in self.window(START, "2026-09-16T08:00:03Z")],
-            [100, 101, 102],
-        )
+        self.assertEqual(self.window(START, "2026-09-16T08:00:03Z"), runs)
+        self.assertEqual(self.api.call_count, 11)
         self.assert_window_query(self.api.call_args_list[2], START, START)
         self.assert_window_query(
-            self.api.call_args_list[3], "2026-09-16T08:00:01Z", "2026-09-16T08:00:01Z"
+            self.api.call_args_list[4], "2026-09-16T08:00:01Z", "2026-09-16T08:00:01Z"
         )
+        self.assert_window_query(
+            self.api.call_args_list[7], "2026-09-16T08:00:02Z", "2026-09-16T08:00:02Z"
+        )
+        self.assert_window_query(
+            self.api.call_args_list[9], "2026-09-16T08:00:03Z", "2026-09-16T08:00:03Z"
+        )
+
+    def test_split_history_changes_are_rejected(self):
+        for count in (999, 1001):
+            with self.subTest(count=count):
+                runs = [make_run(index) for index in range(count)]
+                self.api.side_effect = [
+                    run_page([], total=1000),
+                    *paginated_responses(runs[:499]),
+                    *paginated_responses(runs[499:]),
+                ]
+                with self.assertRaisesRegex(ValueError, "changed or was truncated"):
+                    self.window()
+
+    def test_split_history_count_uses_distinct_run_ids(self):
+        runs = [make_run(index) for index in range(999)]
+        self.api.side_effect = [
+            run_page([], total=1000),
+            *paginated_responses(runs[:500]),
+            *paginated_responses(runs[499:]),
+        ]
+        with self.assertRaisesRegex(ValueError, "changed or was truncated"):
+            self.window()
+
+    def test_nested_split_history_changes_are_rejected(self):
+        runs = [make_run(index) for index in range(1000)]
+        self.api.side_effect = [
+            run_page([], total=1000),
+            run_page([], total=1000),
+            *paginated_responses(runs[:499]),
+            *paginated_responses(runs[499:999]),
+            run_page(runs[999:]),
+        ]
+        with self.assertRaisesRegex(ValueError, "changed or was truncated"):
+            self.window(START, "2026-09-16T08:00:03Z")
+        self.assertEqual(self.api.call_count, 6)
 
     def test_saturated_single_second_is_an_explicit_error(self):
         for total in (1000, 1001):
@@ -489,6 +547,26 @@ class CollectTests(DiagnosticsTests):
             diagnostics.collect(self.directory)
         self.assertFalse((self.directory / "manifest.json").exists())
         self.assertFalse(self.output.exists())
+
+    def test_changed_split_history_does_not_publish_a_partial_manifest(self):
+        left = [self.previous] + [make_run(index) for index in range(1000, 1498)]
+        right = [self.current] + [
+            make_run(index, created_at="2026-09-17T02:00:00Z")
+            for index in range(2000, 2499)
+        ]
+        self.api.side_effect = [
+            self.current,
+            run_page([self.previous]),
+            run_page([], total=1000),
+            *paginated_responses(left),
+            *paginated_responses(right),
+        ]
+        with self.assertRaisesRegex(ValueError, "changed or was truncated"):
+            diagnostics.collect(self.directory)
+        self.older_activity.assert_not_called()
+        self.assertFalse((self.directory / "manifest.json").exists())
+        self.assertFalse(self.output.exists())
+        self.assertFalse(self.summary.exists())
 
 
 class OlderActivityRunTests(DiagnosticsTests):
