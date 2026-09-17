@@ -44,6 +44,11 @@ Use the [Factory App credentials](create-pull-request.md#use-a-github-app-for-au
 and **Issues: Read and write**. Copilot uses the built-in token with
 `copilot-requests: write`. The workflow must be on the default branch.
 
+After changing the App's permissions, approve the updated access for its
+installation in **GitHub Settings → Applications → Installed GitHub Apps →
+Configure**. Updating the App definition alone does not grant the new permissions
+to an existing installation.
+
 A short read-only verification step confirms that Factory posted a comment
 with this run's marker. Label assignment and decision content are left to
 Copilot. A green triage run confirms a response, not a successful label handoff
