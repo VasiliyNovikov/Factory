@@ -38,6 +38,11 @@ It uses the shared [AI tool installation and invocation](ai-tools.md), with a
 `actions: read` on the built-in token. Copilot uses that token for read-only
 Actions log queries; the App token handles repository changes and replies.
 
+The implementation invocation passes `--profile implement` to `scripts/ai.sh`,
+using the `implement` profile's model, reasoning effort, and context settings
+from [`.github/model-config.json`](../.github/model-config.json). Event routing
+and issue triage omit `--profile` and continue using `default`.
+
 ## Follow-ups and PR tracking
 
 Each issue owns branch `factory/issue-<number>` and tracking label
