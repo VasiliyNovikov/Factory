@@ -44,7 +44,18 @@ Use the [Factory App credentials](github-app.md)
 and **Issues: Read and write**. Copilot uses the built-in token with
 `copilot-requests: write`. The workflow must be on the default branch.
 
+Triage uses `gh` with the existing `GH_TOKEN` (Factory App token) for repository
+and issue reads, discussion refreshes, replies, and labels. The built-in
+`GITHUB_TOKEN` has no Issues access; substituting it for `GH_TOKEN` can cause
+HTTP 403 on issue reads. `COPILOT_GITHUB_TOKEN` authenticates model requests.
+
 See the shared setup for approving installation permission updates.
+
+For requests changing workflow files, the implementation token must already
+request `permission-workflows: write` on the default branch and the installation
+must grant it. GitHub checks this permission when pushing the PR branch, before
+merge. After resolving a blocked prerequisite, post a new issue comment to
+trigger reassessment.
 
 A short read-only verification step confirms that Factory posted a comment
 with this run's marker. Label assignment and decision content are left to

@@ -24,11 +24,13 @@ with `FACTORY_CLIENT_ID` and `FACTORY_PRIVATE_KEY`. The App installation needs:
 - **Contents: Read and write**
 - **Pull requests: Read and write**
 - **Issues: Read and write** — needed for issue replies
+- **Workflows: Read and write** — needed to push changes to `.github/workflows/`
 
 When adding permissions, approve the installation's updated access in GitHub.
-Requests to change `.github/workflows/` also need the App's **Workflows: Read and
-write** permission and `permission-workflows: write` in the token-generation
-step. The workflow currently requests only the three permissions above.
+The implementation token-generation step explicitly requests all four permissions
+above, including `permission-workflows: write`. That input must already be on the
+default branch before Factory can push a PR changing workflow files. Adding it
+only in that PR cannot expand the token issued to push the PR branch.
 
 The workflow must be on the default branch to receive issue and comment events.
 It uses the shared [AI tool installation and invocation](ai-tools.md), with a
