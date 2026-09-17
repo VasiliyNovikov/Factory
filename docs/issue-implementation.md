@@ -187,3 +187,7 @@ job. A green run does not prove correct PR changes or successful thread mutation
 Copilot verifies those separately, including mutation read-backs. PR creation,
 updates, and labels remain Copilot's responsibility. Setup failures before Copilot
 starts appear only in Actions logs.
+
+**CI status:** Issue-to-PR implementation and addressed-thread resolution have run
+in CI. Clarification replies, duplicate-reply prevention, and denied-resolution
+handling have not yet been exercised live.

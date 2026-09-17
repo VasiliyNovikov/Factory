@@ -181,7 +181,7 @@ jobs:
           Branch new work as ${ISSUE_BRANCH} from origin/${DEFAULT_BRANCH}. Make focused changes,
           run appropriate checks, and commit with the provided identity. Never force-push, push to
           the default branch, merge PRs, or close issues.
-          Create/update one PR with ${TRACKING_LABEL}, triaged, Fixes #${ISSUE_NUMBER}, a summary,
+          Create/update one PR labeled ${TRACKING_LABEL} and triaged, with Fixes #${ISSUE_NUMBER}, a summary,
           and actual verification results. For unclear, blocked, stale, or already-satisfied requests,
           explain or ask; no speculative edits or empty commits.
           Using gh api graphql with the App token, read all the eligible PR's reviewThreads pages
