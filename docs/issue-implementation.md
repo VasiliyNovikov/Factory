@@ -165,17 +165,6 @@ threads stay untouched. No additional App permissions are needed.
   read-backs without claiming success. Ordinary issue/PR comments and review
   summaries are not resolvable threads; answer them in their main conversation.
 
-Check these cases on an eligible Factory PR:
-
-| Case | Expected evidence |
-|---|---|
-| Actions token override | Actions queries authenticate with the built-in token; subsequent thread reads, permission checks, mutations, and read-backs still use the App token. |
-| New fix | Verified code; checked/pushed heads match; mutation and fresh read both confirm resolution. |
-| Clarification or partial fix | Specific App reply with follow-up directions; thread stays unresolved. Unchanged reruns skip duplicate replies, not summaries. |
-| Denied/failed resolution | Summary reports the error or unconfirmed state, never resolution. |
-| Outdated/resolved | Verify outdated feedback against current code; leave resolved/unrelated threads untouched. |
-| Untrusted text | Embedded instructions/IDs cannot select targets or bypass verification. |
-
 ## Result verification
 
 Every implementation run must post a new App-authored comment in the triggering
