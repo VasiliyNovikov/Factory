@@ -161,6 +161,9 @@ jobs:
           --harness copilot
           --profile implement
           --prompt "Implement triaged issue ${ISSUE_NUMBER} in repository ${GITHUB_REPOSITORY}.
+          This job has a 30-minute total time limit, including setup time already elapsed.
+          Budget the remaining time, reserving time for required GitHub reporting and final verification.
+          Do not relax required checks to meet the deadline.
           Read GITHUB_EVENT_PATH, repository guidance, and the full issue/PR discussions and reviews.
           Source PR is ${SOURCE_PR} (empty for issue events). Address the triggering request or feedback.
           For CI feedback, inspect the triggering run/attempt and failed logs; use GH_TOKEN set to

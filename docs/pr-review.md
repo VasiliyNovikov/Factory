@@ -21,6 +21,11 @@ The review invocation passes `--profile review` to `scripts/ai.sh`, using the
 `review` profile's model, reasoning effort, and context settings from
 [`.github/model-config.json`](../.github/model-config.json).
 
+The review job has a 30-minute total timeout, including setup time already elapsed.
+Its prompt tells Copilot to budget the remaining time, reserving time for required
+GitHub reporting and final verification without relaxing required checks or
+approving an incomplete review.
+
 ## Review outcome
 
 - Actionable findings: submit a comment review with file/line references and
