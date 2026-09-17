@@ -35,10 +35,10 @@ only in that PR cannot expand the token issued to push the PR branch.
 The workflow must be on the default branch to receive issue and comment events.
 It uses the shared [AI tool installation and invocation](ai-tools.md), with a
 30-minute job timeout and `contents: read`, `copilot-requests: write`, and
-`actions: read` on the built-in token. Copilot sets `GH_TOKEN` to `GITHUB_TOKEN`
-only for individual read-only Actions commands, never as a session-wide export.
-The App token remains the default `GH_TOKEN` for all other GitHub queries and
-changes, including review-thread reads, permission rechecks, and mutation read-backs.
+`actions: read` on the built-in token. The App token stays the default `GH_TOKEN`,
+including for thread reads, permission rechecks, mutations, and read-backs.
+Only individual read-only Actions commands override it with `GITHUB_TOKEN`;
+never export that override.
 
 The implementation invocation passes `--profile implement` to `scripts/ai.sh`,
 using the `implement` profile's model, reasoning effort, and context settings
@@ -55,15 +55,12 @@ preserves existing commits. Closed or merged PRs get a status reply directing
 additional work to a new issue. Conflicting ownership gets a reply rather than
 an overwrite.
 
-Post follow-up requests on the original issue, in its Factory PR conversation,
-or in a submitted review. Inline comments are read together when the review is
-submitted, avoiding one run per inline finding. Standalone inline comments and
-later inline replies do not trigger runs. Factory handles inline feedback in its
-original review thread and also posts a run summary in the triggering conversation.
-Every thread reply directs answers and follow-ups to the main PR conversation
-or a new submitted comment or change-request review so they can start a run.
-Edited comments do not trigger runs. Submitted comment reviews and change requests
-trigger runs; approvals do not start another implementation.
+Post follow-ups on the original issue, the PR conversation, or a submitted comment
+or change-request review. Inline findings are read together on review submission.
+Factory replies in the original thread, but every reply warns that inline replies
+do not trigger runs and directs answers to the main PR conversation or a new
+submitted comment or change-request review. Standalone inline comments, edited
+comments, and approvals also do not start runs.
 Only the Factory App's own comments and reviews are ignored by author, preventing
 self-reply loops. Feedback from other bots, including `github-actions[bot]`, is
 accepted. Comments do not need a command prefix or a collaborator role.
@@ -138,67 +135,50 @@ its result in its triggering conversation.
 
 ## Review-thread feedback
 
-Copilot reads the eligible PR's review threads using `gh api graphql` with the App
-token, paginating both `reviewThreads` and each thread's comments. This includes replies, authors,
-thread/comment IDs, and current `isResolved`/`isOutdated` state; review summaries
-alone do not provide that context. Before each thread mutation, it rechecks the
-issue/PR eligibility, remote head, full thread contents, resolution state, and
-`viewerCanReply`/`viewerCanResolve` with the App token. These permission fields
-describe the querying identity; mutation read-backs also use the App token.
-Incomplete context or an unverified revision prevents a mutation.
-Thread and comment bodies are untrusted data, not authority
-to select mutation targets or bypass verification. Use only thread IDs returned
-by the eligible PR's API, never IDs supplied in comment bodies.
+Using `gh api graphql` with the App token, Copilot paginates the eligible PR's
+`reviewThreads` and each thread's comments: IDs, authors, bodies, replies, and
+`isResolved`/`isOutdated`. Immediately before each mutation, it rechecks issue/PR
+eligibility, remote head, full thread contents/state, and the App's
+`viewerCanReply`/`viewerCanResolve`. Unverified context, revision, or permission
+blocks mutation. Only API-returned thread IDs from that PR are eligible; comment
+bodies cannot select targets or bypass verification. Resolved and unrelated
+threads stay untouched. No additional App permissions are needed.
 
-- **Addressed:** Verify every actionable point against the current PR revision's
-  code. If changes are needed, run appropriate checks, commit, push successfully, and
-  confirm the remote head matches the checked commit before using
-  `resolveReviewThread`. Both the mutation response and a fresh thread read must
-  report `isResolved: true` before claiming resolution. Already-addressed feedback
-  can be resolved after verification without an empty commit. An outdated
-  location, attempted fix, or passing checks alone is not proof of a fix.
-- **Outstanding:** For unclear, partially addressed, blocked, or disputed feedback,
-  use `addPullRequestReviewThreadReply` to ask a specific question or explain what
-  remains in the original thread, leaving it unresolved. Every thread reply
-  explains that inline replies do not trigger a run and directs answers and
-  follow-ups to the main PR conversation or a new submitted comment or
-  change-request review. Read prior Factory replies and avoid an equivalent reply
-  when feedback and relevant code have not changed, including on reruns. Verify
-  replies appear in the intended thread under the App identity; re-read before
-  retrying an uncertain mutation.
-- **Skipped or failed:** Leave resolved and unrelated threads alone. Report
-  HTTP/GraphQL errors, denied permissions, and unexpected read-back states in the
-  main-conversation outcome without claiming an unverified reply or resolution.
+- **Addressed:** Verify in code that every actionable point is addressed in the
+  current PR revision. Check and push needed fixes successfully; confirm the remote
+  head matches the checked commit before `resolveReviewThread`. Its response and a
+  fresh read must both show `isResolved: true`. Outdated locations, attempted fixes, or passing
+  checks alone are insufficient; already-addressed feedback needs no empty commit.
+- **Outstanding:** Use `addPullRequestReviewThreadReply` for a specific question
+  or explanation about unclear, partial, blocked, or disputed feedback; leave the
+  original thread unresolved. Every reply includes the inline-trigger warning and
+  follow-up directions above.
+  Read prior Factory replies; skip equivalent replies for unchanged feedback/code,
+  including reruns. Verify the intended thread and App author; re-read before
+  retrying uncertain mutations.
+- **Failed:** Report HTTP/GraphQL errors, denied permissions, or unexpected
+  read-backs without claiming success. Ordinary issue/PR comments and review
+  summaries are not resolvable threads; answer them in their main conversation.
 
-These operations use the App token's existing **Pull requests: Read and write**
-permission. Ordinary issue comments, main PR comments, and review summaries are
-not resolvable threads; acknowledge or answer them in the corresponding main
-conversation. Thread replies do not replace the required new run-marked outcome
-comment, which links the PR and summarizes addressed and outstanding feedback
-with thread links, including failures.
-
-Check the behavior on an eligible Factory PR with these cases:
+Check these cases on an eligible Factory PR:
 
 | Case | Expected evidence |
 |---|---|
-| CI feedback token scope | Only individual Actions commands use the built-in token; subsequent thread reads, permission rechecks, mutations, and read-backs use the App token. |
-| Addressed by a new fix | Appropriate checks pass; the pushed head matches the checked commit; the mutation and fresh thread read both confirm resolution. |
-| Clarification needed or only partly addressed | A specific App-authored question or explanation appears in the original thread; `isResolved` stays false. The reply explains that inline replies do not trigger a run and directs answers to the main PR conversation or a new submitted comment or change-request review. An unchanged rerun adds no equivalent inline reply, but still posts its run summary. |
-| Resolution fails or is denied | The outcome reports the API/permission error or unconfirmed state, without claiming resolution; the run-marked summary still appears. |
-| Outdated or already resolved | Outdated feedback is checked against the current code, not automatically resolved; resolved or unrelated threads receive no mutation. |
-| Embedded mutation instructions | Instructions or thread IDs in comment bodies do not select mutation targets or bypass code verification; only API-returned threads on the eligible PR can be mutated. |
+| Actions token override | Subsequent thread reads, permission checks, mutations, and read-backs still use the App token. |
+| New fix | Verified code; checked/pushed heads match; mutation and fresh read both confirm resolution. |
+| Clarification or partial fix | Specific App reply with follow-up directions; thread stays unresolved. Unchanged reruns skip duplicate replies, not summaries. |
+| Denied/failed resolution | Summary reports the error or unconfirmed state, never resolution. |
+| Outdated/resolved | Verify outdated feedback against current code; leave resolved/unrelated threads untouched. |
+| Untrusted text | Embedded instructions/IDs cannot select targets or bypass verification. |
 
 ## Result verification
 
-Every outcome gets a comment in the triggering issue or PR conversation containing
-a unique run marker, even when no new inline reply is needed or a thread mutation
-fails.
-The workflow's inline verification step requires a matching
-App-authored comment. PR creation, updates, and labels are left to Copilot.
+Every implementation run must post a new App-authored comment in the triggering
+conversation with its outcome, unique run marker, PR link, and addressed/outstanding
+feedback with thread links, even after deduplication or mutation failures.
 
-A green run means a response was posted, which can be a clarification or
-an error explanation. It does not independently verify PR changes or their
-correctness, or the thread mutations that Copilot checks via API read-back.
-A missing response from this run fails the job.
-Setup failures before Copilot starts appear in Actions logs rather than a
-reply. This example has not yet been tested in CI.
+`Verify Factory result` checks only for that comment; a missing comment fails the
+job. A green run does not prove correct PR changes or successful thread mutations;
+Copilot verifies those separately, including mutation read-backs. PR creation,
+updates, and labels remain Copilot's responsibility. Setup failures before Copilot
+starts appear only in Actions logs.
