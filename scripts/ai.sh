@@ -2,7 +2,13 @@
 set -euo pipefail
 
 usage() {
-  printf '%s\n' 'Usage: ./scripts/ai.sh --harness opencode|copilot --prompt "PROMPT"'
+  printf '%s\n' \
+    'Usage: ./scripts/ai.sh --harness opencode|copilot --prompt "PROMPT" [--profile NAME]' \
+    '  --profile NAME  Select a named model profile (default: default).' \
+    '' \
+    'Examples:' \
+    '  ./scripts/ai.sh --harness copilot --prompt "PROMPT"' \
+    '  ./scripts/ai.sh --harness opencode --profile review --prompt "PROMPT"'
 }
 
 fail() {
@@ -12,6 +18,7 @@ fail() {
 
 harness=
 prompt=
+profile=default
 while (( $# > 0 )); do
   case "$1" in
     --harness|--prompt)
@@ -20,6 +27,11 @@ while (( $# > 0 )); do
         --harness) harness=$2 ;;
         --prompt) prompt=$2 ;;
       esac
+      shift 2
+      ;;
+    --profile)
+      [[ $# -ge 2 && -n "$2" && "$2" != -* ]] || fail "Missing value for $1"
+      profile=$2
       shift 2
       ;;
     --help|-h) usage; exit 0 ;;
@@ -37,15 +49,12 @@ command -v "$harness" >/dev/null || fail "$harness is not installed"
 
 script_dir=$(dirname -- "${BASH_SOURCE[0]}")
 config="$script_dir/../.github/model-config.json"
-jq -e '
-  (.model | type == "string" and length > 0) and
-  (.reasoningEffort | type == "string" and length > 0) and
-  (.longContext | type == "boolean")
-' "$config" >/dev/null || fail "Invalid model configuration: $config"
+profile_config=$(jq -ce --arg profile "$profile" '.[$profile]' "$config") \
+  || fail "Cannot load model profile '$profile' from $config"
 
-model=$(jq -r '.model' "$config")
-reasoning=$(jq -r '.reasoningEffort' "$config")
-context=$(jq -r 'if .longContext then "long_context" else "default" end' "$config")
+model=$(jq -r '.model' <<< "$profile_config")
+reasoning=$(jq -r '.reasoningEffort' <<< "$profile_config")
+context=$(jq -r 'if .longContext then "long_context" else "default" end' <<< "$profile_config")
 
 case "$harness" in
   copilot)

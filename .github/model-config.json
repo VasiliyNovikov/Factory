@@ -1,5 +1,17 @@
 {
-  "model": "gpt-6-astra",
-  "reasoningEffort": "xhigh",
-  "longContext": true
+  "default": {
+    "model": "gpt-6-astra",
+    "reasoningEffort": "high",
+    "longContext": true
+  },
+  "implement": {
+    "model": "gpt-6-astra",
+    "reasoningEffort": "max",
+    "longContext": true
+  },
+  "review": {
+    "model": "claude-opus-5",
+    "reasoningEffort": "max",
+    "longContext": true
+  }
 }
