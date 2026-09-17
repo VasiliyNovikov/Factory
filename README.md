@@ -8,6 +8,34 @@ Starting with small things:
 - [ ] Review PRs with GitHub Copilot CLI in CI and post comments or approval
 - [ ] Turn issues and user follow-up comments into PRs or Factory replies
 
+## Factory workflow
+
+Triage applies the unique `factory-issue-<number>` tracking label before `triaged`
+starts implementation. The resulting Factory PR carries both labels.
+
+```mermaid
+flowchart TD
+    issue["New untriaged issue"] --> triage{"Issue triage"}
+    triage -->|Not ready| clarification["Clarification or explanatory reply"]
+    clarification -->|New answer or comment| triage
+    triage -->|Ready| tracking["Apply factory-issue-NUMBER"]
+    tracking -->|Then apply triaged| implementation["Issue implementation"]
+    implementation -->|Actionable| pr["Create or update Factory PR"]
+    implementation -->|Unclear, blocked, or already satisfied| reply["Reply in triggering conversation"]
+    reply -->|New feedback| feedback["Issue / PR comments or submitted reviews"]
+    feedback -->|Actionable| implementation
+    pr --> review{"PR review"}
+    review -->|Current-revision findings| implementation
+    review -->|Clean and approval permitted| approval["Approval"]
+    pr --> ci["PR-linked CI"]
+    ci -->|Current-revision failure or timeout| implementation
+```
+
+PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
+triaged issue and, when present, a matching open Factory PR. CI must match the
+PR's current head or merge revision. Factory does not automatically merge PRs
+or close issues.
+
 ## CI examples
 
 The basic examples use this repository's scripts and require no PAT or custom secret.
