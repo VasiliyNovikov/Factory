@@ -55,7 +55,8 @@ self-reply loops. Feedback from other bots, including `github-actions[bot]`, is
 accepted. Comments do not need a command prefix or a collaborator role.
 
 Reviews posted using `GITHUB_TOKEN` do not directly trigger another workflow.
-The `workflow_run` completion trigger receives all workflow completions, then
+The `workflow_run` completion trigger uses `workflows: ['*']` to receive all
+workflow completions (GitHub requires a nonempty `workflows` filter), then
 routes only runs linked to an open, labeled Factory PR at its current head or
 current synthetic merge commit. It prefers the run's explicit PR association;
 when absent, PR and push runs may resolve through a unique open PR on that branch.
