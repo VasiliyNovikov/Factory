@@ -46,6 +46,11 @@ class ReceiptTests(unittest.TestCase):
             "body": "Finding.\n<!-- factory-diagnostics:200:2 -->",
             "labels": [],
         }
+        self.issue_pages = [[]]
+        self.list_call = [
+            "api", "--paginate", "--slurp",
+            "repos/example/factory/issues?state=all&creator=factory-identity[bot]&per_page=100",
+        ]
         self.env = {
             "PATH": f"{self.directory}:{os.environ['PATH']}",
             "RUNNER_TEMP": str(self.directory),
@@ -65,9 +70,15 @@ class ReceiptTests(unittest.TestCase):
             "assert os.environ['GH_TOKEN'] == 'read-only-app-token'\n"
             "assert 'GITHUB_TOKEN' not in os.environ\n"
             "assert sys.argv[1] == 'api'\n"
-            "assert sys.argv[2] in ('repos/example/factory/issues/42', 'repos/example/factory/issues/43')\n"
             "with open(os.environ['CALLS'], 'a') as calls:\n"
             "    calls.write(json.dumps(sys.argv[1:]) + '\\n')\n"
+            "if sys.argv[2:4] == ['--paginate', '--slurp']:\n"
+            "    assert sys.argv[4:] == ['repos/example/factory/issues?state=all&creator=factory-identity[bot]&per_page=100']\n"
+            "    print(os.environ['ISSUE_PAGES'])\n"
+            "    if os.environ.get('LIST_FAIL') == 'true':\n"
+            "        sys.exit('HTTP 403: issue listing interrupted')\n"
+            "    sys.exit(0)\n"
+            "assert sys.argv[2:] in (['repos/example/factory/issues/42'], ['repos/example/factory/issues/43'])\n"
             "if os.environ.get('API_FAIL') == 'true' or sys.argv[2].endswith('/' + os.environ.get('FAIL_ISSUE', '')):\n"
             "    sys.exit('HTTP 403: issue receipt unavailable')\n"
             "print(os.environ['ISSUE'])\n"
@@ -83,7 +94,10 @@ class ReceiptTests(unittest.TestCase):
         return subprocess.run(
             ["bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c",
              step_script("Verify diagnostics result")],
-            env={**self.env, "ISSUE": json.dumps(self.issue)},
+            env={
+                **self.env, "ISSUE": json.dumps(self.issue),
+                "ISSUE_PAGES": json.dumps(self.issue_pages),
+            },
             text=True, capture_output=True,
         )
 
@@ -97,7 +111,8 @@ class ReceiptTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(self.report["summary"], self.summary.read_text())
         self.assertIn("Created issues: []", self.summary.read_text())
-        self.assertFalse(self.calls.exists())
+        self.assertEqual([json.loads(line) for line in self.calls.read_text().splitlines()],
+                         [self.list_call])
 
     def test_first_run_report_is_accepted_without_issues_or_gaps(self):
         self.report["outcome"] = "initialized"
@@ -105,7 +120,8 @@ class ReceiptTests(unittest.TestCase):
         result = self.verify()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("Outcome: initialized", self.summary.read_text())
-        self.assertFalse(self.calls.exists())
+        self.assertEqual([json.loads(line) for line in self.calls.read_text().splitlines()],
+                         [self.list_call])
         for field in ("created_issues", "unavailable_evidence"):
             with self.subTest(field=field):
                 self.report[field] = [42] if field == "created_issues" else ["gap"]
@@ -180,11 +196,12 @@ class ReceiptTests(unittest.TestCase):
     def test_receipts_use_read_only_app_access_and_allow_later_triage_labels(self):
         self.report["created_issues"] = [42]
         self.issue["labels"] = [{"name": "factory-issue-42"}, {"name": "triaged"}]
+        self.issue_pages = [[{**self.issue, "number": 42}]]
         result = self.verify()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(
             [json.loads(line) for line in self.calls.read_text().splitlines()],
-            [["api", "repos/example/factory/issues/42"]],
+            [["api", "repos/example/factory/issues/42"], self.list_call],
         )
         self.assertIn("Created issues: [42]", self.summary.read_text())
 
@@ -211,12 +228,70 @@ class ReceiptTests(unittest.TestCase):
 
     def test_every_created_issue_is_checked_before_publishing_results(self):
         self.report["created_issues"] = [42, 43]
+        self.issue_pages = [[{**self.issue, "number": 43}], [{**self.issue, "number": 42}]]
         result = self.verify()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(len(self.calls.read_text().splitlines()), 2)
+        self.assertEqual(len(self.calls.read_text().splitlines()), 3)
         self.env["FAIL_ISSUE"] = "43"
         self.assert_rejected(self.verify())
         self.assertEqual(len(self.calls.read_text().splitlines()), 2)
+
+    def test_unreported_marked_issues_fail_for_analyzed_and_initialized_reports(self):
+        self.issue_pages = [[{**self.issue, "number": 42}]]
+        for outcome in ("analyzed", "initialized"):
+            with self.subTest(outcome=outcome):
+                self.report["outcome"] = outcome
+                result = self.verify()
+                self.assert_rejected(result)
+                self.assertIn("do not match created_issues", result.stdout)
+
+    def test_unreported_closed_issue_on_later_page_is_rejected(self):
+        self.report["created_issues"] = [42]
+        self.issue_pages = [
+            [{**self.issue, "number": 42}],
+            [{**self.issue, "number": 43, "state": "closed"}],
+        ]
+        self.assert_rejected(self.verify())
+
+    def test_listing_must_contain_every_reported_issue(self):
+        self.report["created_issues"] = [42]
+        self.assert_rejected(self.verify())
+
+    def test_listing_ignores_other_attempts_authors_and_pull_requests(self):
+        self.issue_pages = [[
+            {**self.issue, "number": 41, "body": "<!-- factory-diagnostics:200:1 -->"},
+            {**self.issue, "number": 42, "body": "<!-- factory-diagnostics:201:2 -->"},
+            {**self.issue, "number": 43, "user": {"login": "someone-else"}},
+            {**self.issue, "number": 44, "pull_request": {"url": "example"}},
+            {**self.issue, "number": 45, "body": None},
+        ]]
+        result = self.verify()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_listing_failure_with_valid_partial_output_is_not_success(self):
+        self.env["LIST_FAIL"] = "true"
+        result = self.verify()
+        self.assert_rejected(result)
+        self.assertIn("Could not list Factory issue receipts", result.stdout)
+        self.assertIn("HTTP 403", result.stderr)
+
+    def test_initial_report_is_fail_closed_and_identifies_the_producing_attempt(self):
+        result = subprocess.run(
+            ["bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c",
+             step_script("Initialize diagnostics report")],
+            env={**self.env, "DIAGNOSTICS_DIR": str(self.report_path.parent)},
+            text=True, capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.report = json.loads(self.report_path.read_text())
+        self.assertEqual((self.report["run_id"], self.report["run_attempt"]), (200, 3))
+        self.assertEqual(self.report["outcome"], "incomplete")
+        self.assertTrue(self.report["summary"])
+        self.assertTrue(self.report["errors"])
+        self.assertEqual(self.report["created_issues"], [])
+        self.env["REPORT_ATTEMPT"] = "3"
+        self.assert_rejected(self.verify())
+        self.assertFalse(self.calls.exists())
 
 
 class WorkflowTests(unittest.TestCase):
@@ -249,6 +324,30 @@ class WorkflowTests(unittest.TestCase):
             "env:\n          DIAGNOSTICS_DIR: ${{ runner.temp }}/workflow-diagnostics", diagnose
         )
         self.assertFalse((ROOT / "scripts/workflow-diagnostics.py").exists())
+
+    def test_report_is_seeded_before_setup_and_handoff_paths_agree(self):
+        diagnose, verify = WORKFLOW.split("\n  verify:\n")
+        self.assertLess(diagnose.index("- name: Initialize diagnostics report"),
+                        diagnose.index("- name: Check out invocation revision"))
+        self.assertIn("if-no-files-found: error", diagnose)
+        directories = re.findall(r"^          DIAGNOSTICS_DIR: (.+)$", diagnose, re.MULTILINE)
+        self.assertEqual(len(directories), 2)
+        self.assertEqual(directories[0], directories[1])
+        upload = re.search(r"^          path: (.+)$", diagnose, re.MULTILINE)[1]
+        download = re.search(r"^          path: (.+)$", verify, re.MULTILINE)[1]
+        report = re.search(r'^          report="(.+)"$', verify, re.MULTILINE)[1]
+        self.assertEqual(upload, f"{directories[0]}/report.json")
+        self.assertEqual(download, directories[0])
+        self.assertEqual(report.replace("${RUNNER_TEMP}", "${{ runner.temp }}"), upload)
+        self.assertIn('> "$DIAGNOSTICS_DIR/report.json"',
+                      step_script("Initialize diagnostics report"))
+
+    def test_script_steps_use_explicit_bash_to_match_executed_tests(self):
+        for name in ("Initialize diagnostics report", "Analyze workflows with parallel Copilot subagents",
+                     "Verify diagnostics result"):
+            with self.subTest(step=name):
+                step = WORKFLOW.split(f"      - name: {name}\n", 1)[1].split("\n      - name:", 1)[0]
+                self.assertIn("        shell: bash", step.splitlines())
 
     def test_artifact_and_report_attempt_use_the_producing_jobs_saved_outputs(self):
         diagnose, verify = WORKFLOW.split("\n  verify:\n")
@@ -305,24 +404,37 @@ class WorkflowTests(unittest.TestCase):
                 "import json, os, sys\n"
                 "with open(os.environ['ARGUMENTS_FILE'], 'w') as output:\n"
                 "    json.dump(sys.argv[1:], output)\n"
+                "sys.exit(int(os.environ.get('COPILOT_EXIT', '0')))\n"
             )
             copilot.chmod(0o755)
+            env = {
+                "PATH": f"{directory}:{os.environ['PATH']}",
+                "ARGUMENTS_FILE": str(arguments_file),
+                "DIAGNOSTICS_DIR": str(directory / "evidence"),
+                "GITHUB_REPOSITORY": "example/factory",
+                "GITHUB_RUN_ID": "200",
+                "GITHUB_RUN_ATTEMPT": "3",
+                "DEFAULT_BRANCH": "main",
+                "FACTORY_LOGIN": "factory-identity[bot]",
+            }
             result = subprocess.run(
                 ["bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c",
-                 step_script("Analyze workflows with parallel Copilot subagents")],
-                cwd=ROOT, text=True, capture_output=True,
-                env={
-                    "PATH": f"{directory}:{os.environ['PATH']}",
-                    "ARGUMENTS_FILE": str(arguments_file),
-                    "DIAGNOSTICS_DIR": str(directory / "evidence"),
-                    "GITHUB_REPOSITORY": "example/factory",
-                    "GITHUB_RUN_ID": "200",
-                    "GITHUB_RUN_ATTEMPT": "3",
-                    "DEFAULT_BRANCH": "main",
-                    "FACTORY_LOGIN": "factory-identity[bot]",
-                },
+                 step_script("Initialize diagnostics report")],
+                cwd=ROOT, text=True, capture_output=True, env=env,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
+            report_path = directory / "evidence/report.json"
+            initial_report = report_path.read_text()
+            for exit_code in (0, 23):
+                with self.subTest(copilot_exit=exit_code):
+                    result = subprocess.run(
+                        ["bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c",
+                         step_script("Analyze workflows with parallel Copilot subagents")],
+                        cwd=ROOT, text=True, capture_output=True,
+                        env={**env, "COPILOT_EXIT": str(exit_code)},
+                    )
+                    self.assertEqual(result.returncode, exit_code, result.stderr)
+                    self.assertEqual(report_path.read_text(), initial_report)
             arguments = json.loads(arguments_file.read_text())
         self.assertEqual(arguments.count("--prompt"), 1)
         prompt = arguments[arguments.index("--prompt") + 1]

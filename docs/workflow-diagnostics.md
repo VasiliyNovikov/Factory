@@ -76,7 +76,10 @@ queries use a command-local `GH_TOKEN="$GITHUB_TOKEN"` override; repository,
 issue, and PR operations use the App token. Model requests use
 `COPILOT_GITHUB_TOKEN`.
 
-Copilot writes `report.json` with the run ID, producing attempt, outcome,
+Before checkout or tool/token setup, the workflow seeds an `incomplete` report
+with a fatal error, so an early failure or a model that never writes its report
+does not leave a success-shaped result. Copilot replaces this placeholder in
+`report.json` with the run ID, producing attempt, outcome,
 Markdown summary, unique created issue numbers, expected evidence limitations,
 and fatal errors. The summary records boundary URLs/timestamps, selected
 workflow/run IDs, actual subagent IDs and results, duplicate links, and created
@@ -87,8 +90,14 @@ Copilot, requires a well-formed report for the producing run/attempt, a nonempty
 summary, no fatal errors, and an `initialized` or `analyzed` outcome. An
 initialized report cannot claim created issues or evidence gaps. Every reported
 issue must exist in this repository with the Factory author and attempt marker;
-the verifier's fresh App token has only Issues read access. Missing reports,
-invalid receipts, incomplete outcomes, and API errors fail explicitly.
+the verifier also paginates the Factory author's issues in all states and
+requires the numbers carrying that exact marker to match `created_issues`.
+This catches omitted issues, including closed issues and findings hidden by an
+`initialized` report, without relying on search indexing. Other attempts and PRs
+are excluded. The verifier's fresh App token has only Issues read access.
+Missing reports, invalid or mismatched receipts, incomplete outcomes, and API
+errors fail explicitly. All inline scripts use explicit Bash with `pipefail`,
+so even a listing failure after valid partial output fails verification.
 
 Confirmed expired logs, superseded-attempt logs, or logs not yet available for
 unfinished runs go in `unavailable_evidence`, with cause and supporting URLs.
@@ -100,19 +109,24 @@ These checks verify **reported status and issue receipts, not independent
 coverage or reasoning**. First-run selection, collection completeness, actual
 subagent execution/concurrency, evidence classification, duplicate detection,
 and unlabeled creation are Copilot responsibilities. There is no pinned
-manifest or automated label-history audit. Issues are created during analysis,
+manifest or automated label-history audit. Receipt reconciliation cannot
+attribute issues without the marker or with a removed marker to this attempt.
+Issues are created during analysis,
 so the receipt check is not a gate before triage. The read-only subagent and
 untrusted-data rules are behavioral constraints, not a sandbox: the coordinator
 still handles repository-wide evidence, including forks, while holding Issues
 write access. The isolated check does not prevent analysis-time issue changes.
 
-The report is retained for 14 days as `workflow-diagnostics-RUN_ID-ATTEMPT`,
-including on failure. Verification also runs after a failed diagnosis unless
+The report, including the incomplete placeholder on early failure, is retained
+for 14 days as `workflow-diagnostics-RUN_ID-ATTEMPT` when initialization and
+upload can run. A missing report makes upload fail rather than just warn.
+Verification also runs after a failed diagnosis unless
 the workflow was cancelled or diagnosis was skipped. **Re-run failed jobs**
 reuses the producing job's saved artifact name and attempt when only verification
 failed; **Re-run all jobs** repeats diagnosis for the original window.
-If the artifact has expired or been deleted, rerun all jobs. Setup failures
-remain visible in Actions logs; a failed run is not evidence of no findings.
+Runner termination, initialization/upload failure, or artifact expiration/deletion
+can still leave no downloadable report; inspect the diagnosis/upload logs and
+rerun all jobs. A failed run is not evidence of no findings.
 
 The dependency-free [Tests workflow](../.github/workflows/tests.yml) exercises
 the inline receipt check and workflow/prompt contracts on PRs (including forks)
