@@ -5,10 +5,9 @@ and new comments on open issues that do not have `triaged`. PR comments go to
 the separate [implementation workflow](issue-implementation.md). Only Factory's own comments are
 ignored by author; other bots and humans can provide clarification.
 
-The workflow runs `scripts/ai.sh --harness copilot --profile triage`, selecting
-`gpt-6-astra` with `high` reasoning and `longContext: false` from
-[the shared model configuration](ai-tools.md). Copilot receives `--context default`;
-other workflows keep their existing profile selections.
+The workflow runs `scripts/ai.sh --harness copilot --profile triage`, using the
+`triage` profile's model, reasoning effort, and context settings from
+[`.github/model-config.json`](../.github/model-config.json).
 
 Copilot reads the issue, full discussion, repository guidance, and relevant code.
 It then posts a Factory comment with one of two outcomes:

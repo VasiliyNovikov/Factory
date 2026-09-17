@@ -52,9 +52,5 @@ Profiles supply `model`, `reasoningEffort`, and `longContext` without schema
 validation. `longContext` applies only to Copilot. Unknown names fail rather than
 falling back to `default`.
 
-The `triage` profile uses `gpt-6-astra`, `high` reasoning, and `longContext: false`,
-which passes `--context default` to Copilot. This configuration balances quality
-and latency qualitatively; it does not guarantee a speedup or a latency target.
-
 Build on this setup to [create a pull request](create-pull-request.md) or
 [create an issue](create-issue.md).
