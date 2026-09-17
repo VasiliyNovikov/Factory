@@ -159,6 +159,7 @@ jobs:
         run: >-
           ./scripts/ai.sh
           --harness copilot
+          --profile implement
           --prompt "Implement triaged issue ${ISSUE_NUMBER} in repository ${GITHUB_REPOSITORY}.
           Read GITHUB_EVENT_PATH, repository guidance, and the full issue/PR discussions and reviews.
           Source PR is ${SOURCE_PR} (empty for issue events). Address the triggering request or feedback.

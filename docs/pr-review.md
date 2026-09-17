@@ -17,6 +17,9 @@ permissions:
 It checks out the base revision for the installation script, harness, and model
 configuration. Copilot reads the proposed changes through `gh pr view`,
 `gh pr diff`, and read-only API calls, rather than executing the PR's code.
+The review invocation passes `--profile review` to `scripts/ai.sh`, using the
+`review` profile's model, reasoning effort, and context settings from
+[`.github/model-config.json`](../.github/model-config.json).
 
 ## Review outcome
 
