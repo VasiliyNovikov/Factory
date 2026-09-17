@@ -5,6 +5,13 @@
 - Keep code understandable and maintainable by humans and AI: use clear
   structure and naming, avoid unnecessary duplication, and reuse existing logic
   where appropriate without needless abstraction.
+- Prefer AI-led task handling with simple prompts and existing tools over
+  unnecessary custom workflow scripts or scripted decision logic. Keep automation
+  simple and flexible; use scripts when critical performance needs or lower
+  overall complexity justify them.
+- Design for capable, current AI models and continued improvement rather than
+  incidental limitations of today's models. This preference does not relax
+  required permissions, safety boundaries, or result verification.
 - This is an initial scaffold for an agentic software factory experiment.
   `README.md` tracks completed CI access milestones. No application code is
   implemented yet.
