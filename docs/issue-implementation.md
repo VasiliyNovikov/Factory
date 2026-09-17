@@ -40,10 +40,15 @@ including for thread reads, permission rechecks, mutations, and read-backs.
 Only individual read-only Actions commands override it with `GITHUB_TOKEN`;
 never export that override.
 
+The prompt makes clear that the 30-minute limit includes setup time already elapsed.
+Copilot must budget the remaining time, reserving time for required GitHub reporting
+and final verification without relaxing required checks.
+
 The implementation invocation passes `--profile implement` to `scripts/ai.sh`,
 using the `implement` profile's model, reasoning effort, and context settings
 from [`.github/model-config.json`](../.github/model-config.json). Event routing
-and issue triage omit `--profile` and continue using `default`.
+passes `--profile triage`, using the same configured `triage` profile as
+[issue triage](issue-triage.md).
 
 ## Follow-ups and PR tracking
 
