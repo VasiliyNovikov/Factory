@@ -41,7 +41,8 @@ Actions log queries; the App token handles repository changes and replies.
 The implementation invocation passes `--profile implement` to `scripts/ai.sh`,
 using the `implement` profile's model, reasoning effort, and context settings
 from [`.github/model-config.json`](../.github/model-config.json). Event routing
-and issue triage omit `--profile` and continue using `default`.
+omits `--profile` and continues using `default`; [issue triage](issue-triage.md)
+explicitly selects `triage`.
 
 ## Follow-ups and PR tracking
 
