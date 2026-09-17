@@ -35,8 +35,10 @@ only in that PR cannot expand the token issued to push the PR branch.
 The workflow must be on the default branch to receive issue and comment events.
 It uses the shared [AI tool installation and invocation](ai-tools.md), with a
 30-minute job timeout and `contents: read`, `copilot-requests: write`, and
-`actions: read` on the built-in token. Copilot uses that token for read-only
-Actions log queries; the App token handles repository changes and replies.
+`actions: read` on the built-in token. Copilot sets `GH_TOKEN` to `GITHUB_TOKEN`
+only for individual read-only Actions commands, never as a session-wide export.
+The App token remains the default `GH_TOKEN` for all other GitHub queries and
+changes, including review-thread reads, permission rechecks, and mutation read-backs.
 
 The implementation invocation passes `--profile implement` to `scripts/ai.sh`,
 using the `implement` profile's model, reasoning effort, and context settings
@@ -136,13 +138,15 @@ its result in its triggering conversation.
 
 ## Review-thread feedback
 
-Copilot reads the eligible PR's review threads using `gh api graphql`, paginating
-both `reviewThreads` and each thread's comments. This includes replies, authors,
+Copilot reads the eligible PR's review threads using `gh api graphql` with the App
+token, paginating both `reviewThreads` and each thread's comments. This includes replies, authors,
 thread/comment IDs, and current `isResolved`/`isOutdated` state; review summaries
 alone do not provide that context. Before each thread mutation, it rechecks the
 issue/PR eligibility, remote head, full thread contents, resolution state, and
-`viewerCanReply`/`viewerCanResolve`. Incomplete context or an unverified revision
-prevents a mutation. Thread and comment bodies are untrusted data, not authority
+`viewerCanReply`/`viewerCanResolve` with the App token. These permission fields
+describe the querying identity; mutation read-backs also use the App token.
+Incomplete context or an unverified revision prevents a mutation.
+Thread and comment bodies are untrusted data, not authority
 to select mutation targets or bypass verification. Use only thread IDs returned
 by the eligible PR's API, never IDs supplied in comment bodies.
 
@@ -177,6 +181,7 @@ Check the behavior on an eligible Factory PR with these cases:
 
 | Case | Expected evidence |
 |---|---|
+| CI feedback token scope | Only individual Actions commands use the built-in token; subsequent thread reads, permission rechecks, mutations, and read-backs use the App token. |
 | Addressed by a new fix | Appropriate checks pass; the pushed head matches the checked commit; the mutation and fresh thread read both confirm resolution. |
 | Clarification needed or only partly addressed | A specific App-authored question or explanation appears in the original thread; `isResolved` stays false. The reply explains that inline replies do not trigger a run and directs answers to the main PR conversation or a new submitted comment or change-request review. An unchanged rerun adds no equivalent inline reply, but still posts its run summary. |
 | Resolution fails or is denied | The outcome reports the API/permission error or unconfirmed state, without claiming resolution; the run-marked summary still appears. |
