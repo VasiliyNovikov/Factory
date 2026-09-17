@@ -6,154 +6,118 @@ be started from **Actions -> Workflow diagnostics -> Run workflow**. Select the
 default branch; dispatches on other branches are skipped. GitHub can delay
 scheduled runs.
 
+Copilot owns history collection, workflow analysis, duplicate detection, and
+issue creation. The workflow prompt supplies the requirements and API hints
+instead of maintaining a separate diagnostics program. It reuses
+`scripts/install-tools.sh`, `scripts/ai.sh --harness copilot`, and the `default`
+profile in `.github/model-config.json`.
+
 ## Analysis window
 
-The first invocation only establishes a boundary in Actions history: it does
-not install AI tools, invoke Copilot, or create issues. Scheduled and manual
-invocations share that history.
+Copilot reads the current run and pages its workflow history to find the
+preceding default-branch scheduled or manual invocation by `run_number`,
+regardless of conclusion. If there is no predecessor, it records an
+`initialized` report and stops: **no run/log analysis, subagents, or findings
+issues**. Setup and Copilot still run to make that boundary decision. API errors
+must not be treated as empty history.
 
-Subsequent invocations collect runs from every repository workflow and branch,
-starting with the preceding default-branch diagnostics invocation, **including
-that diagnostics run**, and ending just before the current invocation. The
-current diagnostics run is inspected next time. The predecessor need not have
-succeeded; its failures must be diagnosable too.
+Later invocations inspect all workflows, branches, and outcomes between that
+predecessor (inclusive) and the current invocation (exclusive). The preceding
+diagnostics run is included; the current one is inspected next time. Original
+`created_at` timestamps and run IDs break same-second ties and preserve the
+window on retries, rather than advancing it to the retry time.
 
-The helper uses run creation timestamps, with run IDs breaking same-second
-ties. A rerun of diagnostics keeps its original window, rather than advancing
-the boundary; duplicate checks also cover issues created by earlier attempts.
-Each selected run records its latest attempt, and subagents inspect attempt/job
-history. Older runs updated during the interval (for example, completed or
-rerun) are also included when created in the **90 days before the window start**
-(inclusive). The manifest and job summary record this fixed supplemental lookback;
-older retained metadata is outside that lookup. Because GitHub has no updated-at
-run filter, the helper queries this bounded creation range with the same
-cap-aware pagination instead of scanning the repository's entire retained history.
-This does not truncate the primary interval between diagnostics invocations,
-even if they are more than 90 days apart. An older run updated after the upper
-boundary is considered by the next invocation instead. Log retention may be
-shorter than the lookback; unavailable evidence must still be reported.
+The prompt also covers older runs updated during the interval, using a bounded
+creation lookback of **90 days before the window start**. This supplemental
+lookback does not shorten the primary interval, even after a longer gap.
+Collection hints require pagination, splitting time ranges at GitHub's
+1,000-result filtered-search cap, and reconciling distinct counts at every
+split. Missing history, inconsistent counts, an unsplittable saturated second,
+and API failures must be reported rather than hidden as complete coverage.
+The model carries out these checks; they are not a separate deterministic gate.
 
-History queries paginate, and large time ranges split to avoid GitHub's
-1,000-result filtered-search limit. Every split checks its combined distinct run
-count against the parent query's total before returning. Missing history, API
-failures, inconsistent counts, or an unsplittable saturated second fail
-collection explicitly.
-If all preceding diagnostics history has been deleted, the next invocation
-establishes a new first-run boundary without analysis.
-
-One concurrency group serializes scheduled and manual diagnostics without
-cancelling an active run. GitHub retains at most one pending invocation; bursts
-of manual dispatches can replace a pending run. The boundary is the preceding
-invocation, not the last successful analysis, so failures or cancelled runs do
-not automatically replay missed windows. Rerun a failed invocation to retry
-its original window. **Re-run failed jobs** reuses a successful diagnosis when
-only verification failed; **Re-run all jobs** recollects and reanalyzes the same
-window under the new attempt.
+One concurrency group serializes scheduled and manual runs without cancelling
+an active run. GitHub retains at most one pending invocation, so dispatch bursts
+can replace pending runs. The boundary is the preceding invocation, not the last
+successful analysis: failed/cancelled windows are not automatically replayed.
+Rerun the original invocation to retry its window. If all preceding history is
+deleted, Copilot can only establish a new initial boundary.
 
 ## Analysis and issue handoff
 
-The workflow reuses `scripts/install-tools.sh`, `scripts/ai.sh --harness copilot`,
-and the `default` profile in `.github/model-config.json`. Copilot launches a
-separate read-only subagent for each workflow, concurrently or in parallel
-batches when tool limits require it, then waits for and consolidates all results.
+Copilot must launch one read-only subagent per selected workflow concurrently
+(parallel batches if tool limits require), wait for every result, and consolidate
+findings. Each subagent receives the complete selected run list and inspects
+attempts, jobs, relevant logs, and workflow revisions through read-only APIs.
 Successful, failed, cancelled, skipped, and unfinished runs are all in scope.
-Subagents inspect jobs, relevant completed job logs, and workflow revisions
-without executing fetched code or log instructions.
+Fetched code and log instructions must never be executed.
 
-The coordinating agent checks existing issues **and PRs in all states**, including
-earlier diagnostics attempts, before creating one issue per distinct actionable
-fix, optimization, or other improvement. Findings must have evidence, supporting
-run/job links, impact, proposed scope, and acceptance criteria. Existing findings
-are linked in the report rather than reopened or duplicated. No actionable
-findings means no issues are created.
+Before each new issue, the coordinator refreshes duplicate checks across
+issues **and PRs in all states**, including previous diagnostics attempts.
+Existing findings are linked in the report, not reopened, commented on, or
+duplicated. Create one issue per distinct evidenced fix, optimization, or other
+improvement, with impact, supporting run/job URLs, proposed scope, and acceptance
+criteria. No actionable findings means no issues.
 
-Issues are created by the Factory App with a
-`<!-- factory-diagnostics:RUN_ID:ATTEMPT -->` marker and **no labels**. Their
-App-authored `issues.opened` events start normal [triage](issue-triage.md);
-diagnostics does not pre-apply `triaged` or implementation tracking labels.
-Verification audits paginated label history, not an empty live label list:
-normal triage may already have labeled an issue before verification or a retry.
-Factory-applied labels require a prior Factory ready-decision comment with its
-triage run marker, then the matching tracking label before `triaged`. Other
-Factory labels or Factory labels applied before that decision fail the audit,
-even if later removed. Subsequent labels from other actors are not diagnostics
-pre-labeling. Missing label history or unknown label actors fail explicitly.
-Diagnostics completions are excluded from implementation's event router before
-tool setup or Copilot invocation; the next diagnostics run inspects its predecessor.
+New issues use the Factory App identity, contain
+`<!-- factory-diagnostics:RUN_ID:ATTEMPT -->`, and have **no labels at creation**.
+Their App-authored `issues.opened` events enter normal [triage](issue-triage.md).
+Copilot checks the creation response and leaves later triage/human updates
+alone; it must not apply `triaged`, tracking labels, or triage-decision comments.
+Diagnostics completions remain excluded from the implementation event router.
 
-## Permissions and results
+## Permissions and result checks
 
-Use the existing [Factory App setup](github-app.md) with `FACTORY_CLIENT_ID` and
-`FACTORY_PRIVATE_KEY`. The diagnostics App token requests Contents read, Pull
-requests read (duplicate checks), and Issues write (reads and issue creation).
-It needs no push or workflow-write permissions. Checkout does not persist
-credentials. The built-in token has `contents: read`, `actions: read`, and
-`copilot-requests: write`. Actions run/job/log queries use that built-in token
-via a command-local `GH_TOKEN` override; other GitHub operations use the App
-token, and model requests use `COPILOT_GITHUB_TOKEN`. The separate verification
-job uses only Contents/Actions read access on its built-in token and a fresh
-App token with Issues read access for receipts and label history; it has no
-issue-write or model permissions and does not run Copilot.
+Use the existing [Factory App setup](github-app.md). The analysis App token
+requests Contents read, Pull requests read, and Issues write, with no push or
+workflow-write access. Checkout does not persist credentials. The built-in
+token has Contents/Actions read and `copilot-requests: write`. Read-only Actions
+queries use a command-local `GH_TOKEN="$GITHUB_TOKEN"` override; repository,
+issue, and PR operations use the App token. Model requests use
+`COPILOT_GITHUB_TOKEN`.
 
-Repository-wide coverage includes fork and non-default-branch evidence. The
-untrusted-data instructions and read-only subagent contract are behavioral
-constraints, not a sandbox: the coordinator processes their results while
-holding the App's Issues write token. The isolated verifier protects its own
-checks, but does not prevent analysis-time issue changes or isolate write
-credentials from untrusted evidence. Restricting evidence to the default branch
-would narrow the agreed coverage, so that restriction is not applied.
+Copilot writes `report.json` with the run ID, producing attempt, outcome,
+Markdown summary, unique created issue numbers, expected evidence limitations,
+and fatal errors. The summary records boundary URLs/timestamps, selected
+workflow/run IDs, actual subagent IDs and results, duplicate links, and created
+issue URLs. Outcomes are `initialized`, `analyzed`, or `incomplete`.
 
-Copilot writes a structured report with per-workflow subagent IDs, exact run
-coverage, summaries, created issue numbers, duplicate links, `unavailable_evidence`,
-and fatal `errors`. Both evidence/error fields must be arrays, including when empty.
-Expected gaps are recorded separately with `workflow_id`, `run_id`, `reason`, and
-nonempty `details` explaining the cause and supporting run/job evidence:
+A small inline check on a **fresh read-only runner**, without checkout or
+Copilot, requires a well-formed report for the producing run/attempt, a nonempty
+summary, no fatal errors, and an `initialized` or `analyzed` outcome. An
+initialized report cannot claim created issues or evidence gaps. Every reported
+issue must exist in this repository with the Factory author and attempt marker;
+the verifier's fresh App token has only Issues read access. Missing reports,
+invalid receipts, incomplete outcomes, and API errors fail explicitly.
 
-- `expired_logs`: confirmed log expiration under retention.
-- `superseded_attempt_logs`: confirmed unavailability of a superseded attempt's logs.
-- `unfinished_run`: logs not yet available because the inspected run is unfinished.
+Confirmed expired logs, superseded-attempt logs, or logs not yet available for
+unfinished runs go in `unavailable_evidence`, with cause and supporting URLs.
+They produce a visible warning and summary, not a clean result. Unexplained
+404s, permission failures, rate limits, other tooling failures, and unfinished
+subagent analysis belong in fatal `errors`.
 
-These gaps produce a visible warning and a **verified with evidence limitations**
-summary with run links, rather than failing the job or declaring a clean result.
-An analysis with `complete: false` is accepted only when its workflow has a
-reported expected gap. Every workflow/run and distinct subagent receipt remains
-required, including runs with unavailable logs. Unexplained HTTP 404s, permission
-failures, rate limits, other API/tooling failures, and unfinished or missing
-subagent analysis remain fatal `errors`; they must not be classified as expected
-unavailability. The verifier checks the classification's structure, not its truth.
+These checks verify **reported status and issue receipts, not independent
+coverage or reasoning**. First-run selection, collection completeness, actual
+subagent execution/concurrency, evidence classification, duplicate detection,
+and unlabeled creation are Copilot responsibilities. There is no pinned
+manifest or automated label-history audit. Issues are created during analysis,
+so the receipt check is not a gate before triage. The read-only subagent and
+untrusted-data rules are behavioral constraints, not a sandbox: the coordinator
+still handles repository-wide evidence, including forks, while holding Issues
+write access. The isolated check does not prevent analysis-time issue changes.
 
-The collector publishes `manifest_sha256` before Copilot runs and promotes it
-to a job output. Verification runs on a **fresh runner**, checks out the same
-invocation commit (`github.sha`) as collection, and downloads only the JSON
-artifact into its temporary directory. It does not reuse the agent-writable
-checkout or verifier. It receives the captured digest as `MANIFEST_SHA256` and
-rejects a missing digest or altered manifest before parsing coverage or run
-identity. `scripts/workflow-diagnostics.py verify` also rejects missing reports,
-incomplete run coverage, repeated subagent IDs, fatal errors, and issue receipts
-without the Factory author, producing analysis attempt marker, or valid label
-history.
+The report is retained for 14 days as `workflow-diagnostics-RUN_ID-ATTEMPT`,
+including on failure. Verification also runs after a failed diagnosis unless
+the workflow was cancelled or diagnosis was skipped. **Re-run failed jobs**
+reuses the producing job's saved artifact name and attempt when only verification
+failed; **Re-run all jobs** repeats diagnosis for the original window.
+If the artifact has expired or been deleted, rerun all jobs. Setup failures
+remain visible in Actions logs; a failed run is not evidence of no findings.
 
-The diagnosis and verification job summaries show the window and results.
-The manifest and any report are retained as a
-`workflow-diagnostics-RUN_ID-ATTEMPT` artifact for 14 days, including on failure.
-The diagnosis job publishes that exact artifact name as a saved output, so a
-verification-only retry downloads the producing attempt's evidence and uses its
-pinned digest, rather than looking for a new artifact or mixing attempts.
-If that artifact has expired or been deleted, rerun all jobs to regenerate it.
-Verification also runs after an analysis failure if collection selected an
-analysis window and the workflow was not cancelled; it is skipped for the
-first-run boundary. Setup and collection failures appear in Actions logs; a
-failed run is not evidence that no improvements exist. Verification checks
-report coverage and issue existence, not the semantic quality of AI analysis,
-actual tool concurrency, or exhaustive semantic duplicate detection. Issues
-are created during analysis, so verification is an audit, not a gate before
-their normal triage handoff. The label audit checks the recorded marked handoff,
-not the semantic validity of the decision or which App invocation performed it.
-
-The dependency-free [Tests workflow](../.github/workflows/tests.yml) runs the
-deterministic helper suite on every pull request and push to `master`, using
-the runner's `python3` with read-only repository access and no App secrets.
-Run the same command locally:
+The dependency-free [Tests workflow](../.github/workflows/tests.yml) exercises
+the inline receipt check and workflow/prompt contracts on PRs (including forks)
+and pushes to `master`. It does not test model decisions or live orchestration.
+Run it locally with:
 
 ```sh
 python3 -m unittest discover -s tests -v

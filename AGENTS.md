@@ -18,8 +18,8 @@
   - [Issue triage and label handoff](docs/issue-triage.md)
   - [Issue implementation and follow-ups](docs/issue-implementation.md)
   - [Periodic workflow diagnostics](docs/workflow-diagnostics.md)
-- No application toolchain or dependency manifest is configured. Diagnostics
-  helper tests use `python3 -m unittest discover -s tests -v`;
+- No application toolchain or dependency manifest is configured. Workflow
+  contract tests use `python3 -m unittest discover -s tests -v`;
   `.github/workflows/tests.yml` runs them on pull requests and pushes to `master`.
 - `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
   Copilot PR-creation test. See the linked examples for setup, permissions,
@@ -34,4 +34,6 @@
   shared-label concurrency, PR tracking, and result checks.
 - `.github/workflows/workflow-diagnostics.yml` analyzes repository workflow runs
   daily or manually with parallel Copilot subagents and creates findings issues
-  for normal triage. Its first invocation establishes a boundary without analysis.
+  for normal triage. Copilot selects the window and records a report; a small
+  read-only job checks report status and issue receipts. Its first invocation
+  establishes a boundary without analysis.

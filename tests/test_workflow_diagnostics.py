@@ -1,1201 +1,275 @@
-import copy
-import hashlib
-import importlib.util
 import json
 import os
 from pathlib import Path
 import re
 import subprocess
 import tempfile
+import textwrap
 import unittest
-from unittest import mock
-from urllib.parse import parse_qs, urlsplit
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "workflow-diagnostics.py"
-SPEC = importlib.util.spec_from_file_location("workflow_diagnostics", SCRIPT)
-diagnostics = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(diagnostics)
-
-REPOSITORY = "example/factory"
-SERVER = "https://github.example"
-START = "2026-09-16T08:00:00Z"
-END = "2026-09-17T08:00:00Z"
+ROOT = Path(__file__).resolve().parents[1]
+WORKFLOW = (ROOT / ".github/workflows/workflow-diagnostics.yml").read_text()
 
 
-def make_run(run_id, **overrides):
-    run = {
-        "id": run_id,
-        "run_number": run_id,
-        "run_attempt": 1,
-        "workflow_id": 7,
-        "name": "Diagnostics",
-        "path": ".github/workflows/workflow-diagnostics.yml",
-        "event": "schedule",
-        "status": "completed",
-        "conclusion": "success",
-        "html_url": f"{SERVER}/{REPOSITORY}/actions/runs/{run_id}",
-        "head_branch": "main",
-        "head_sha": "a" * 40,
-        "created_at": START,
-        "run_started_at": START,
-        "updated_at": START,
-    }
-    run.update(overrides)
-    return run
+def step_script(name):
+    step = WORKFLOW.split(f"      - name: {name}\n", 1)[1].split("\n      - name:", 1)[0]
+    style, block = step.split("\n        run: ", 1)[1].split("\n", 1)
+    block = textwrap.dedent(block)
+    if style == "|":
+        return block
+    if style == ">-":
+        return " ".join(block.splitlines())
+    raise AssertionError(f"Unsupported run style: {style}")
 
 
-def run_page(runs, total=None):
-    return {
-        "total_count": len(runs) if total is None else total,
-        "workflow_runs": runs,
-    }
-
-
-def paginated_responses(runs):
-    return [
-        run_page(runs[:100], total=len(runs)),
-        [
-            run_page(runs[offset:offset + 100], total=len(runs))
-            for offset in range(0, len(runs), 100)
-        ],
-    ]
-
-
-class ApiTests(unittest.TestCase):
-    def test_actions_credentials_are_isolated_from_app_credentials(self):
-        environment = {
-            "GH_TOKEN": "factory-app-token",
-            "GITHUB_TOKEN": "actions-token",
-            "UNRELATED": "preserved",
-        }
-        with (
-            mock.patch.dict(os.environ, environment, clear=True),
-            mock.patch.object(
-                diagnostics.subprocess, "check_output", return_value='{"ok": true}'
-            ) as check_output,
-        ):
-            self.assertEqual(diagnostics.api("actions-endpoint", actions=True), {"ok": True})
-            self.assertEqual(diagnostics.api("issue-endpoint"), {"ok": True})
-            actions_call, app_call = check_output.call_args_list
-            self.assertEqual(actions_call.args[0], ["gh", "api", "actions-endpoint"])
-            self.assertEqual(actions_call.kwargs["env"]["GH_TOKEN"], "actions-token")
-            self.assertEqual(actions_call.kwargs["env"]["UNRELATED"], "preserved")
-            self.assertIs(actions_call.kwargs["text"], True)
-            self.assertEqual(app_call.kwargs["env"]["GH_TOKEN"], "factory-app-token")
-            self.assertEqual(dict(os.environ), environment)
-
-    def test_paginated_api_uses_slurp_and_preserves_pages(self):
-        with (
-            mock.patch.dict(os.environ, {"GITHUB_TOKEN": "actions-token"}, clear=True),
-            mock.patch.object(
-                diagnostics.subprocess, "check_output", return_value='[{"page": 1}, {"page": 2}]'
-            ) as check_output,
-        ):
-            self.assertEqual(
-                diagnostics.api("endpoint", actions=True, paginate=True),
-                [{"page": 1}, {"page": 2}],
-            )
-            self.assertEqual(
-                check_output.call_args.args[0],
-                ["gh", "api", "endpoint", "--paginate", "--slurp"],
-            )
-
-    def test_actions_api_does_not_fall_back_to_app_token(self):
-        with (
-            mock.patch.dict(os.environ, {"GH_TOKEN": "app-token"}, clear=True),
-            mock.patch.object(diagnostics.subprocess, "check_output") as check_output,
-        ):
-            with self.assertRaises(KeyError):
-                diagnostics.api("endpoint", actions=True)
-            check_output.assert_not_called()
-
-    def test_api_errors_are_not_converted_to_empty_history(self):
-        with mock.patch.object(
-            diagnostics.subprocess,
-            "check_output",
-            side_effect=subprocess.CalledProcessError(1, ["gh", "api"]),
-        ):
-            with self.assertRaises(subprocess.CalledProcessError):
-                diagnostics.api("endpoint")
-
-
-class DiagnosticsTests(unittest.TestCase):
+class ReceiptTests(unittest.TestCase):
     def setUp(self):
-        workspace = tempfile.TemporaryDirectory(
-            prefix=".workflow-diagnostics-", dir=Path(__file__).resolve().parent
-        )
+        workspace = tempfile.TemporaryDirectory(prefix=".diagnostics-", dir=ROOT / "tests")
         self.addCleanup(workspace.cleanup)
         self.directory = Path(workspace.name)
-        self.summary = self.directory / "summary.txt"
-        self.output = self.directory / "output.txt"
-        environment = mock.patch.dict(
-            os.environ,
-            {
-                "GITHUB_REPOSITORY": REPOSITORY,
-                "GITHUB_RUN_ID": "200",
-                "DEFAULT_BRANCH": "main",
-                "GITHUB_STEP_SUMMARY": str(self.summary),
-                "GITHUB_OUTPUT": str(self.output),
-                "GITHUB_SERVER_URL": SERVER,
-                "FACTORY_LOGIN": "factory[bot]",
-                "GITHUB_TOKEN": "actions-token",
-                "GH_TOKEN": "app-token",
-            },
-            clear=True,
-        )
-        environment.start()
-        self.addCleanup(environment.stop)
-        api_patch = mock.patch.object(diagnostics, "api", autospec=True)
-        self.api = api_patch.start()
-        self.addCleanup(api_patch.stop)
-        self.current = make_run(200, run_number=20, created_at=END)
-        self.previous = make_run(100, run_number=19)
-
-    def read_manifest(self):
-        return json.loads((self.directory / "manifest.json").read_text())
-
-    def read_outputs(self):
-        return dict(line.split("=", 1) for line in self.output.read_text().splitlines())
-
-
-class PreviousRunTests(DiagnosticsTests):
-    def test_previous_accepts_manual_and_scheduled_runs_with_any_conclusion(self):
-        for event in ("schedule", "workflow_dispatch"):
-            for conclusion in ("success", "failure", "cancelled", None):
-                with self.subTest(event=event, conclusion=conclusion):
-                    candidate = make_run(
-                        100, run_number=19, event=event, conclusion=conclusion
-                    )
-                    self.api.return_value = run_page([candidate])
-                    self.assertEqual(
-                        diagnostics.previous_run(REPOSITORY, self.current, "main"),
-                        candidate,
-                    )
-
-    def test_previous_ignores_other_events_branches_current_and_newer_runs(self):
-        older_rerun = make_run(
-            90, run_number=18, run_attempt=5, updated_at="2026-09-18T12:00:00Z"
-        )
-        candidates = [
-            make_run(210, run_number=21),
-            dict(self.current, run_attempt=1),
-            make_run(198, run_number=19, head_branch="feature"),
-            make_run(197, run_number=19, event="push"),
-            make_run(196, run_number=19, event="pull_request"),
-            older_rerun,
-            self.previous,
-        ]
-        self.api.return_value = run_page(candidates)
-        self.assertEqual(
-            diagnostics.previous_run(
-                REPOSITORY, dict(self.current, run_attempt=3), "main"
-            ),
-            self.previous,
-        )
-
-    def test_previous_pages_unfiltered_history_past_a_thousand_runs(self):
-        full_page = [
-            make_run(index, run_number=19, head_branch="feature")
-            for index in range(100)
-        ]
-        self.api.side_effect = (
-            [run_page(full_page, total=1101)] * 11
-            + [run_page([self.previous], total=1101)]
-        )
-        self.assertEqual(
-            diagnostics.previous_run(REPOSITORY, self.current, "main"), self.previous
-        )
-        self.assertEqual(self.api.call_count, 12)
-        for page_number, call in enumerate(self.api.call_args_list, start=1):
-            endpoint = urlsplit(call.args[0])
-            self.assertEqual(
-                endpoint.path, f"repos/{REPOSITORY}/actions/workflows/7/runs"
-            )
-            self.assertEqual(
-                parse_qs(endpoint.query),
-                {"per_page": ["100"], "page": [str(page_number)]},
-            )
-            self.assertEqual(call.kwargs, {"actions": True})
-
-    def test_previous_stops_on_empty_page(self):
-        self.api.side_effect = [
-            run_page([make_run(index, event="push") for index in range(100)]),
-            run_page([]),
-        ]
-        self.assertIsNone(diagnostics.previous_run(REPOSITORY, self.current, "main"))
-        self.assertEqual(self.api.call_count, 2)
-
-
-class WindowRunTests(DiagnosticsTests):
-    def window(self, start=START, end=END):
-        return diagnostics.window_runs(
-            REPOSITORY, diagnostics.timestamp(start), diagnostics.timestamp(end)
-        )
-
-    def assert_window_query(self, call, start, end, *, paginated=False):
-        endpoint = urlsplit(call.args[0])
-        self.assertEqual(endpoint.path, f"repos/{REPOSITORY}/actions/runs")
-        self.assertEqual(
-            parse_qs(endpoint.query),
-            {"created": [f"{start}..{end}"], "per_page": ["100"]},
-        )
-        self.assertEqual(
-            call.kwargs,
-            {"actions": True, **({"paginate": True} if paginated else {})},
-        )
-
-    def test_small_windows_need_one_query_including_zero_and_exactly_100(self):
-        for count in (0, 1, 100):
-            with self.subTest(count=count):
-                runs = [make_run(index) for index in range(count)]
-                self.api.reset_mock()
-                self.api.return_value = run_page(runs)
-                self.assertEqual(self.window(), runs)
-                self.api.assert_called_once()
-                self.assert_window_query(self.api.call_args, START, END)
-
-    def test_multiple_pages_include_all_workflows_events_and_conclusions(self):
-        runs = [
-            make_run(index, workflow_id=index % 3, event="push", conclusion="failure")
-            for index in range(205)
-        ]
-        self.api.side_effect = [
-            run_page(runs[:100], total=205),
-            [run_page(runs[:100]), run_page(runs[100:200]), run_page(runs[200:])],
-        ]
-        self.assertEqual(self.window(), runs)
-        self.assertEqual(self.api.call_count, 2)
-        self.assert_window_query(self.api.call_args_list[0], START, END)
-        self.assert_window_query(self.api.call_args_list[1], START, END, paginated=True)
-
-    def test_saturated_queries_split_into_disjoint_inclusive_seconds(self):
-        for total in (1000, 1001):
-            with self.subTest(total=total):
-                self.api.reset_mock()
-                left = [make_run(index) for index in range(500)]
-                right = [
-                    make_run(index, created_at="2026-09-16T08:00:02Z")
-                    for index in range(500, total)
-                ]
-                self.api.side_effect = [
-                    run_page([], total=total),
-                    *paginated_responses(left),
-                    *paginated_responses(right),
-                ]
-                self.assertEqual(self.window(START, "2026-09-16T08:00:03Z"), left + right)
-                self.assertEqual(self.api.call_count, 5)
-                self.assert_window_query(
-                    self.api.call_args_list[1], START, "2026-09-16T08:00:01Z"
-                )
-                self.assert_window_query(
-                    self.api.call_args_list[3],
-                    "2026-09-16T08:00:02Z",
-                    "2026-09-16T08:00:03Z",
-                )
-
-    def test_saturated_children_are_split_recursively(self):
-        runs = [
-            make_run(index, created_at=f"2026-09-16T08:00:0{index // 500}Z")
-            for index in range(2000)
-        ]
-        self.api.side_effect = [
-            run_page([], total=2000),
-            run_page([], total=1000),
-            *paginated_responses(runs[:500]),
-            *paginated_responses(runs[500:1000]),
-            run_page([], total=1000),
-            *paginated_responses(runs[1000:1500]),
-            *paginated_responses(runs[1500:]),
-        ]
-        self.assertEqual(self.window(START, "2026-09-16T08:00:03Z"), runs)
-        self.assertEqual(self.api.call_count, 11)
-        self.assert_window_query(self.api.call_args_list[2], START, START)
-        self.assert_window_query(
-            self.api.call_args_list[4], "2026-09-16T08:00:01Z", "2026-09-16T08:00:01Z"
-        )
-        self.assert_window_query(
-            self.api.call_args_list[7], "2026-09-16T08:00:02Z", "2026-09-16T08:00:02Z"
-        )
-        self.assert_window_query(
-            self.api.call_args_list[9], "2026-09-16T08:00:03Z", "2026-09-16T08:00:03Z"
-        )
-
-    def test_split_history_changes_are_rejected(self):
-        for count in (999, 1001):
-            with self.subTest(count=count):
-                runs = [make_run(index) for index in range(count)]
-                self.api.side_effect = [
-                    run_page([], total=1000),
-                    *paginated_responses(runs[:499]),
-                    *paginated_responses(runs[499:]),
-                ]
-                with self.assertRaisesRegex(ValueError, "changed or was truncated"):
-                    self.window()
-
-    def test_split_history_count_uses_distinct_run_ids(self):
-        runs = [make_run(index) for index in range(999)]
-        self.api.side_effect = [
-            run_page([], total=1000),
-            *paginated_responses(runs[:500]),
-            *paginated_responses(runs[499:]),
-        ]
-        with self.assertRaisesRegex(ValueError, "changed or was truncated"):
-            self.window()
-
-    def test_nested_split_history_changes_are_rejected(self):
-        runs = [make_run(index) for index in range(1000)]
-        self.api.side_effect = [
-            run_page([], total=1000),
-            run_page([], total=1000),
-            *paginated_responses(runs[:499]),
-            *paginated_responses(runs[499:999]),
-            run_page(runs[999:]),
-        ]
-        with self.assertRaisesRegex(ValueError, "changed or was truncated"):
-            self.window(START, "2026-09-16T08:00:03Z")
-        self.assertEqual(self.api.call_count, 6)
-
-    def test_saturated_single_second_is_an_explicit_error(self):
-        for total in (1000, 1001):
-            with self.subTest(total=total):
-                self.api.reset_mock()
-                self.api.return_value = run_page([], total=total)
-                with self.assertRaisesRegex(ValueError, "1,000 runs in one second"):
-                    self.window(START, START)
-                self.api.assert_called_once()
-
-    def test_missing_or_duplicate_history_is_rejected(self):
-        responses = (
-            run_page([make_run(100)], total=2),
-            run_page([make_run(100), make_run(100)], total=2),
-        )
-        for response in responses:
-            with self.subTest(response=response):
-                self.api.return_value = response
-                with self.assertRaisesRegex(ValueError, "changed or was truncated"):
-                    self.window()
-
-    def test_truncated_paginated_history_is_rejected(self):
-        runs = [make_run(index) for index in range(100)]
-        self.api.side_effect = [
-            run_page(runs, total=101),
-            [run_page(runs), run_page([runs[-1]])],
-        ]
-        with self.assertRaisesRegex(ValueError, "changed or was truncated"):
-            self.window()
-
-
-class CollectTests(DiagnosticsTests):
-    def setUp(self):
-        super().setUp()
-        older_patch = mock.patch.object(
-            diagnostics, "older_activity_runs", autospec=True, return_value=[]
-        )
-        self.older_activity = older_patch.start()
-        self.addCleanup(older_patch.stop)
-
-    def collect_runs(self, runs, *, current=None, older_runs=()):
-        self.older_activity.return_value = list(older_runs)
-        self.api.side_effect = [
-            current or self.current,
-            run_page([self.previous]),
-            run_page(runs),
-        ]
-        diagnostics.collect(self.directory)
-        return self.read_manifest()
-
-    def test_first_run_establishes_boundary_without_querying_a_window(self):
-        self.api.side_effect = [self.current, run_page([])]
-        with mock.patch.object(diagnostics, "window_runs") as window:
-            diagnostics.collect(self.directory)
-        window.assert_not_called()
-        self.older_activity.assert_not_called()
-        self.assertEqual(self.api.call_count, 2)
-        manifest = self.read_manifest()
-        self.assertIsNone(manifest["previous_run"])
-        self.assertEqual(manifest["workflows"], [])
-        self.assertEqual(manifest["current_run"], self.current)
-        self.assertEqual(self.read_outputs(), {
-            "analyze": "false",
-            "manifest_sha256": hashlib.sha256(
-                (self.directory / "manifest.json").read_bytes()
-            ).hexdigest(),
-        })
-        self.assertIn("no analysis or issue creation", self.summary.read_text())
-
-    def test_non_default_branch_is_rejected_before_history_lookup(self):
-        self.api.return_value = dict(self.current, head_branch="feature")
-        with self.assertRaisesRegex(ValueError, "default branch"):
-            diagnostics.collect(self.directory)
-        self.api.assert_called_once()
-        self.assertFalse((self.directory / "manifest.json").exists())
-
-    def test_timestamp_ties_include_previous_and_exclude_current(self):
-        runs = [
-            make_run(201, created_at=END),
-            make_run(99),
-            self.current,
-            make_run(199, created_at=END),
-            make_run(101),
-            self.previous,
-        ]
-        manifest = self.collect_runs(runs)
-        self.assertEqual(
-            [run["id"] for group in manifest["workflows"] for run in group["runs"]],
-            [100, 101, 199],
-        )
-        self.assertEqual(manifest["previous_run"], self.previous)
-        self.assertEqual(manifest["older_activity_lookback_days"], 90)
-        self.assertEqual(self.read_outputs(), {
-            "analyze": "true",
-            "manifest_sha256": hashlib.sha256(
-                (self.directory / "manifest.json").read_bytes()
-            ).hexdigest(),
-        })
-        self.assertIn("Collected 3 runs across 1 workflows", self.summary.read_text())
-        self.assertIn("older-activity lookback: 90 days", self.summary.read_text())
-        self.assertIn("(inclusive)", self.summary.read_text())
-        self.assertIn("(exclusive)", self.summary.read_text())
-
-    def test_reruns_preserve_original_window_and_exclude_the_current_run(self):
-        runs = [
-            self.previous,
-            make_run(150, created_at="2026-09-16T12:00:00Z"),
-            self.current,
-            make_run(250, created_at="2026-09-17T12:00:00Z"),
-        ]
-        initial = self.collect_runs(runs)
-        rerun = dict(
-            self.current,
-            run_attempt=3,
-            run_started_at="2026-09-18T08:00:00Z",
-            updated_at="2026-09-18T08:01:00Z",
-        )
-        repeated = self.collect_runs(runs, current=rerun)
-        self.assertEqual(initial["previous_run"], repeated["previous_run"])
-        self.assertEqual(initial["workflows"], repeated["workflows"])
-        self.assertEqual(repeated["current_run"]["run_attempt"], 3)
-        self.assertEqual(
-            parse_qs(urlsplit(self.api.call_args.args[0]).query)["created"],
-            [f"{START}..{END}"],
-        )
-
-    def test_older_run_completed_or_rerun_in_window_is_included(self):
-        older = make_run(
-            50,
-            workflow_id=8,
-            created_at="2026-09-15T08:00:00Z",
-            run_started_at="2026-09-16T10:00:00Z",
-            updated_at="2026-09-16T10:01:00Z",
-            run_attempt=2,
-        )
-        manifest = self.collect_runs([self.previous], older_runs=[older])
-        self.assertEqual(
-            [run["id"] for group in manifest["workflows"] for run in group["runs"]],
-            [50, 100],
-        )
-        self.older_activity.assert_called_once_with(
-            REPOSITORY, diagnostics.timestamp(START), diagnostics.timestamp(END)
-        )
-
-    def test_primary_window_is_not_limited_by_the_older_activity_lookback(self):
-        self.previous = dict(self.previous, created_at="2026-01-01T08:00:00Z")
-        runs = [
-            self.previous,
-            make_run(110, created_at="2026-02-01T08:00:00Z"),
-            make_run(150, created_at="2026-07-01T08:00:00Z"),
-        ]
-        manifest = self.collect_runs(runs + [self.current])
-        self.assertEqual(manifest["workflows"][0]["runs"], runs)
-        self.assertEqual(
-            parse_qs(urlsplit(self.api.call_args.args[0]).query)["created"],
-            [f"2026-01-01T08:00:00Z..{END}"],
-        )
-
-    def test_older_activity_breaks_creation_time_ties_without_duplicate_overlap(self):
-        before_previous = make_run(99, updated_at="2026-09-16T12:00:00Z")
-        after_previous = make_run(101, updated_at="2026-09-16T12:00:00Z")
-        manifest = self.collect_runs(
-            [before_previous, self.previous, after_previous, self.current],
-            older_runs=[before_previous, self.previous, after_previous],
-        )
-        self.assertEqual(
-            manifest["workflows"][0]["runs"],
-            [before_previous, self.previous, after_previous],
-        )
-        self.assertIn("Collected 3 runs across 1 workflows", self.summary.read_text())
-
-    def test_duplicate_runs_are_rejected_before_publishing_manifest(self):
-        self.api.side_effect = [
-            self.current,
-            run_page([self.previous]),
-            run_page([self.previous, self.previous], total=1),
-        ]
-        with self.assertRaisesRegex(ValueError, "Duplicate runs"):
-            diagnostics.collect(self.directory)
-        self.assertFalse((self.directory / "manifest.json").exists())
-
-    def test_collection_keeps_every_workflow_event_and_conclusion(self):
-        conclusions = (
-            "success", "failure", "cancelled", "skipped", "neutral",
-            "timed_out", "action_required", "stale", "startup_failure", None,
-        )
-        runs = [self.previous] + [
-            make_run(
-                110 + index,
-                workflow_id=30 + index,
-                name=f"Workflow {index}",
-                path=f".github/workflows/workflow-{index}.yml",
-                event=("push", "pull_request", "workflow_dispatch")[index % 3],
-                conclusion=conclusion,
-                status="in_progress" if conclusion is None else "completed",
-                head_branch="feature",
-            )
-            for index, conclusion in enumerate(conclusions)
-        ]
-        manifest = self.collect_runs(list(reversed(runs)))
-        self.assertEqual(len(manifest["workflows"]), len(runs))
-        for group, run in zip(manifest["workflows"], runs):
-            self.assertEqual(group["workflow_id"], run["workflow_id"])
-            self.assertEqual(group["name"], run["name"])
-            self.assertEqual(group["path"], run["path"])
-            self.assertEqual(group["runs"], [run])
-
-    def test_missing_previous_run_is_an_explicit_error(self):
-        with self.assertRaisesRegex(ValueError, "previous diagnostics run is missing"):
-            self.collect_runs([make_run(101), self.current])
-        self.assertFalse((self.directory / "manifest.json").exists())
-        self.assertFalse(self.output.exists())
-
-    def test_api_failure_does_not_publish_a_partial_manifest(self):
-        self.api.side_effect = [
-            self.current,
-            run_page([self.previous]),
-            subprocess.CalledProcessError(1, ["gh", "api"]),
-        ]
-        with self.assertRaises(subprocess.CalledProcessError):
-            diagnostics.collect(self.directory)
-        self.assertFalse((self.directory / "manifest.json").exists())
-        self.assertFalse(self.output.exists())
-
-    def test_changed_split_history_does_not_publish_a_partial_manifest(self):
-        left = [self.previous] + [make_run(index) for index in range(1000, 1498)]
-        right = [self.current] + [
-            make_run(index, created_at="2026-09-17T02:00:00Z")
-            for index in range(2000, 2499)
-        ]
-        self.api.side_effect = [
-            self.current,
-            run_page([self.previous]),
-            run_page([], total=1000),
-            *paginated_responses(left),
-            *paginated_responses(right),
-        ]
-        with self.assertRaisesRegex(ValueError, "changed or was truncated"):
-            diagnostics.collect(self.directory)
-        self.older_activity.assert_not_called()
-        self.assertFalse((self.directory / "manifest.json").exists())
-        self.assertFalse(self.output.exists())
-        self.assertFalse(self.summary.exists())
-
-    def test_older_activity_failure_does_not_publish_a_partial_manifest(self):
-        self.older_activity.side_effect = ValueError("Run history changed or was truncated")
-        with self.assertRaisesRegex(ValueError, "changed or was truncated"):
-            self.collect_runs([self.previous])
-        self.assertFalse((self.directory / "manifest.json").exists())
-        self.assertFalse(self.output.exists())
-        self.assertFalse(self.summary.exists())
-
-
-class OlderActivityRunTests(DiagnosticsTests):
-    def older_activity(self):
-        return diagnostics.older_activity_runs(
-            REPOSITORY, diagnostics.timestamp(START), diagnostics.timestamp(END)
-        )
-
-    def test_bounded_query_includes_old_activity_with_half_open_update_window(self):
-        old_created = "2026-09-15T08:00:00Z"
-        runs = [
-            make_run(50, created_at=old_created, updated_at=START),
-            make_run(51, created_at=old_created, updated_at="2026-09-16T12:00:00Z"),
-            make_run(52, created_at=old_created, updated_at=END),
-            make_run(53, created_at=old_created, updated_at=old_created),
-            make_run(101, created_at=START, updated_at="2026-09-16T12:00:00Z"),
-            make_run(
-                102,
-                created_at="2026-09-16T08:00:01Z",
-                updated_at="2026-09-16T12:00:00Z",
-            ),
-        ]
-        self.api.return_value = run_page(runs)
-        self.assertEqual(
-            self.older_activity(),
-            runs[:2] + [runs[4]],
-        )
-        self.api.assert_called_once()
-        self.assertEqual(
-            parse_qs(urlsplit(self.api.call_args.args[0]).query),
-            {"created": [f"2026-06-18T08:00:00Z..{START}"], "per_page": ["100"]},
-        )
-        self.assertEqual(self.api.call_args.kwargs, {"actions": True})
-
-    def test_lookup_includes_exactly_90_days_without_scanning_older_history(self):
-        retained = [
-            make_run(10, created_at="2025-01-01T00:00:00Z", updated_at=START),
-            make_run(20, created_at="2026-06-18T07:59:59Z", updated_at=START),
-            make_run(30, created_at="2026-06-18T08:00:00Z", updated_at=START),
-            make_run(40, created_at=START, updated_at=START),
-        ]
-
-        def history(endpoint, *, actions, paginate=False):
-            self.assertTrue(actions)
-            query = parse_qs(urlsplit(endpoint).query)
-            runs = retained
-            if "created" in query:
-                lower, upper = query["created"][0].split("..")
-                runs = [run for run in retained if lower <= run["created_at"] <= upper]
-            return [run_page(runs)] if paginate else run_page(runs)
-
-        self.api.side_effect = history
-        self.assertEqual(self.older_activity(), retained[2:])
-        self.api.assert_called_once()
-        endpoint = urlsplit(self.api.call_args.args[0])
-        self.assertEqual(endpoint.path, f"repos/{REPOSITORY}/actions/runs")
-        self.assertEqual(
-            parse_qs(endpoint.query),
-            {"created": [f"2026-06-18T08:00:00Z..{START}"], "per_page": ["100"]},
-        )
-
-    def test_bounded_lookup_keeps_all_pages(self):
-        runs = [
-            make_run(index, created_at="2026-09-15T08:00:00Z", updated_at=START)
-            for index in range(205)
-        ]
-        self.api.side_effect = paginated_responses(runs)
-        self.assertEqual(self.older_activity(), runs)
-        self.assertEqual(self.api.call_count, 2)
-        for call in self.api.call_args_list:
-            self.assertEqual(
-                parse_qs(urlsplit(call.args[0]).query)["created"],
-                [f"2026-06-18T08:00:00Z..{START}"],
-            )
-        self.assertEqual(
-            self.api.call_args.kwargs, {"actions": True, "paginate": True}
-        )
-
-    def test_bounded_lookup_rejects_inconsistent_history(self):
-        self.api.return_value = run_page([make_run(50)], total=2)
-        with self.assertRaisesRegex(ValueError, "changed or was truncated"):
-            self.older_activity()
-
-
-class VerifyTests(DiagnosticsTests):
-    def setUp(self):
-        super().setUp()
-        self.manifest = {
-            "repository": REPOSITORY,
-            "current_run": dict(self.current, run_attempt=2),
-            "previous_run": self.previous,
-            "workflows": [
-                {"workflow_id": 7, "runs": [self.previous, make_run(101)]},
-                {"workflow_id": 8, "runs": [make_run(150, workflow_id=8)]},
-            ],
-        }
+        self.report_path = self.directory / "workflow-diagnostics/report.json"
+        self.report_path.parent.mkdir()
+        self.summary = self.directory / "summary"
+        self.calls = self.directory / "calls"
         self.report = {
             "run_id": 200,
             "run_attempt": 2,
-            "errors": [],
-            "unavailable_evidence": [],
-            "analyses": [
-                {
-                    "workflow_id": 7,
-                    "run_ids": [100, 101],
-                    "complete": True,
-                    "subagent_id": "diagnostics-agent-7",
-                    "summary": "Both runs completed successfully; no actionable finding.",
-                },
-                {
-                    "workflow_id": 8,
-                    "run_ids": [150],
-                    "complete": True,
-                    "subagent_id": "diagnostics-agent-8",
-                    "summary": "The workflow completed successfully; no actionable finding.",
-                },
-            ],
-            "duplicates": [],
+            "outcome": "analyzed",
+            "summary": "Inspected the preceding diagnostics run and Tests; no new findings.",
             "created_issues": [],
+            "unavailable_evidence": [],
+            "errors": [],
         }
-        manifest_bytes = json.dumps(self.manifest).encode()
-        (self.directory / "manifest.json").write_bytes(manifest_bytes)
-        os.environ["MANIFEST_SHA256"] = hashlib.sha256(manifest_bytes).hexdigest()
-
-    def verify_report(self):
-        (self.directory / "report.json").write_text(json.dumps(self.report))
-        diagnostics.verify(self.directory)
-
-    def assert_rejected(self, message):
-        with self.assertRaisesRegex(ValueError, message):
-            self.verify_report()
-        self.assertFalse(self.summary.exists())
-
-    def issue(self, number=42, **overrides):
-        issue = {
-            "user": {"login": "factory[bot]"},
-            "body": "Actionable finding.\n<!-- factory-diagnostics:200:2 -->",
-            "html_url": f"{SERVER}/{REPOSITORY}/issues/{number}",
+        self.issue = {
+            "user": {"login": "factory-identity[bot]"},
+            "body": "Finding.\n<!-- factory-diagnostics:200:2 -->",
             "labels": [],
         }
-        issue.update(overrides)
-        return issue
-
-    def label_event(self, name, *, actor="factory[bot]", event="labeled"):
-        return {"event": event, "actor": {"login": actor}, "label": {"name": name}}
-
-    def ready_event(self, **overrides):
-        event = {
-            "event": "commented",
-            "user": {"login": "factory[bot]"},
-            "body": "<!-- factory-triage:ready -->\n<!-- factory-triage-run:300:1 -->",
+        self.env = {
+            "PATH": f"{self.directory}:{os.environ['PATH']}",
+            "RUNNER_TEMP": str(self.directory),
+            "GITHUB_STEP_SUMMARY": str(self.summary),
+            "GITHUB_REPOSITORY": "example/factory",
+            "GITHUB_RUN_ID": "200",
+            "GITHUB_RUN_ATTEMPT": "3",
+            "REPORT_ATTEMPT": "2",
+            "GH_TOKEN": "read-only-app-token",
+            "FACTORY_LOGIN": "factory-identity[bot]",
+            "CALLS": str(self.calls),
         }
-        event.update(overrides)
-        return event
+        gh = self.directory / "gh"
+        gh.write_text(
+            "#!/usr/bin/env python3\n"
+            "import json, os, sys\n"
+            "assert os.environ['GH_TOKEN'] == 'read-only-app-token'\n"
+            "assert 'GITHUB_TOKEN' not in os.environ\n"
+            "assert sys.argv[1] == 'api'\n"
+            "assert sys.argv[2] in ('repos/example/factory/issues/42', 'repos/example/factory/issues/43')\n"
+            "with open(os.environ['CALLS'], 'a') as calls:\n"
+            "    calls.write(json.dumps(sys.argv[1:]) + '\\n')\n"
+            "if os.environ.get('API_FAIL') == 'true' or sys.argv[2].endswith('/' + os.environ.get('FAIL_ISSUE', '')):\n"
+            "    sys.exit('HTTP 403: issue receipt unavailable')\n"
+            "print(os.environ['ISSUE'])\n"
+        )
+        gh.chmod(0o755)
 
-    def evidence_gap(self, **overrides):
-        evidence = {
-            "workflow_id": 8,
-            "run_id": 150,
-            "reason": "expired_logs",
-            "details": "The API confirms that job logs expired at their retention limit.",
-        }
-        evidence.update(overrides)
-        return evidence
+    def verify(self, *, raw=None, missing=False):
+        self.summary.unlink(missing_ok=True)
+        self.calls.unlink(missing_ok=True)
+        self.report_path.unlink(missing_ok=True)
+        if not missing:
+            self.report_path.write_text(json.dumps(self.report) if raw is None else raw)
+        return subprocess.run(
+            ["bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c",
+             step_script("Verify diagnostics result")],
+            env={**self.env, "ISSUE": json.dumps(self.issue)},
+            text=True, capture_output=True,
+        )
 
-    def test_clean_report_requires_no_issue_and_writes_evidence_summary(self):
-        self.summary.write_text("Existing collection summary.\n")
-        self.verify_report()
-        self.api.assert_not_called()
-        summary = self.summary.read_text()
-        self.assertTrue(summary.startswith("Existing collection summary.\n"))
-        self.assertIn("## Diagnostics results", summary)
-        for analysis in self.report["analyses"]:
-            self.assertIn(
-                f"Workflow {analysis['workflow_id']}: {analysis['summary']}", summary
-            )
-        self.assertIn("Created issues: none.", summary)
-        self.assertIn("Existing findings: none.", summary)
+    def assert_rejected(self, result):
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertIn("::error::", result.stdout)
+        self.assertFalse(self.summary.exists(), "do not publish success after a failed check")
 
-    def test_mutated_manifest_cannot_hide_missing_workflows_or_runs(self):
-        original_report = copy.deepcopy(self.report)
-        for omitted in ("workflow", "run"):
-            with self.subTest(omitted=omitted):
-                manifest = copy.deepcopy(self.manifest)
-                self.report = copy.deepcopy(original_report)
-                if omitted == "workflow":
-                    manifest["workflows"].pop()
-                    self.report["analyses"].pop()
-                else:
-                    manifest["workflows"][0]["runs"].pop()
-                    self.report["analyses"][0]["run_ids"].pop()
-                (self.directory / "manifest.json").write_text(json.dumps(manifest))
-                self.assert_rejected("manifest does not match the collected SHA-256")
-        self.api.assert_not_called()
+    def test_analyzed_report_with_no_findings_needs_no_issue(self):
+        result = self.verify()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(self.report["summary"], self.summary.read_text())
+        self.assertIn("Created issues: []", self.summary.read_text())
+        self.assertFalse(self.calls.exists())
 
-    def test_mutated_manifest_cannot_change_invocation_or_repository(self):
-        original_report = copy.deepcopy(self.report)
-        for field, value in (("id", 199), ("run_attempt", 1), ("repository", "other/factory")):
+    def test_first_run_report_is_accepted_without_issues_or_gaps(self):
+        self.report["outcome"] = "initialized"
+        self.report["summary"] = "Initial boundary established; no analysis or issue creation."
+        result = self.verify()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Outcome: initialized", self.summary.read_text())
+        self.assertFalse(self.calls.exists())
+        for field in ("created_issues", "unavailable_evidence"):
             with self.subTest(field=field):
-                manifest = copy.deepcopy(self.manifest)
-                self.report = copy.deepcopy(original_report)
-                if field == "repository":
-                    manifest[field] = value
-                else:
-                    manifest["current_run"][field] = value
-                    self.report["run_id" if field == "id" else field] = value
-                (self.directory / "manifest.json").write_text(json.dumps(manifest))
-                self.assert_rejected("manifest does not match the collected SHA-256")
-        self.api.assert_not_called()
+                self.report[field] = [42] if field == "created_issues" else ["gap"]
+                self.assert_rejected(self.verify())
+                self.report[field] = []
 
-    def test_manifest_digest_is_checked_before_parsing_manifest_or_report(self):
-        (self.directory / "manifest.json").write_bytes(b"not JSON\n")
-        with self.assertRaisesRegex(ValueError, "manifest does not match the collected SHA-256"):
-            diagnostics.verify(self.directory)
-        self.assertFalse(self.summary.exists())
-        self.api.assert_not_called()
-
-    def test_collected_digest_is_required_and_must_match(self):
-        for digest in (None, "", "0" * 64):
-            with self.subTest(digest=digest):
-                if digest is None:
-                    os.environ.pop("MANIFEST_SHA256")
-                else:
-                    os.environ["MANIFEST_SHA256"] = digest
-                self.assert_rejected("manifest does not match the collected SHA-256")
-        self.api.assert_not_called()
-
-    def test_report_for_another_run_or_attempt_is_rejected(self):
-        for field, value in (("run_id", 199), ("run_attempt", 1)):
-            with self.subTest(field=field):
+    def test_report_matches_producing_attempt_not_verification_retry(self):
+        result = self.verify()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for field, value in (("run_id", 201), ("run_attempt", 3), ("run_id", "200")):
+            with self.subTest(field=field, value=value):
                 original = self.report[field]
                 self.report[field] = value
-                self.assert_rejected("different diagnostics invocation")
+                self.assert_rejected(self.verify())
                 self.report[field] = original
-        self.api.assert_not_called()
+        self.env["REPORT_ATTEMPT"] = ""
+        self.assert_rejected(self.verify())
 
-    def test_errors_are_rejected_even_with_complete_coverage(self):
-        for errors in (["Failed to fetch a log"], None, ""):
-            with self.subTest(errors=errors):
-                self.report["errors"] = errors
-                self.assert_rejected("Incomplete diagnostics")
-        self.api.assert_not_called()
-
-    def test_expected_evidence_gaps_are_nonfatal_and_visible(self):
-        for reason in ("expired_logs", "superseded_attempt_logs", "unfinished_run"):
-            for complete in (True, False):
-                with self.subTest(reason=reason, complete=complete):
-                    evidence = self.evidence_gap(reason=reason)
-                    self.report["unavailable_evidence"] = [evidence]
-                    self.report["analyses"][1]["complete"] = complete
-                    with mock.patch("builtins.print") as warning:
-                        self.verify_report()
-                    summary = self.summary.read_text()
-                    self.assertIn("Verified with evidence limitations", summary)
-                    self.assertIn("## Unavailable evidence", summary)
-                    self.assertIn(reason, summary)
-                    self.assertIn(evidence["details"], summary)
-                    self.assertIn(
-                        f"Workflow 8, [run 150]({SERVER}/{REPOSITORY}/actions/runs/150)",
-                        summary,
-                    )
-                    warning.assert_called_once_with(
-                        "::warning::Diagnostics verified with 1 expected evidence gap(s); "
-                        "see the job summary."
-                    )
-                    self.summary.unlink()
-        self.api.assert_not_called()
-
-    def test_unavailable_evidence_requires_a_list_of_known_run_gaps(self):
-        for evidence in (
-            None,
-            "",
-            {},
-            ["Logs expired"],
-            [None],
-            [42],
-            [{}],
-            [self.evidence_gap(workflow_id=999)],
-            [self.evidence_gap(workflow_id=True)],
-            [self.evidence_gap(run_id=101)],
-            [self.evidence_gap(run_id=True)],
-            [self.evidence_gap(reason="api_error")],
-            [self.evidence_gap(reason="")],
-            [self.evidence_gap(details=" \n")],
-            [self.evidence_gap(details=None)],
+    def test_incomplete_or_error_reports_fail_even_without_findings(self):
+        for outcome, errors in (
+            ("incomplete", []), ("clean", []), (None, []),
+            ("analyzed", ["HTTP 403"]), ("analyzed", "not an array"),
+            ("initialized", ["history unavailable"]),
         ):
-            with self.subTest(evidence=evidence):
-                self.report["unavailable_evidence"] = evidence
-                self.assert_rejected("Unavailable evidence")
-        self.api.assert_not_called()
+            with self.subTest(outcome=outcome, errors=errors):
+                self.report.update(outcome=outcome, errors=errors)
+                self.assert_rejected(self.verify())
+                self.assertFalse(self.calls.exists())
 
-    def test_report_must_explicitly_declare_unavailable_evidence(self):
-        del self.report["unavailable_evidence"]
-        self.assert_rejected("Unavailable evidence")
+    def test_missing_malformed_or_multiple_reports_fail(self):
+        self.assert_rejected(self.verify(missing=True))
+        valid = json.dumps(self.report)
+        for raw in ("", "{broken", "null", "[]", valid + "\n" + valid):
+            with self.subTest(raw=raw):
+                self.assert_rejected(self.verify(raw=raw))
+        for field in self.report:
+            with self.subTest(missing_field=field):
+                self.assert_rejected(self.verify(raw=json.dumps(
+                    {key: value for key, value in self.report.items() if key != field}
+                )))
 
-    def test_evidence_gaps_cannot_excuse_missing_or_duplicate_run_coverage(self):
-        self.report["unavailable_evidence"] = [self.evidence_gap()]
-        self.report["analyses"][1]["complete"] = False
-        for run_ids in ([], [150, 150], [999]):
-            with self.subTest(run_ids=run_ids):
-                self.report["analyses"][1]["run_ids"] = run_ids
-                self.assert_rejected("Incomplete run coverage")
+    def test_summary_must_be_nonempty_text(self):
+        for summary in ("", " \n\t ", None, [], 42):
+            with self.subTest(summary=summary):
+                self.report["summary"] = summary
+                self.assert_rejected(self.verify())
 
-    def test_evidence_gap_does_not_excuse_another_unfinished_workflow(self):
-        self.report["unavailable_evidence"] = [self.evidence_gap()]
-        self.report["analyses"][0]["complete"] = False
-        self.assert_rejected("Incomplete run coverage for workflow 7")
-
-    def test_evidence_gaps_cannot_hide_api_or_tooling_errors(self):
-        self.report["unavailable_evidence"] = [self.evidence_gap()]
-        for error in ("HTTP 403 fetching a log", "Rate limit exceeded", "Subagent failed"):
-            with self.subTest(error=error):
-                self.report["errors"] = [error]
-                self.assert_rejected("Incomplete diagnostics")
-        self.api.assert_not_called()
-
-    def test_evidence_gaps_do_not_relax_completion_types(self):
-        self.report["unavailable_evidence"] = [self.evidence_gap()]
-        for complete in (None, 1, "true", "false"):
-            with self.subTest(complete=complete):
-                self.report["analyses"][1]["complete"] = complete
-                self.assert_rejected("Incomplete run coverage")
-
-    def test_evidence_gaps_still_require_verified_issue_receipts(self):
-        self.report["unavailable_evidence"] = [self.evidence_gap()]
-        self.report["analyses"][1]["complete"] = False
-        self.report["created_issues"] = [42]
-        self.api.return_value = self.issue(user={"login": "someone-else"})
-        self.assert_rejected("not a Factory-authored receipt from this attempt")
-        self.api.assert_called_once_with(f"repos/{REPOSITORY}/issues/42")
-
-    def test_evidence_gaps_still_require_unique_subagent_receipts(self):
-        self.report["unavailable_evidence"] = [self.evidence_gap()]
-        self.report["analyses"][1]["complete"] = False
-        self.report["analyses"][1]["subagent_id"] = self.report["analyses"][0]["subagent_id"]
-        self.assert_rejected("separate subagent")
-
-    def test_complete_must_be_literal_true_without_evidence_gaps(self):
-        for complete in (False, None, 1, "true"):
-            with self.subTest(complete=complete):
-                self.report["analyses"][1]["complete"] = complete
-                self.assert_rejected("Incomplete run coverage")
-
-    def test_workflow_coverage_cannot_be_missing_duplicate_or_unexpected(self):
-        original = copy.deepcopy(self.report["analyses"])
-        for analyses in (
-            original[:1],
-            [original[0], original[0]],
-            original + [original[0]],
-            [original[0], dict(original[1], workflow_id=999)],
-        ):
-            with self.subTest(analyses=analyses):
-                self.report["analyses"] = analyses
-                self.assert_rejected("each workflow exactly once")
-
-    def test_run_coverage_cannot_be_missing_duplicate_or_unexpected(self):
-        for run_ids in ([100], [100, 100], [100, 101, 101], [100, 999], []):
-            with self.subTest(run_ids=run_ids):
-                self.report["analyses"][0]["run_ids"] = run_ids
-                self.assert_rejected("Incomplete run coverage")
-
-    def test_report_order_does_not_affect_coverage(self):
-        self.report["analyses"][0]["run_ids"].reverse()
-        self.report["analyses"].reverse()
-        self.verify_report()
-        self.api.assert_not_called()
-
-    def test_subagent_receipts_and_evidence_summaries_cannot_be_empty(self):
-        for field in ("subagent_id", "summary"):
-            for value in ("", " \n", None, 7):
-                with self.subTest(field=field, value=value):
-                    original = self.report["analyses"][0][field]
-                    self.report["analyses"][0][field] = value
-                    self.assert_rejected("subagent receipt and an evidence-based summary")
-                    self.report["analyses"][0][field] = original
-
-    def test_each_workflow_requires_a_unique_subagent(self):
-        self.report["analyses"][1]["subagent_id"] = self.report["analyses"][0]["subagent_id"]
-        self.assert_rejected("separate subagent")
-
-    def test_valid_issue_receipts_use_app_api_and_appear_in_summary(self):
-        self.report["created_issues"] = [42, 43]
-        self.report["duplicates"] = [f"{SERVER}/{REPOSITORY}/issues/10"]
-        self.api.side_effect = [self.issue(42), [[]], self.issue(43), [[]]]
-        self.verify_report()
-        self.assertEqual(
-            self.api.call_args_list,
-            [
-                mock.call(f"repos/{REPOSITORY}/issues/42"),
-                mock.call(f"repos/{REPOSITORY}/issues/42/timeline?per_page=100", paginate=True),
-                mock.call(f"repos/{REPOSITORY}/issues/43"),
-                mock.call(f"repos/{REPOSITORY}/issues/43/timeline?per_page=100", paginate=True),
-            ],
-        )
-        summary = self.summary.read_text()
-        self.assertIn(
-            f"Created issues: {SERVER}/{REPOSITORY}/issues/42, "
-            f"{SERVER}/{REPOSITORY}/issues/43.",
-            summary,
-        )
-        self.assertIn(f"Existing findings: {SERVER}/{REPOSITORY}/issues/10.", summary)
-
-    def test_issue_receipt_requires_app_author_run_attempt_marker_and_not_a_pr(self):
-        self.report["created_issues"] = [42]
-        invalid_issues = (
-            self.issue(user={"login": "someone-else"}),
-            self.issue(body="Missing marker"),
-            self.issue(body=None),
-            self.issue(body="<!-- factory-diagnostics:199:2 -->"),
-            self.issue(body="<!-- factory-diagnostics:200:1 -->"),
-            self.issue(pull_request={"url": "https://api.example/pulls/42"}),
-        )
-        for issue in invalid_issues:
-            with self.subTest(issue=issue):
-                self.api.return_value = issue
-                self.assert_rejected("not a Factory-authored receipt from this attempt")
-
-    def test_preapplied_factory_labels_are_rejected(self):
-        self.report["created_issues"] = [42]
-        for name in ("triaged", "factory-issue-42", "bug"):
-            with self.subTest(name=name):
-                self.summary.unlink(missing_ok=True)
-                self.api.side_effect = [
-                    self.issue(labels=[{"name": name}]),
-                    [[self.label_event(name)]],
-                ]
-                self.assert_rejected("valid triage handoff")
-
-    def test_removed_preapplied_labels_still_fail_the_audit(self):
-        self.report["created_issues"] = [42]
-        self.api.side_effect = [
-            self.issue(),
-            [[
-                self.label_event("triaged"),
-                self.label_event("triaged", event="unlabeled"),
-                self.ready_event(),
-            ]],
-        ]
-        self.assert_rejected("valid triage handoff")
-
-    def test_existing_triage_labels_are_accepted_on_verification_retry(self):
-        self.report["created_issues"] = [42]
-        os.environ["GITHUB_RUN_ATTEMPT"] = "3"
-        for names in (["factory-issue-42"], ["factory-issue-42", "triaged"]):
-            with self.subTest(names=names):
-                self.api.reset_mock()
-                self.api.side_effect = [
-                    self.issue(labels=[{"name": name} for name in names]),
-                    [[self.ready_event()], [self.label_event(name) for name in names]],
-                ]
-                self.verify_report()
-                self.api.assert_called_with(
-                    f"repos/{REPOSITORY}/issues/42/timeline?per_page=100", paginate=True
-                )
-                self.assertIn(f"{SERVER}/{REPOSITORY}/issues/42", self.summary.read_text())
-
-    def test_factory_labels_require_a_prior_marked_factory_ready_decision(self):
-        self.report["created_issues"] = [42]
-        for decision in (
-            self.ready_event(user={"login": "someone-else"}),
-            self.ready_event(body="<!-- factory-triage:ready -->"),
-            self.ready_event(body="<!-- factory-triage:reply -->\n<!-- factory-triage-run:300:1 -->"),
-            self.ready_event(body=None),
-            self.ready_event(body=(
-                "<!-- factory-triage:ready -->\n<!-- factory-triage:reply -->\n"
-                "<!-- factory-triage-run:300:1 -->"
-            )),
-        ):
-            with self.subTest(decision=decision):
-                self.api.side_effect = [
-                    self.issue(labels=[{"name": "factory-issue-42"}]),
-                    [[decision, self.label_event("factory-issue-42")]],
-                ]
-                self.assert_rejected("valid triage handoff")
-
-    def test_ready_decision_cannot_retroactively_authorize_labels(self):
-        self.report["created_issues"] = [42]
-        self.api.side_effect = [
-            self.issue(labels=[{"name": "factory-issue-42"}]),
-            [[self.label_event("factory-issue-42")], [self.ready_event()]],
-        ]
-        self.assert_rejected("valid triage handoff")
-
-    def test_factory_handoff_requires_matching_tracking_before_triaged(self):
-        self.report["created_issues"] = [42]
-        for name in ("triaged", "factory-issue-99", "bug"):
-            with self.subTest(name=name):
-                self.api.side_effect = [
-                    self.issue(labels=[{"name": name}]),
-                    [[self.ready_event(), self.label_event(name)]],
-                ]
-                self.assert_rejected("valid triage handoff")
-
-    def test_removed_tracking_label_does_not_authorize_triaged(self):
-        self.report["created_issues"] = [42]
-        self.api.side_effect = [
-            self.issue(labels=[{"name": "triaged"}]),
-            [[
-                self.ready_event(),
-                self.label_event("factory-issue-42"),
-                self.label_event("factory-issue-42", event="unlabeled"),
-                self.label_event("triaged"),
-            ]],
-        ]
-        self.assert_rejected("valid triage handoff")
-
-    def test_later_labels_from_other_actors_are_not_diagnostics_prelabeling(self):
-        self.report["created_issues"] = [42]
-        self.api.side_effect = [
-            self.issue(labels=[{"name": "bug"}]),
-            [[self.label_event("bug", actor="maintainer")]],
-        ]
-        self.verify_report()
-        self.assertIn(f"{SERVER}/{REPOSITORY}/issues/42", self.summary.read_text())
-
-    def test_labels_added_after_the_issue_read_do_not_cause_a_snapshot_race(self):
-        self.report["created_issues"] = [42]
-        self.api.side_effect = [
-            self.issue(),
-            [[self.ready_event(), self.label_event("factory-issue-42"), self.label_event("triaged")]],
-        ]
-        self.verify_report()
-        self.assertIn(f"{SERVER}/{REPOSITORY}/issues/42", self.summary.read_text())
-
-    def test_live_labels_missing_from_history_fail_explicitly(self):
-        self.report["created_issues"] = [42]
-        self.api.side_effect = [self.issue(labels=[{"name": "triaged"}]), [[]]]
-        self.assert_rejected("incomplete label history")
-
-    def test_unknown_label_actor_fails_explicitly(self):
-        self.report["created_issues"] = [42]
-        self.api.side_effect = [
-            self.issue(labels=[{"name": "triaged"}]),
-            [[self.label_event("triaged", actor=None)]],
-        ]
-        self.assert_rejected("unknown label actor")
-
-    def test_issue_labels_must_be_an_explicit_array_of_named_labels(self):
-        self.report["created_issues"] = [42]
-        invalid_issues = [self.issue(labels=labels) for labels in (
-            None, "", {}, [None], ["triaged"], [{}], [{"name": None}],
-        )]
-        missing_labels = self.issue()
-        del missing_labels["labels"]
-        for issue in invalid_issues + [missing_labels]:
-            with self.subTest(issue=issue):
-                self.api.return_value = issue
-                self.assert_rejected("invalid labels")
-
-    def test_unavailable_label_history_fails_without_publishing_results(self):
-        self.report["created_issues"] = [42]
-        self.api.side_effect = [self.issue(), subprocess.CalledProcessError(1, ["gh", "api"])]
-        with self.assertRaises(subprocess.CalledProcessError):
-            self.verify_report()
-        self.assertFalse(self.summary.exists())
-
-    def test_issue_receipts_require_unique_positive_integer_numbers(self):
+    def test_issue_numbers_must_be_unique_positive_integers(self):
         for issues in (None, "42", [True], ["42"], [0], [-1], [1.5], [42, 42]):
             with self.subTest(issues=issues):
                 self.report["created_issues"] = issues
-                self.assert_rejected("unique positive issue numbers")
-        self.api.assert_not_called()
+                self.assert_rejected(self.verify())
+                self.assertFalse(self.calls.exists())
 
-    def test_unavailable_issue_receipt_fails_without_publishing_results(self):
+    def test_expected_gaps_are_visible_not_a_clean_result(self):
+        gap = "Expired logs confirmed for https://github.com/example/factory/actions/runs/100."
+        self.report["unavailable_evidence"] = [gap]
+        result = self.verify()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("::warning::", result.stdout)
+        self.assertIn("not a clean result", self.summary.read_text())
+        self.assertIn(gap, self.summary.read_text())
+        self.report["errors"] = ["subagent did not finish"]
+        self.assert_rejected(self.verify())
+
+    def test_gaps_require_an_array_of_nonempty_descriptions(self):
+        for gaps in (None, "gap", [""], ["  "], [42], [{}]):
+            with self.subTest(gaps=gaps):
+                self.report["unavailable_evidence"] = gaps
+                self.assert_rejected(self.verify())
+
+    def test_receipts_use_read_only_app_access_and_allow_later_triage_labels(self):
         self.report["created_issues"] = [42]
-        self.api.side_effect = subprocess.CalledProcessError(1, ["gh", "api"])
-        with self.assertRaises(subprocess.CalledProcessError):
-            self.verify_report()
-        self.assertFalse(self.summary.exists())
+        self.issue["labels"] = [{"name": "factory-issue-42"}, {"name": "triaged"}]
+        result = self.verify()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            [json.loads(line) for line in self.calls.read_text().splitlines()],
+            [["api", "repos/example/factory/issues/42"]],
+        )
+        self.assertIn("Created issues: [42]", self.summary.read_text())
 
-    def test_duplicate_findings_must_belong_to_this_repository(self):
-        for duplicates in (
-            None,
-            "not a list",
-            [42],
-            [f"{SERVER}/other/repository/issues/10"],
-            [f"{SERVER}/{REPOSITORY}-other/issues/10"],
-            [f"https://elsewhere.example/{REPOSITORY}/issues/10"],
-            [f"{SERVER}/{REPOSITORY}/actions/runs/10"],
-            [f"{SERVER}/{REPOSITORY}/issues/0"],
-            [f"{SERVER}/{REPOSITORY}/issues/10/unrelated"],
+    def test_wrong_author_marker_or_pr_receipts_fail(self):
+        self.report["created_issues"] = [42]
+        original = self.issue.copy()
+        for fields in (
+            {"user": {"login": "someone-else"}},
+            {"body": None}, {"body": "No marker"},
+            {"body": "<!-- factory-diagnostics:200:3 -->"},
+            {"body": "<!-- factory-diagnostics:201:2 -->"},
+            {"pull_request": {"url": "https://github.com/example/factory/pull/42"}},
         ):
-            with self.subTest(duplicates=duplicates):
-                self.report["duplicates"] = duplicates
-                self.assert_rejected("link existing repository issues or PRs")
+            with self.subTest(fields=fields):
+                self.issue = {**original, **fields}
+                self.assert_rejected(self.verify())
+
+    def test_receipt_api_failures_are_not_reported_as_success(self):
+        self.report["created_issues"] = [42]
+        self.env["API_FAIL"] = "true"
+        result = self.verify()
+        self.assert_rejected(result)
+        self.assertIn("HTTP 403", result.stderr)
+
+    def test_every_created_issue_is_checked_before_publishing_results(self):
+        self.report["created_issues"] = [42, 43]
+        result = self.verify()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(self.calls.read_text().splitlines()), 2)
+        self.env["FAIL_ISSUE"] = "43"
+        self.assert_rejected(self.verify())
+        self.assertEqual(len(self.calls.read_text().splitlines()), 2)
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_schedule_dispatch_default_branch_and_serialization(self):
+        self.assertIn("schedule:\n    - cron: '0 0 * * *'\n  workflow_dispatch:", WORKFLOW)
+        self.assertIn("group: workflow-diagnostics\n  cancel-in-progress: false", WORKFLOW)
+        self.assertIn(
+            "if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
+            WORKFLOW,
+        )
+        self.assertIn("timeout-minutes: 30", WORKFLOW)
+
+    def test_verifier_is_isolated_inline_and_read_only(self):
+        diagnose, verify = WORKFLOW.split("\n  verify:\n")
+        self.assertIn("needs: diagnose", verify)
+        self.assertIn("!cancelled() && needs.diagnose.result != 'skipped'", verify)
+        self.assertIn("permissions:\n      actions: read\n", verify)
+        self.assertIn("permission-issues: read", verify)
+        for unexpected in (
+            "actions/checkout", "scripts/", "copilot", "permission-issues: write",
+            "GITHUB_TOKEN:", "manifest_sha256",
+        ):
+            self.assertNotIn(unexpected, verify)
+        self.assertIn("permission-issues: write", diagnose)
+        self.assertIn("permission-pull-requests: read", diagnose)
+        self.assertIn("persist-credentials: false", diagnose)
+        self.assertIn("if: always()\n        uses: actions/upload-artifact@v4", diagnose)
+        self.assertNotIn("runner.temp", diagnose.split("    steps:\n", 1)[0])
+        self.assertIn(
+            "env:\n          DIAGNOSTICS_DIR: ${{ runner.temp }}/workflow-diagnostics", diagnose
+        )
+        self.assertFalse((ROOT / "scripts/workflow-diagnostics.py").exists())
+
+    def test_artifact_and_report_attempt_use_the_producing_jobs_saved_outputs(self):
+        diagnose, verify = WORKFLOW.split("\n  verify:\n")
+        output = re.search(r"^      artifact_name: (.+)$", diagnose, re.MULTILINE)[1]
+        upload = re.search(r"^          name: (.+)$", diagnose, re.MULTILINE)[1]
+        download = re.search(r"^          name: (.+)$", verify, re.MULTILINE)[1]
+        self.assertEqual(output, upload)
+        self.assertEqual(download, "${{ needs.diagnose.outputs.artifact_name }}")
+        self.assertIn("report_attempt: ${{ github.run_attempt }}", diagnose)
+        self.assertIn("REPORT_ATTEMPT: ${{ needs.diagnose.outputs.report_attempt }}", verify)
+        self.assertNotIn("${{ github.run_attempt }}", verify)
+        for producer_attempt, verifier_attempt in ((1, 1), (1, 2), (2, 3), (3, 3)):
+            with self.subTest(producer=producer_attempt, verifier=verifier_attempt):
+                saved = output.replace("${{ github.run_id }}", "200").replace(
+                    "${{ github.run_attempt }}", str(producer_attempt)
+                )
+                selected = download.replace("${{ needs.diagnose.outputs.artifact_name }}", saved)
+                self.assertEqual(selected, f"workflow-diagnostics-200-{producer_attempt}")
+
     def test_workflow_run_router_checks_origin_and_branch_before_setup(self):
-        workflow = (SCRIPT.parents[1] / ".github/workflows/issue-implementation.yml").read_text()
+        workflow = (ROOT / ".github/workflows/issue-implementation.yml").read_text()
         route = workflow.split("\n  route:\n", 1)[1].split("\n  implement:\n", 1)[0]
         condition = re.search(r"^    if: >-\n(.*?)^    runs-on:", route, re.MULTILINE | re.DOTALL)
         self.assertIsNotNone(condition, "eligibility must gate the entire routing job")
@@ -1213,7 +287,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertNotIn(".github/workflows/tests.yml", condition)
 
     def test_fork_pull_requests_keep_read_only_test_coverage(self):
-        workflow = (SCRIPT.parents[1] / ".github/workflows/tests.yml").read_text()
+        workflow = (ROOT / ".github/workflows/tests.yml").read_text()
         self.assertIn("on:\n  pull_request:\n  push:\n    branches: [master]\n", workflow)
         self.assertNotRegex(workflow, r"(?m)^\s+if:")
         self.assertNotIn("secrets.", workflow)
@@ -1221,46 +295,59 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("persist-credentials: false", workflow)
         self.assertIn("run: python3 -m unittest discover -s tests -v", workflow)
 
-    def test_artifact_download_uses_the_producing_jobs_saved_output(self):
-        workflow = (SCRIPT.parents[1] / ".github/workflows/workflow-diagnostics.yml").read_text()
-        diagnose, verify = workflow.split("\n  verify:\n")
-        output = re.search(r"^      artifact_name: (.+)$", diagnose, re.MULTILINE)
-        self.assertIsNotNone(output, "diagnose must publish the artifact name it produced")
-        upload = re.search(r"^          name: (.+)$", diagnose, re.MULTILINE)
-        download = re.search(r"^          name: (.+)$", verify, re.MULTILINE)
-        self.assertIsNotNone(upload)
-        self.assertIsNotNone(download)
-        self.assertEqual(output[1], upload[1])
-        self.assertEqual(download[1], "${{ needs.diagnose.outputs.artifact_name }}")
-        for producer_attempt, verifier_attempt in ((1, 1), (1, 2), (2, 3), (3, 3)):
-            with self.subTest(producer=producer_attempt, verifier=verifier_attempt):
-                saved_output = output[1].replace("${{ github.run_id }}", "200").replace(
-                    "${{ github.run_attempt }}", str(producer_attempt)
-                )
-                selected = download[1].replace(
-                    "${{ needs.diagnose.outputs.artifact_name }}", saved_output
-                ).replace("${{ github.run_id }}", "200").replace(
-                    "${{ github.run_attempt }}", str(verifier_attempt)
-                )
-                self.assertEqual(selected, f"workflow-diagnostics-200-{producer_attempt}")
-
-
-class MainTests(unittest.TestCase):
-    def test_cli_surfaces_expected_failures_with_diagnostics_context(self):
-        errors = (
-            ValueError("incomplete history"),
-            KeyError("workflow_runs"),
-            OSError("cannot read report"),
-            subprocess.CalledProcessError(1, ["gh", "api"]),
-        )
-        for error in errors:
-            with self.subTest(error=error):
-                with (
-                    mock.patch("sys.argv", [str(SCRIPT), "collect", "unused"]),
-                    mock.patch.object(diagnostics, "collect", side_effect=error),
-                ):
-                    with self.assertRaisesRegex(SystemExit, "Workflow diagnostics failed:"):
-                        diagnostics.main()
+    def test_real_harness_receives_one_prompt_with_window_and_handoff_contracts(self):
+        with tempfile.TemporaryDirectory(prefix=".prompt-", dir=ROOT / "tests") as directory:
+            directory = Path(directory)
+            arguments_file = directory / "arguments.json"
+            copilot = directory / "copilot"
+            copilot.write_text(
+                "#!/usr/bin/env python3\n"
+                "import json, os, sys\n"
+                "with open(os.environ['ARGUMENTS_FILE'], 'w') as output:\n"
+                "    json.dump(sys.argv[1:], output)\n"
+            )
+            copilot.chmod(0o755)
+            result = subprocess.run(
+                ["bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c",
+                 step_script("Analyze workflows with parallel Copilot subagents")],
+                cwd=ROOT, text=True, capture_output=True,
+                env={
+                    "PATH": f"{directory}:{os.environ['PATH']}",
+                    "ARGUMENTS_FILE": str(arguments_file),
+                    "DIAGNOSTICS_DIR": str(directory / "evidence"),
+                    "GITHUB_REPOSITORY": "example/factory",
+                    "GITHUB_RUN_ID": "200",
+                    "GITHUB_RUN_ATTEMPT": "3",
+                    "DEFAULT_BRANCH": "main",
+                    "FACTORY_LOGIN": "factory-identity[bot]",
+                },
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            arguments = json.loads(arguments_file.read_text())
+        self.assertEqual(arguments.count("--prompt"), 1)
+        prompt = arguments[arguments.index("--prompt") + 1]
+        for required in (
+            "GH_TOKEN to GITHUB_TOKEN on that command", "Never change credentials globally",
+            "main schedule or workflow_dispatch", "largest run_number strictly below",
+            "If none exists after checking all pages", "do not analyze runs or logs",
+            "launch subagents, or create issues", "API failure is not an empty history",
+            "write an initialized report and stop",
+            "previous (created_at, id) inclusive to current exclusive",
+            "Rerunning an invocation must keep that original window",
+            "ALL workflows and branches", "90 days", "1000 results", "including the parent",
+            "one read-only Copilot subagent per workflow", "concurrently",
+            "wait for every result", "issues AND PRs in all states",
+            "Create issues without labels", "check the creation response for no labels",
+            "<!-- factory-diagnostics:200:3 -->", "If there are no actionable findings",
+            "Never assume an unexplained HTTP 404 means expiration",
+            "including on partial failure",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, prompt)
+        report = json.loads(prompt.split("Its exact shape is: ", 1)[1].split(". Use outcome", 1)[0])
+        self.assertEqual((report["run_id"], report["run_attempt"]), (200, 3))
+        self.assertEqual(report["outcome"], "incomplete")
+        self.assertNotIn("workflow-diagnostics.py", prompt)
 
 
 if __name__ == "__main__":

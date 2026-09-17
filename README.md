@@ -26,8 +26,9 @@ on the default branch. PR review runs on PR events. Issue triage assesses new
 issues and clarification comments; implementation handles triaged issues and
 feedback on their Factory PRs. See
 [GitHub's Copilot CLI Actions guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli-in-actions).
-Workflow diagnostics runs daily at 00:00 UTC or manually, analyzes workflow runs
-with parallel Copilot subagents, and sends actionable findings through triage.
+Workflow diagnostics runs daily at 00:00 UTC or manually. Copilot selects the
+run window, analyzes workflows with parallel subagents, and sends actionable
+findings through triage; a read-only job checks its report and issue receipts.
 [Unit tests](.github/workflows/tests.yml) run on pull requests and pushes to `master`.
 
 1. [Install AI tools and run a prompt](docs/ai-tools.md)
