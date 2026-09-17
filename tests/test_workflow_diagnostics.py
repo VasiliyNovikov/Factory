@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import importlib.util
 import json
 import os
@@ -152,6 +153,9 @@ class DiagnosticsTests(unittest.TestCase):
 
     def read_manifest(self):
         return json.loads((self.directory / "manifest.json").read_text())
+
+    def read_outputs(self):
+        return dict(line.split("=", 1) for line in self.output.read_text().splitlines())
 
 
 class PreviousRunTests(DiagnosticsTests):
@@ -411,7 +415,12 @@ class CollectTests(DiagnosticsTests):
         self.assertIsNone(manifest["previous_run"])
         self.assertEqual(manifest["workflows"], [])
         self.assertEqual(manifest["current_run"], self.current)
-        self.assertEqual(self.output.read_text(), "analyze=false\n")
+        self.assertEqual(self.read_outputs(), {
+            "analyze": "false",
+            "manifest_sha256": hashlib.sha256(
+                (self.directory / "manifest.json").read_bytes()
+            ).hexdigest(),
+        })
         self.assertIn("no analysis or issue creation", self.summary.read_text())
 
     def test_non_default_branch_is_rejected_before_history_lookup(self):
@@ -436,8 +445,15 @@ class CollectTests(DiagnosticsTests):
             [100, 101, 199],
         )
         self.assertEqual(manifest["previous_run"], self.previous)
-        self.assertEqual(self.output.read_text(), "analyze=true\n")
+        self.assertEqual(manifest["older_activity_lookback_days"], 90)
+        self.assertEqual(self.read_outputs(), {
+            "analyze": "true",
+            "manifest_sha256": hashlib.sha256(
+                (self.directory / "manifest.json").read_bytes()
+            ).hexdigest(),
+        })
         self.assertIn("Collected 3 runs across 1 workflows", self.summary.read_text())
+        self.assertIn("older-activity lookback: 90 days", self.summary.read_text())
         self.assertIn("(inclusive)", self.summary.read_text())
         self.assertIn("(exclusive)", self.summary.read_text())
 
@@ -480,6 +496,20 @@ class CollectTests(DiagnosticsTests):
         )
         self.older_activity.assert_called_once_with(
             REPOSITORY, diagnostics.timestamp(START), diagnostics.timestamp(END)
+        )
+
+    def test_primary_window_is_not_limited_by_the_older_activity_lookback(self):
+        self.previous = dict(self.previous, created_at="2026-01-01T08:00:00Z")
+        runs = [
+            self.previous,
+            make_run(110, created_at="2026-02-01T08:00:00Z"),
+            make_run(150, created_at="2026-07-01T08:00:00Z"),
+        ]
+        manifest = self.collect_runs(runs + [self.current])
+        self.assertEqual(manifest["workflows"][0]["runs"], runs)
+        self.assertEqual(
+            parse_qs(urlsplit(self.api.call_args.args[0]).query)["created"],
+            [f"2026-01-01T08:00:00Z..{END}"],
         )
 
     def test_older_activity_breaks_creation_time_ties_without_duplicate_overlap(self):
@@ -568,9 +598,22 @@ class CollectTests(DiagnosticsTests):
         self.assertFalse(self.output.exists())
         self.assertFalse(self.summary.exists())
 
+    def test_older_activity_failure_does_not_publish_a_partial_manifest(self):
+        self.older_activity.side_effect = ValueError("Run history changed or was truncated")
+        with self.assertRaisesRegex(ValueError, "changed or was truncated"):
+            self.collect_runs([self.previous])
+        self.assertFalse((self.directory / "manifest.json").exists())
+        self.assertFalse(self.output.exists())
+        self.assertFalse(self.summary.exists())
+
 
 class OlderActivityRunTests(DiagnosticsTests):
-    def test_unfiltered_pages_include_old_activity_with_half_open_update_window(self):
+    def older_activity(self):
+        return diagnostics.older_activity_runs(
+            REPOSITORY, diagnostics.timestamp(START), diagnostics.timestamp(END)
+        )
+
+    def test_bounded_query_includes_old_activity_with_half_open_update_window(self):
         old_created = "2026-09-15T08:00:00Z"
         runs = [
             make_run(50, created_at=old_created, updated_at=START),
@@ -584,18 +627,66 @@ class OlderActivityRunTests(DiagnosticsTests):
                 updated_at="2026-09-16T12:00:00Z",
             ),
         ]
-        self.api.return_value = [run_page(runs[:2]), run_page(runs[2:])]
+        self.api.return_value = run_page(runs)
         self.assertEqual(
-            diagnostics.older_activity_runs(
-                REPOSITORY, diagnostics.timestamp(START), diagnostics.timestamp(END)
-            ),
+            self.older_activity(),
             runs[:2] + [runs[4]],
         )
-        self.api.assert_called_once_with(
-            f"repos/{REPOSITORY}/actions/runs?per_page=100",
-            actions=True,
-            paginate=True,
+        self.api.assert_called_once()
+        self.assertEqual(
+            parse_qs(urlsplit(self.api.call_args.args[0]).query),
+            {"created": [f"2026-06-18T08:00:00Z..{START}"], "per_page": ["100"]},
         )
+        self.assertEqual(self.api.call_args.kwargs, {"actions": True})
+
+    def test_lookup_includes_exactly_90_days_without_scanning_older_history(self):
+        retained = [
+            make_run(10, created_at="2025-01-01T00:00:00Z", updated_at=START),
+            make_run(20, created_at="2026-06-18T07:59:59Z", updated_at=START),
+            make_run(30, created_at="2026-06-18T08:00:00Z", updated_at=START),
+            make_run(40, created_at=START, updated_at=START),
+        ]
+
+        def history(endpoint, *, actions, paginate=False):
+            self.assertTrue(actions)
+            query = parse_qs(urlsplit(endpoint).query)
+            runs = retained
+            if "created" in query:
+                lower, upper = query["created"][0].split("..")
+                runs = [run for run in retained if lower <= run["created_at"] <= upper]
+            return [run_page(runs)] if paginate else run_page(runs)
+
+        self.api.side_effect = history
+        self.assertEqual(self.older_activity(), retained[2:])
+        self.api.assert_called_once()
+        endpoint = urlsplit(self.api.call_args.args[0])
+        self.assertEqual(endpoint.path, f"repos/{REPOSITORY}/actions/runs")
+        self.assertEqual(
+            parse_qs(endpoint.query),
+            {"created": [f"2026-06-18T08:00:00Z..{START}"], "per_page": ["100"]},
+        )
+
+    def test_bounded_lookup_keeps_all_pages(self):
+        runs = [
+            make_run(index, created_at="2026-09-15T08:00:00Z", updated_at=START)
+            for index in range(205)
+        ]
+        self.api.side_effect = paginated_responses(runs)
+        self.assertEqual(self.older_activity(), runs)
+        self.assertEqual(self.api.call_count, 2)
+        for call in self.api.call_args_list:
+            self.assertEqual(
+                parse_qs(urlsplit(call.args[0]).query)["created"],
+                [f"2026-06-18T08:00:00Z..{START}"],
+            )
+        self.assertEqual(
+            self.api.call_args.kwargs, {"actions": True, "paginate": True}
+        )
+
+    def test_bounded_lookup_rejects_inconsistent_history(self):
+        self.api.return_value = run_page([make_run(50)], total=2)
+        with self.assertRaisesRegex(ValueError, "changed or was truncated"):
+            self.older_activity()
 
 
 class VerifyTests(DiagnosticsTests):
@@ -633,9 +724,11 @@ class VerifyTests(DiagnosticsTests):
             "duplicates": [],
             "created_issues": [],
         }
+        manifest_bytes = json.dumps(self.manifest).encode()
+        (self.directory / "manifest.json").write_bytes(manifest_bytes)
+        os.environ["MANIFEST_SHA256"] = hashlib.sha256(manifest_bytes).hexdigest()
 
     def verify_report(self):
-        (self.directory / "manifest.json").write_text(json.dumps(self.manifest))
         (self.directory / "report.json").write_text(json.dumps(self.report))
         diagnostics.verify(self.directory)
 
@@ -666,6 +759,54 @@ class VerifyTests(DiagnosticsTests):
             )
         self.assertIn("Created issues: none.", summary)
         self.assertIn("Existing findings: none.", summary)
+
+    def test_mutated_manifest_cannot_hide_missing_workflows_or_runs(self):
+        original_report = copy.deepcopy(self.report)
+        for omitted in ("workflow", "run"):
+            with self.subTest(omitted=omitted):
+                manifest = copy.deepcopy(self.manifest)
+                self.report = copy.deepcopy(original_report)
+                if omitted == "workflow":
+                    manifest["workflows"].pop()
+                    self.report["analyses"].pop()
+                else:
+                    manifest["workflows"][0]["runs"].pop()
+                    self.report["analyses"][0]["run_ids"].pop()
+                (self.directory / "manifest.json").write_text(json.dumps(manifest))
+                self.assert_rejected("manifest does not match the collected SHA-256")
+        self.api.assert_not_called()
+
+    def test_mutated_manifest_cannot_change_invocation_or_repository(self):
+        original_report = copy.deepcopy(self.report)
+        for field, value in (("id", 199), ("run_attempt", 1), ("repository", "other/factory")):
+            with self.subTest(field=field):
+                manifest = copy.deepcopy(self.manifest)
+                self.report = copy.deepcopy(original_report)
+                if field == "repository":
+                    manifest[field] = value
+                else:
+                    manifest["current_run"][field] = value
+                    self.report["run_id" if field == "id" else field] = value
+                (self.directory / "manifest.json").write_text(json.dumps(manifest))
+                self.assert_rejected("manifest does not match the collected SHA-256")
+        self.api.assert_not_called()
+
+    def test_manifest_digest_is_checked_before_parsing_manifest_or_report(self):
+        (self.directory / "manifest.json").write_bytes(b"not JSON\n")
+        with self.assertRaisesRegex(ValueError, "manifest does not match the collected SHA-256"):
+            diagnostics.verify(self.directory)
+        self.assertFalse(self.summary.exists())
+        self.api.assert_not_called()
+
+    def test_collected_digest_is_required_and_must_match(self):
+        for digest in (None, "", "0" * 64):
+            with self.subTest(digest=digest):
+                if digest is None:
+                    os.environ.pop("MANIFEST_SHA256")
+                else:
+                    os.environ["MANIFEST_SHA256"] = digest
+                self.assert_rejected("manifest does not match the collected SHA-256")
+        self.api.assert_not_called()
 
     def test_report_for_another_run_or_attempt_is_rejected(self):
         for field, value in (("run_id", 199), ("run_attempt", 1)):

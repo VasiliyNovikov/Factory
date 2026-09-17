@@ -23,9 +23,15 @@ ties. A rerun of diagnostics keeps its original window, rather than advancing
 the boundary; duplicate checks also cover issues created by earlier attempts.
 Each selected run records its latest attempt, and subagents inspect attempt/job
 history. Older runs updated during the interval (for example, completed or
-rerun) are also included. Because GitHub has no updated-at run filter, detecting
-that activity requires an unfiltered, paginated repository-history scan. An older
-run updated after the upper boundary is picked up by the next invocation instead.
+rerun) are also included when created in the **90 days before the window start**
+(inclusive). The manifest and job summary record this fixed supplemental lookback;
+older retained metadata is outside that lookup. Because GitHub has no updated-at
+run filter, the helper queries this bounded creation range with the same
+cap-aware pagination instead of scanning the repository's entire retained history.
+This does not truncate the primary interval between diagnostics invocations,
+even if they are more than 90 days apart. An older run updated after the upper
+boundary is considered by the next invocation instead. Log retention may be
+shorter than the lookback; unavailable evidence must still be reported.
 
 History queries paginate, and large time ranges split to avoid GitHub's
 1,000-result filtered-search limit. Every split checks its combined distinct run
@@ -63,6 +69,8 @@ Issues are created by the Factory App with a
 `<!-- factory-diagnostics:RUN_ID:ATTEMPT -->` marker and **no labels**. Their
 App-authored `issues.opened` events start normal [triage](issue-triage.md);
 diagnostics does not pre-apply `triaged` or implementation tracking labels.
+Diagnostics completions are excluded from implementation's event router before
+tool setup or Copilot invocation; the next diagnostics run inspects its predecessor.
 
 ## Permissions and results
 
@@ -77,6 +85,9 @@ token, and model requests use `COPILOT_GITHUB_TOKEN`.
 
 Copilot writes a structured report with per-workflow subagent IDs, exact run
 coverage, summaries, created issue numbers, duplicate links, and errors.
+The collector publishes `manifest_sha256` as a step output before Copilot runs.
+Verification receives that captured digest as `MANIFEST_SHA256` and rejects a
+missing digest or altered manifest before parsing its coverage or run identity.
 `scripts/workflow-diagnostics.py verify` rejects missing reports, incomplete
 coverage, repeated subagent IDs, reported evidence/API errors, and issue receipts
 without the Factory author and current attempt marker. Missing or unfinished

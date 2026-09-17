@@ -3,12 +3,16 @@
 
 import argparse
 from datetime import datetime, timedelta, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import subprocess
 from urllib.parse import urlencode
+
+
+OLDER_ACTIVITY_LOOKBACK_DAYS = 90
 
 
 def api(endpoint, *, actions=False, paginate=False):
@@ -75,14 +79,13 @@ def window_runs(repository, start, end):
 
 
 def older_activity_runs(repository, start, end):
-    # The API has no updated-at filter. Scan unfiltered history so old runs
-    # completed or rerun in this window are not silently missed.
-    pages = api(
-        f"repos/{repository}/actions/runs?per_page=100", actions=True, paginate=True
-    )
+    # The API has no updated-at filter. Bound the creation search instead of
+    # scanning all retained history for completed or rerun activity.
+    oldest = start - timedelta(days=OLDER_ACTIVITY_LOOKBACK_DAYS)
+    runs = window_runs(repository, oldest, start)
     return [
-        run for page in pages for run in page["workflow_runs"]
-        if timestamp(run["created_at"]) <= start
+        run for run in runs
+        if oldest <= timestamp(run["created_at"]) <= start
         and start <= timestamp(run["updated_at"]) < end
     ]
 
@@ -139,17 +142,23 @@ def collect(directory):
         "repository": repository,
         "current_run": summarize(current),
         "previous_run": summarize(previous) if previous else None,
+        "older_activity_lookback_days": OLDER_ACTIVITY_LOOKBACK_DAYS,
         "workflows": list(groups.values()),
     }
     directory.mkdir(parents=True, exist_ok=True)
-    (directory / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    manifest_path = directory / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+    manifest_sha256 = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
     with open(os.environ["GITHUB_OUTPUT"], "a") as output:
         output.write(f"analyze={'true' if previous else 'false'}\n")
+        output.write(f"manifest_sha256={manifest_sha256}\n")
     with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
         if previous:
             summary.write(
                 f"Diagnostics window: [{previous['id']}]({previous['html_url']}) "
                 f"(inclusive) to [{current['id']}]({current['html_url']}) (exclusive).\n\n"
+                f"Supplemental older-activity lookback: {OLDER_ACTIVITY_LOOKBACK_DAYS} days "
+                "before the window start.\n\n"
                 f"Collected {sum(len(group['runs']) for group in groups.values())} runs "
                 f"across {len(groups)} workflows.\n"
             )
@@ -163,7 +172,12 @@ def require(condition, message):
 
 
 def verify(directory):
-    manifest = json.loads((directory / "manifest.json").read_text())
+    manifest_bytes = (directory / "manifest.json").read_bytes()
+    require(
+        hashlib.sha256(manifest_bytes).hexdigest() == os.environ.get("MANIFEST_SHA256"),
+        "Diagnostics manifest does not match the collected SHA-256",
+    )
+    manifest = json.loads(manifest_bytes)
     report = json.loads((directory / "report.json").read_text())
     current = manifest["current_run"]
     require(

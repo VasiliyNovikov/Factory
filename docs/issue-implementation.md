@@ -65,8 +65,9 @@ workflow completions (GitHub requires a nonempty `workflows` filter), then
 routes only runs linked to an open, labeled Factory PR at its current head or
 current synthetic merge commit. It prefers the run's explicit PR association;
 when absent, PR and push runs may resolve through a unique open PR on that branch.
-Ambiguous associations, unrelated runs, and completions of triage or implementation
-itself are skipped.
+Ambiguous associations, unrelated runs, and completions of triage, implementation,
+or workflow diagnostics are skipped. Diagnostics runs only on the default branch;
+its next invocation analyzes its predecessor without invoking the PR-feedback router.
 
 - Successful `.github/workflows/pr-review.yml` runs require a bot review with
   findings matching that run's marker and the current PR head.
@@ -89,7 +90,7 @@ closed, or mismatched PRs should produce no routing outputs.
 
 YAML conditions skip `factory-identity[bot]` comments/reviews, comments or reviews
 on closed or untriaged items, unrelated issue labels, approvals, successful non-review
-workflows, and triage/implementation completions before starting routing. Keep
+workflows, and triage/implementation/diagnostics completions before starting routing. Keep
 the early author filter aligned with the installed Factory App's login. Other
 events incur a Copilot invocation even when routing decides there is no work.
 Routing checks out the default branch and has a 15-minute timeout. Its App token

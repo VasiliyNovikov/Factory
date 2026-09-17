@@ -27,6 +27,7 @@ jobs:
       (github.event_name != 'workflow_run' ||
         (github.event.workflow_run.path != '.github/workflows/issue-implementation.yml' &&
          github.event.workflow_run.path != '.github/workflows/issue-triage.yml' &&
+         github.event.workflow_run.path != '.github/workflows/workflow-diagnostics.yml' &&
          (contains(fromJSON('["failure", "timed_out"]'), github.event.workflow_run.conclusion) ||
           (github.event.workflow_run.conclusion == 'success' &&
            github.event.workflow_run.path == '.github/workflows/pr-review.yml'))))
