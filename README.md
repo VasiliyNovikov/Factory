@@ -15,6 +15,7 @@ starts implementation. The resulting Factory PR carries both labels.
 
 **Actors:** Agentic blocks use Copilot in CI; human / bot input can come from a
 human or another bot under its own account. Automation denotes CI runs and checks.
+
 **Identities:** Factory = `factory-identity[bot]`; Actions = `github-actions[bot]`.
 Running in Actions does not make Factory-created content Actions-authored.
 
@@ -34,6 +35,7 @@ flowchart TD
     review -->|Current-revision findings| implementation
     review -->|Clean and approval permitted| approval["Agentic: approval<br/>Review author: Actions"]
     pr --> ci["Automation: PR-linked CI<br/>Checks produced by: GitHub Actions"]
+    pr -->|Discussion or review| feedback
     ci -->|Current-revision failure or timeout| implementation
 ```
 
