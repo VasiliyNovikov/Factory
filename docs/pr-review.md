@@ -1,4 +1,4 @@
-# Review a pull request
+# PR review
 
 [PR review](../.github/workflows/pr-review.yml) is a separate workflow that runs
 when a PR is opened, updated with new commits, reopened, or marked ready for
@@ -50,6 +50,6 @@ Copilot identified both deliberate regressions and posted inline findings, and
 the verification step passed. The approval path has not yet been tested.
 
 To enable automatic runs and let `github-actions[bot]` approve clean PRs, follow
-the [GitHub App setup in the PR-creation example](create-pull-request.md#use-a-github-app-for-automatic-runs-and-approvals).
+the [Factory GitHub App setup](github-app.md).
 The App creates PRs under a separate identity; the review workflow keeps using
 its built-in token.
