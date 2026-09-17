@@ -5,8 +5,6 @@ on:
     types: [labeled]
   issue_comment:
     types: [created]
-  pull_request_review_comment:
-    types: [created]
   pull_request_review:
     types: [submitted]
   workflow_run:
@@ -17,8 +15,15 @@ jobs:
   route:
     if: >-
       (github.event_name != 'issues' || github.event.label.name == 'triaged') &&
+      (github.event_name != 'issue_comment' ||
+        (github.event.comment.user.login != 'factory-identity[bot]' &&
+         github.event.issue.state == 'open' &&
+         contains(github.event.issue.labels.*.name, 'triaged'))) &&
       (github.event_name != 'pull_request_review' ||
-        contains(fromJSON('["commented", "changes_requested"]'), github.event.review.state)) &&
+        (github.event.review.user.login != 'factory-identity[bot]' &&
+         github.event.pull_request.state == 'open' &&
+         contains(github.event.pull_request.labels.*.name, 'triaged') &&
+         contains(fromJSON('["commented", "changes_requested"]'), github.event.review.state))) &&
       (github.event_name != 'workflow_run' ||
         (github.event.workflow_run.path != '.github/workflows/issue-implementation.yml' &&
          github.event.workflow_run.path != '.github/workflows/issue-triage.yml' &&

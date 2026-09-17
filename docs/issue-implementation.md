@@ -2,8 +2,8 @@
 
 [Issue implementation](../.github/workflows/issue-implementation.yml) starts when
 [triage](issue-triage.md) adds `triaged` to an issue, or someone posts feedback on
-an open triaged issue or its Factory PR. Inline comments, submitted comment or
-change-request reviews, PR-review findings, and failed CI runs linked to that PR trigger
+an open triaged issue or its Factory PR. Submitted comment or change-request
+reviews (including their inline findings), PR-review findings, and failed CI runs linked to that PR trigger
 follow-ups. It reads the full issue and PR discussions, repository guidance, and
 relevant code before acting:
 
@@ -47,8 +47,11 @@ additional work to a new issue. Conflicting ownership gets a reply rather than
 an overwrite.
 
 Post follow-up requests on the original issue, in its Factory PR conversation,
-or as inline review comments. Replies to PR feedback are posted in the PR's main
-conversation. Edited comments do not trigger runs. Submitted comment reviews
+or in a submitted review. Inline comments are read together when the review is
+submitted, avoiding one run per inline finding. Standalone inline comments and
+later inline replies do not trigger runs; post those follow-ups in the main PR
+conversation or submit another review. Replies to PR feedback are posted in the
+PR's main conversation. Edited comments do not trigger runs. Submitted comment reviews
 and change requests trigger runs; approvals do not start another implementation.
 Only the Factory App's own comments and reviews are ignored by author, preventing
 self-reply loops. Feedback from other bots, including `github-actions[bot]`, is
@@ -82,8 +85,10 @@ repository, base, branch, and unique tracking label, and require the original
 issue to remain open with matching labels. Untriaged issues and unrelated,
 closed, or mismatched PRs should produce no routing outputs.
 
-YAML conditions skip unrelated issue labels, approvals, successful non-review
-workflows, and triage/implementation completions before starting routing. Other
+YAML conditions skip `factory-identity[bot]` comments/reviews, comments or reviews
+on closed or untriaged items, unrelated issue labels, approvals, successful non-review
+workflows, and triage/implementation completions before starting routing. Keep
+the early author filter aligned with the installed Factory App's login. Other
 events incur a Copilot invocation even when routing decides there is no work.
 Routing checks out the default branch and has a 15-minute timeout. Its App token
 has only Contents, Issues, and Pull requests read access; the built-in token
