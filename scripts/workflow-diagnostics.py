@@ -171,6 +171,55 @@ def require(condition, message):
         raise ValueError(message)
 
 
+def verify_issue_labels(repository, number, issue):
+    labels = issue.get("labels")
+    require(
+        isinstance(labels, list)
+        and all(isinstance(label, dict) and isinstance(label.get("name"), str)
+                and label["name"] for label in labels),
+        f"Issue #{number} has invalid labels",
+    )
+    factory = os.environ["FACTORY_LOGIN"]
+    tracking = f"factory-issue-{number}"
+    ready = False
+    active_labels = set()
+    observed_labels = set()
+    # Triage may have labeled the issue before this audit, especially on a retry.
+    pages = api(f"repos/{repository}/issues/{number}/timeline?per_page=100", paginate=True)
+    for page in pages:
+        for event in page:
+            if event["event"] == "commented":
+                body = event["body"] or ""
+                if (
+                    event["user"]["login"] == factory
+                    and "<!-- factory-triage:ready -->" in body
+                    and "<!-- factory-triage:reply -->" not in body
+                    and re.search(r"<!-- factory-triage-run:[1-9][0-9]*:[1-9][0-9]* -->", body)
+                ):
+                    ready = True
+            elif event["event"] == "labeled":
+                name = event["label"]["name"]
+                actor = (event.get("actor") or {}).get("login")
+                require(
+                    isinstance(actor, str) and actor,
+                    f"Issue #{number} has an unknown label actor",
+                )
+                require(
+                    actor != factory
+                    or (ready and (name == tracking
+                                   or (name == "triaged" and tracking in active_labels))),
+                    f"Issue #{number} has Factory-applied labels without a valid triage handoff",
+                )
+                active_labels.add(name)
+                observed_labels.add(name)
+            elif event["event"] == "unlabeled":
+                active_labels.discard(event["label"]["name"])
+    require(
+        {label["name"] for label in labels} <= observed_labels,
+        f"Issue #{number} has incomplete label history; retry verification",
+    )
+
+
 def verify(directory):
     manifest_bytes = (directory / "manifest.json").read_bytes()
     require(
@@ -257,6 +306,7 @@ def verify(directory):
             and marker in (issue["body"] or ""),
             f"Issue #{number} is not a Factory-authored receipt from this attempt",
         )
+        verify_issue_labels(manifest["repository"], number, issue)
         issue_urls.append(issue["html_url"])
     with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
         summary.write("\n## Diagnostics results\n\n")

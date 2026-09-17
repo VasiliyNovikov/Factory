@@ -46,7 +46,9 @@ cancelling an active run. GitHub retains at most one pending invocation; bursts
 of manual dispatches can replace a pending run. The boundary is the preceding
 invocation, not the last successful analysis, so failures or cancelled runs do
 not automatically replay missed windows. Rerun a failed invocation to retry
-its original window.
+its original window. **Re-run failed jobs** reuses a successful diagnosis when
+only verification failed; **Re-run all jobs** recollects and reanalyzes the same
+window under the new attempt.
 
 ## Analysis and issue handoff
 
@@ -69,6 +71,13 @@ Issues are created by the Factory App with a
 `<!-- factory-diagnostics:RUN_ID:ATTEMPT -->` marker and **no labels**. Their
 App-authored `issues.opened` events start normal [triage](issue-triage.md);
 diagnostics does not pre-apply `triaged` or implementation tracking labels.
+Verification audits paginated label history, not an empty live label list:
+normal triage may already have labeled an issue before verification or a retry.
+Factory-applied labels require a prior Factory ready-decision comment with its
+triage run marker, then the matching tracking label before `triaged`. Other
+Factory labels or Factory labels applied before that decision fail the audit,
+even if later removed. Subsequent labels from other actors are not diagnostics
+pre-labeling. Missing label history or unknown label actors fail explicitly.
 Diagnostics completions are excluded from implementation's event router before
 tool setup or Copilot invocation; the next diagnostics run inspects its predecessor.
 
@@ -83,8 +92,8 @@ credentials. The built-in token has `contents: read`, `actions: read`, and
 via a command-local `GH_TOKEN` override; other GitHub operations use the App
 token, and model requests use `COPILOT_GITHUB_TOKEN`. The separate verification
 job uses only Contents/Actions read access on its built-in token and a fresh
-App token with Issues read access for receipts; it has no issue-write or model
-permissions and does not run Copilot.
+App token with Issues read access for receipts and label history; it has no
+issue-write or model permissions and does not run Copilot.
 
 Copilot writes a structured report with per-workflow subagent IDs, exact run
 coverage, summaries, created issue numbers, duplicate links, `unavailable_evidence`,
@@ -113,11 +122,16 @@ checkout or verifier. It receives the captured digest as `MANIFEST_SHA256` and
 rejects a missing digest or altered manifest before parsing coverage or run
 identity. `scripts/workflow-diagnostics.py verify` also rejects missing reports,
 incomplete run coverage, repeated subagent IDs, fatal errors, and issue receipts
-without the Factory author and current attempt marker.
+without the Factory author, producing analysis attempt marker, or valid label
+history.
 
 The diagnosis and verification job summaries show the window and results.
 The manifest and any report are retained as a
 `workflow-diagnostics-RUN_ID-ATTEMPT` artifact for 14 days, including on failure.
+The diagnosis job publishes that exact artifact name as a saved output, so a
+verification-only retry downloads the producing attempt's evidence and uses its
+pinned digest, rather than looking for a new artifact or mixing attempts.
+If that artifact has expired or been deleted, rerun all jobs to regenerate it.
 Verification also runs after an analysis failure if collection selected an
 analysis window and the workflow was not cancelled; it is skipped for the
 first-run boundary. Setup and collection failures appear in Actions logs; a
@@ -125,7 +139,8 @@ failed run is not evidence that no improvements exist. Verification checks
 report coverage and issue existence, not the semantic quality of AI analysis,
 actual tool concurrency, or exhaustive semantic duplicate detection. Issues
 are created during analysis, so verification is an audit, not a gate before
-their normal triage handoff.
+their normal triage handoff. The label audit checks the recorded marked handoff,
+not the semantic validity of the decision or which App invocation performed it.
 
 The dependency-free [Tests workflow](../.github/workflows/tests.yml) runs the
 deterministic helper suite on every pull request and push to `master`, using

@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import unittest
@@ -743,9 +744,22 @@ class VerifyTests(DiagnosticsTests):
             "user": {"login": "factory[bot]"},
             "body": "Actionable finding.\n<!-- factory-diagnostics:200:2 -->",
             "html_url": f"{SERVER}/{REPOSITORY}/issues/{number}",
+            "labels": [],
         }
         issue.update(overrides)
         return issue
+
+    def label_event(self, name, *, actor="factory[bot]", event="labeled"):
+        return {"event": event, "actor": {"login": actor}, "label": {"name": name}}
+
+    def ready_event(self, **overrides):
+        event = {
+            "event": "commented",
+            "user": {"login": "factory[bot]"},
+            "body": "<!-- factory-triage:ready -->\n<!-- factory-triage-run:300:1 -->",
+        }
+        event.update(overrides)
+        return event
 
     def evidence_gap(self, **overrides):
         evidence = {
@@ -975,13 +989,15 @@ class VerifyTests(DiagnosticsTests):
     def test_valid_issue_receipts_use_app_api_and_appear_in_summary(self):
         self.report["created_issues"] = [42, 43]
         self.report["duplicates"] = [f"{SERVER}/{REPOSITORY}/issues/10"]
-        self.api.side_effect = [self.issue(42), self.issue(43)]
+        self.api.side_effect = [self.issue(42), [[]], self.issue(43), [[]]]
         self.verify_report()
         self.assertEqual(
             self.api.call_args_list,
             [
                 mock.call(f"repos/{REPOSITORY}/issues/42"),
+                mock.call(f"repos/{REPOSITORY}/issues/42/timeline?per_page=100", paginate=True),
                 mock.call(f"repos/{REPOSITORY}/issues/43"),
+                mock.call(f"repos/{REPOSITORY}/issues/43/timeline?per_page=100", paginate=True),
             ],
         )
         summary = self.summary.read_text()
@@ -1006,6 +1022,145 @@ class VerifyTests(DiagnosticsTests):
             with self.subTest(issue=issue):
                 self.api.return_value = issue
                 self.assert_rejected("not a Factory-authored receipt from this attempt")
+
+    def test_preapplied_factory_labels_are_rejected(self):
+        self.report["created_issues"] = [42]
+        for name in ("triaged", "factory-issue-42", "bug"):
+            with self.subTest(name=name):
+                self.summary.unlink(missing_ok=True)
+                self.api.side_effect = [
+                    self.issue(labels=[{"name": name}]),
+                    [[self.label_event(name)]],
+                ]
+                self.assert_rejected("valid triage handoff")
+
+    def test_removed_preapplied_labels_still_fail_the_audit(self):
+        self.report["created_issues"] = [42]
+        self.api.side_effect = [
+            self.issue(),
+            [[
+                self.label_event("triaged"),
+                self.label_event("triaged", event="unlabeled"),
+                self.ready_event(),
+            ]],
+        ]
+        self.assert_rejected("valid triage handoff")
+
+    def test_existing_triage_labels_are_accepted_on_verification_retry(self):
+        self.report["created_issues"] = [42]
+        os.environ["GITHUB_RUN_ATTEMPT"] = "3"
+        for names in (["factory-issue-42"], ["factory-issue-42", "triaged"]):
+            with self.subTest(names=names):
+                self.api.reset_mock()
+                self.api.side_effect = [
+                    self.issue(labels=[{"name": name} for name in names]),
+                    [[self.ready_event()], [self.label_event(name) for name in names]],
+                ]
+                self.verify_report()
+                self.api.assert_called_with(
+                    f"repos/{REPOSITORY}/issues/42/timeline?per_page=100", paginate=True
+                )
+                self.assertIn(f"{SERVER}/{REPOSITORY}/issues/42", self.summary.read_text())
+
+    def test_factory_labels_require_a_prior_marked_factory_ready_decision(self):
+        self.report["created_issues"] = [42]
+        for decision in (
+            self.ready_event(user={"login": "someone-else"}),
+            self.ready_event(body="<!-- factory-triage:ready -->"),
+            self.ready_event(body="<!-- factory-triage:reply -->\n<!-- factory-triage-run:300:1 -->"),
+            self.ready_event(body=None),
+            self.ready_event(body=(
+                "<!-- factory-triage:ready -->\n<!-- factory-triage:reply -->\n"
+                "<!-- factory-triage-run:300:1 -->"
+            )),
+        ):
+            with self.subTest(decision=decision):
+                self.api.side_effect = [
+                    self.issue(labels=[{"name": "factory-issue-42"}]),
+                    [[decision, self.label_event("factory-issue-42")]],
+                ]
+                self.assert_rejected("valid triage handoff")
+
+    def test_ready_decision_cannot_retroactively_authorize_labels(self):
+        self.report["created_issues"] = [42]
+        self.api.side_effect = [
+            self.issue(labels=[{"name": "factory-issue-42"}]),
+            [[self.label_event("factory-issue-42")], [self.ready_event()]],
+        ]
+        self.assert_rejected("valid triage handoff")
+
+    def test_factory_handoff_requires_matching_tracking_before_triaged(self):
+        self.report["created_issues"] = [42]
+        for name in ("triaged", "factory-issue-99", "bug"):
+            with self.subTest(name=name):
+                self.api.side_effect = [
+                    self.issue(labels=[{"name": name}]),
+                    [[self.ready_event(), self.label_event(name)]],
+                ]
+                self.assert_rejected("valid triage handoff")
+
+    def test_removed_tracking_label_does_not_authorize_triaged(self):
+        self.report["created_issues"] = [42]
+        self.api.side_effect = [
+            self.issue(labels=[{"name": "triaged"}]),
+            [[
+                self.ready_event(),
+                self.label_event("factory-issue-42"),
+                self.label_event("factory-issue-42", event="unlabeled"),
+                self.label_event("triaged"),
+            ]],
+        ]
+        self.assert_rejected("valid triage handoff")
+
+    def test_later_labels_from_other_actors_are_not_diagnostics_prelabeling(self):
+        self.report["created_issues"] = [42]
+        self.api.side_effect = [
+            self.issue(labels=[{"name": "bug"}]),
+            [[self.label_event("bug", actor="maintainer")]],
+        ]
+        self.verify_report()
+        self.assertIn(f"{SERVER}/{REPOSITORY}/issues/42", self.summary.read_text())
+
+    def test_labels_added_after_the_issue_read_do_not_cause_a_snapshot_race(self):
+        self.report["created_issues"] = [42]
+        self.api.side_effect = [
+            self.issue(),
+            [[self.ready_event(), self.label_event("factory-issue-42"), self.label_event("triaged")]],
+        ]
+        self.verify_report()
+        self.assertIn(f"{SERVER}/{REPOSITORY}/issues/42", self.summary.read_text())
+
+    def test_live_labels_missing_from_history_fail_explicitly(self):
+        self.report["created_issues"] = [42]
+        self.api.side_effect = [self.issue(labels=[{"name": "triaged"}]), [[]]]
+        self.assert_rejected("incomplete label history")
+
+    def test_unknown_label_actor_fails_explicitly(self):
+        self.report["created_issues"] = [42]
+        self.api.side_effect = [
+            self.issue(labels=[{"name": "triaged"}]),
+            [[self.label_event("triaged", actor=None)]],
+        ]
+        self.assert_rejected("unknown label actor")
+
+    def test_issue_labels_must_be_an_explicit_array_of_named_labels(self):
+        self.report["created_issues"] = [42]
+        invalid_issues = [self.issue(labels=labels) for labels in (
+            None, "", {}, [None], ["triaged"], [{}], [{"name": None}],
+        )]
+        missing_labels = self.issue()
+        del missing_labels["labels"]
+        for issue in invalid_issues + [missing_labels]:
+            with self.subTest(issue=issue):
+                self.api.return_value = issue
+                self.assert_rejected("invalid labels")
+
+    def test_unavailable_label_history_fails_without_publishing_results(self):
+        self.report["created_issues"] = [42]
+        self.api.side_effect = [self.issue(), subprocess.CalledProcessError(1, ["gh", "api"])]
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.verify_report()
+        self.assertFalse(self.summary.exists())
 
     def test_issue_receipts_require_unique_positive_integer_numbers(self):
         for issues in (None, "42", [True], ["42"], [0], [-1], [1.5], [42, 42]):
@@ -1036,6 +1191,31 @@ class VerifyTests(DiagnosticsTests):
             with self.subTest(duplicates=duplicates):
                 self.report["duplicates"] = duplicates
                 self.assert_rejected("link existing repository issues or PRs")
+
+
+class WorkflowTests(unittest.TestCase):
+    def test_artifact_download_uses_the_producing_jobs_saved_output(self):
+        workflow = (SCRIPT.parents[1] / ".github/workflows/workflow-diagnostics.yml").read_text()
+        diagnose, verify = workflow.split("\n  verify:\n")
+        output = re.search(r"^      artifact_name: (.+)$", diagnose, re.MULTILINE)
+        self.assertIsNotNone(output, "diagnose must publish the artifact name it produced")
+        upload = re.search(r"^          name: (.+)$", diagnose, re.MULTILINE)
+        download = re.search(r"^          name: (.+)$", verify, re.MULTILINE)
+        self.assertIsNotNone(upload)
+        self.assertIsNotNone(download)
+        self.assertEqual(output[1], upload[1])
+        self.assertEqual(download[1], "${{ needs.diagnose.outputs.artifact_name }}")
+        for producer_attempt, verifier_attempt in ((1, 1), (1, 2), (2, 3), (3, 3)):
+            with self.subTest(producer=producer_attempt, verifier=verifier_attempt):
+                saved_output = output[1].replace("${{ github.run_id }}", "200").replace(
+                    "${{ github.run_attempt }}", str(producer_attempt)
+                )
+                selected = download[1].replace(
+                    "${{ needs.diagnose.outputs.artifact_name }}", saved_output
+                ).replace("${{ github.run_id }}", "200").replace(
+                    "${{ github.run_attempt }}", str(verifier_attempt)
+                )
+                self.assertEqual(selected, f"workflow-diagnostics-200-{producer_attempt}")
 
 
 class MainTests(unittest.TestCase):

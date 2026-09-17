@@ -21,6 +21,7 @@ jobs:
     outputs:
       analyze: ${{ steps.window.outputs.analyze }}
       manifest_sha256: ${{ steps.window.outputs.manifest_sha256 }}
+      artifact_name: workflow-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
     env:
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
@@ -97,8 +98,10 @@ jobs:
           Each new issue must describe the problem and impact, category (fix, optimization, or improvement),
           supporting run/job URLs, proposed scope, and acceptance criteria, and contain
           <!-- factory-diagnostics:${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT} -->.
-          Do not add labels (especially triaged or factory-issue-*), so App issue-opened events enter
-          normal triage. Do not create speculative issues, clean-run issues, PRs, commits, or code changes.
+          Create issues without labels (especially triaged or factory-issue-*), so App issue-opened
+          events enter normal triage. Do not add or remove labels or post triage-decision comments;
+          leave later triage and human updates alone.
+          Do not create speculative issues, clean-run issues, PRs, commits, or code changes.
           If there are no actionable findings, create nothing.
           Write ${DIAGNOSTICS_DIR}/report.json only after collecting every subagent result and
           verifying every created issue via the API. Its exact shape is:
@@ -149,7 +152,7 @@ jobs:
       - name: Download diagnostics evidence
         uses: actions/download-artifact@v4
         with:
-          name: workflow-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ needs.diagnose.outputs.artifact_name }}
           path: ${{ runner.temp }}/workflow-diagnostics
 
       - name: Create Factory verification token
