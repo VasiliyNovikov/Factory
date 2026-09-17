@@ -13,21 +13,27 @@ Starting with small things:
 Triage applies the unique `factory-issue-<number>` tracking label before `triaged`
 starts implementation. The resulting Factory PR carries both labels.
 
+**Actors:** Agentic blocks use Copilot in CI; human / bot input can come from a
+human or another bot under its own account. Automation denotes CI runs and checks.
+**Identities:** Factory = `factory-identity[bot]`; Actions = `github-actions[bot]`.
+Running in Actions does not make Factory-created content Actions-authored.
+
 ```mermaid
 flowchart TD
-    issue["New untriaged issue"] --> triage{"Issue triage"}
-    triage -->|Not ready| clarification["Clarification or explanatory reply"]
-    clarification -->|New answer or comment| triage
-    triage -->|Ready| tracking["Apply factory-issue-NUMBER"]
-    tracking -->|Then apply triaged| implementation["Issue implementation"]
-    implementation -->|Actionable| pr["Create or update Factory PR"]
-    implementation -->|Unclear, blocked, or already satisfied| reply["Reply in triggering conversation"]
-    reply -->|New feedback| feedback["Issue / PR comments or submitted reviews"]
+    issue["Human / bot: new untriaged issue<br/>Author: submitting account"] --> triage{"Agentic: issue triage<br/>Identity: Factory"}
+    triage -->|Not ready| clarification["Agentic: clarification or explanation<br/>Comment author: Factory"]
+    clarification --> answer["Human / bot: answer or comment<br/>Author: submitting account"]
+    answer --> triage
+    triage -->|Ready| tracking["Agentic: ready comment + factory-issue-NUMBER<br/>Created / applied by: Factory"]
+    tracking -->|Factory then applies triaged| implementation["Agentic: issue implementation<br/>Identity: Factory"]
+    implementation -->|Actionable| pr["Agentic: create / update PR + commits<br/>Author: Factory"]
+    implementation -->|Unclear, blocked, or already satisfied| reply["Agentic: reply in triggering conversation<br/>Comment author: Factory"]
+    reply -->|New feedback| feedback["Human / bot: issue / PR comments or submitted reviews<br/>Author: submitting account"]
     feedback -->|Actionable| implementation
-    pr --> review{"PR review"}
+    pr --> review{"Agentic: PR review<br/>Review author: Actions"}
     review -->|Current-revision findings| implementation
-    review -->|Clean and approval permitted| approval["Approval"]
-    pr --> ci["PR-linked CI"]
+    review -->|Clean and approval permitted| approval["Agentic: approval<br/>Review author: Actions"]
+    pr --> ci["Automation: PR-linked CI<br/>Checks produced by: GitHub Actions"]
     ci -->|Current-revision failure or timeout| implementation
 ```
 
