@@ -37,8 +37,8 @@ It uses the shared [AI tool installation and invocation](ai-tools.md), with a
 30-minute job timeout and `contents: read`, `copilot-requests: write`, and
 `actions: read` on the built-in token. The App token stays the default `GH_TOKEN`,
 including for thread reads, permission rechecks, mutations, and read-backs.
-Only individual read-only Actions commands override it with `GITHUB_TOKEN`;
-never export that override.
+`gh` prefers `GH_TOKEN`, so prefix only individual read-only Actions commands with
+`GH_TOKEN="$GITHUB_TOKEN"`; never export that override.
 
 The prompt makes clear that the 30-minute limit includes setup time already elapsed.
 Copilot must budget the remaining time, reserving time for required GitHub reporting
@@ -169,7 +169,7 @@ Check these cases on an eligible Factory PR:
 
 | Case | Expected evidence |
 |---|---|
-| Actions token override | Subsequent thread reads, permission checks, mutations, and read-backs still use the App token. |
+| Actions token override | Actions queries authenticate with the built-in token; subsequent thread reads, permission checks, mutations, and read-backs still use the App token. |
 | New fix | Verified code; checked/pushed heads match; mutation and fresh read both confirm resolution. |
 | Clarification or partial fix | Specific App reply with follow-up directions; thread stays unresolved. Unchanged reruns skip duplicate replies, not summaries. |
 | Denied/failed resolution | Summary reports the error or unconfirmed state, never resolution. |
