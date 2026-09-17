@@ -2,7 +2,13 @@
 set -euo pipefail
 
 usage() {
-  printf '%s\n' 'Usage: ./scripts/ai.sh --harness opencode|copilot --prompt "PROMPT"'
+  printf '%s\n' \
+    'Usage: ./scripts/ai.sh --harness opencode|copilot --prompt "PROMPT" [--profile NAME]' \
+    '  --profile NAME  Select a named model profile (default: default).' \
+    '' \
+    'Examples:' \
+    '  ./scripts/ai.sh --harness copilot --prompt "PROMPT"' \
+    '  ./scripts/ai.sh --harness opencode --profile review --prompt "PROMPT"'
 }
 
 fail() {
@@ -12,6 +18,7 @@ fail() {
 
 harness=
 prompt=
+profile=default
 while (( $# > 0 )); do
   case "$1" in
     --harness|--prompt)
@@ -20,6 +27,11 @@ while (( $# > 0 )); do
         --harness) harness=$2 ;;
         --prompt) prompt=$2 ;;
       esac
+      shift 2
+      ;;
+    --profile)
+      [[ $# -ge 2 && -n "$2" && "$2" != -* ]] || fail "Missing value for $1"
+      profile=$2
       shift 2
       ;;
     --help|-h) usage; exit 0 ;;
@@ -37,15 +49,30 @@ command -v "$harness" >/dev/null || fail "$harness is not installed"
 
 script_dir=$(dirname -- "${BASH_SOURCE[0]}")
 config="$script_dir/../.github/model-config.json"
-jq -e '
-  (.model | type == "string" and length > 0) and
-  (.reasoningEffort | type == "string" and length > 0) and
-  (.longContext | type == "boolean")
-' "$config" >/dev/null || fail "Invalid model configuration: $config"
+profile_config=$(jq -ces --arg profile "$profile" '
+  def valid_profile:
+    type == "object" and
+    (.model | type == "string" and length > 0) and
+    (.reasoningEffort | type == "string" and length > 0) and
+    (.longContext | type == "boolean");
 
-model=$(jq -r '.model' "$config")
-reasoning=$(jq -r '.reasoningEffort' "$config")
-context=$(jq -r 'if .longContext then "long_context" else "default" end' "$config")
+  if length != 1 or (.[0] | type != "object") then
+    error("expected one object of named model profiles")
+  elif (.[0] | has("default") | not) then
+    error("missing default model profile")
+  elif (.[0].default | valid_profile | not) then
+    error("invalid default model profile")
+  elif (.[0] | has($profile) | not) then
+    error("unknown model profile: \($profile)")
+  elif (.[0][$profile] | valid_profile | not) then
+    error("invalid model profile: \($profile)")
+  else .[0][$profile]
+  end
+' "$config") || fail "Invalid model configuration: $config"
+
+model=$(jq -r '.model' <<< "$profile_config")
+reasoning=$(jq -r '.reasoningEffort' <<< "$profile_config")
+context=$(jq -r 'if .longContext then "long_context" else "default" end' <<< "$profile_config")
 
 case "$harness" in
   copilot)
