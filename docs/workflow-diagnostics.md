@@ -95,6 +95,14 @@ job uses only Contents/Actions read access on its built-in token and a fresh
 App token with Issues read access for receipts and label history; it has no
 issue-write or model permissions and does not run Copilot.
 
+Repository-wide coverage includes fork and non-default-branch evidence. The
+untrusted-data instructions and read-only subagent contract are behavioral
+constraints, not a sandbox: the coordinator processes their results while
+holding the App's Issues write token. The isolated verifier protects its own
+checks, but does not prevent analysis-time issue changes or isolate write
+credentials from untrusted evidence. Restricting evidence to the default branch
+would narrow the agreed coverage, so that restriction is not applied.
+
 Copilot writes a structured report with per-workflow subagent IDs, exact run
 coverage, summaries, created issue numbers, duplicate links, `unavailable_evidence`,
 and fatal `errors`. Both evidence/error fields must be arrays, including when empty.

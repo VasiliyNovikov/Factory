@@ -1194,6 +1194,33 @@ class VerifyTests(DiagnosticsTests):
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_workflow_run_router_checks_origin_and_branch_before_setup(self):
+        workflow = (SCRIPT.parents[1] / ".github/workflows/issue-implementation.yml").read_text()
+        route = workflow.split("\n  route:\n", 1)[1].split("\n  implement:\n", 1)[0]
+        condition = re.search(r"^    if: >-\n(.*?)^    runs-on:", route, re.MULTILINE | re.DOTALL)
+        self.assertIsNotNone(condition, "eligibility must gate the entire routing job")
+        condition = " ".join(condition[1].split())
+        self.assertIn(
+            "(github.event_name != 'workflow_run' || "
+            "(github.event.workflow_run.head_repository.full_name == github.repository && "
+            "startsWith(github.event.workflow_run.head_branch, 'factory/issue-') && ",
+            condition,
+        )
+        for name in ("issue-implementation", "issue-triage", "workflow-diagnostics"):
+            self.assertIn(
+                f"github.event.workflow_run.path != '.github/workflows/{name}.yml'", condition
+            )
+        self.assertNotIn(".github/workflows/tests.yml", condition)
+
+    def test_fork_pull_requests_keep_read_only_test_coverage(self):
+        workflow = (SCRIPT.parents[1] / ".github/workflows/tests.yml").read_text()
+        self.assertIn("on:\n  pull_request:\n  push:\n    branches: [master]\n", workflow)
+        self.assertNotRegex(workflow, r"(?m)^\s+if:")
+        self.assertNotIn("secrets.", workflow)
+        self.assertIn("permissions:\n      contents: read\n", workflow)
+        self.assertIn("persist-credentials: false", workflow)
+        self.assertIn("run: python3 -m unittest discover -s tests -v", workflow)
+
     def test_artifact_download_uses_the_producing_jobs_saved_output(self):
         workflow = (SCRIPT.parents[1] / ".github/workflows/workflow-diagnostics.yml").read_text()
         diagnose, verify = workflow.split("\n  verify:\n")
