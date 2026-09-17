@@ -18,8 +18,9 @@
   - [Issue triage and label handoff](docs/issue-triage.md)
   - [Issue implementation and follow-ups](docs/issue-implementation.md)
   - [Periodic workflow diagnostics](docs/workflow-diagnostics.md)
-- No application toolchain, dependency manifest, or build/test/lint commands are
-  configured. Diagnostics helper tests use `python3 -m unittest discover -s tests -v`.
+- No application toolchain or dependency manifest is configured. Diagnostics
+  helper tests use `python3 -m unittest discover -s tests -v`;
+  `.github/workflows/tests.yml` runs them on pull requests and pushes to `master`.
 - `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
   Copilot PR-creation test. See the linked examples for setup, permissions,
   invocation, and result verification.

@@ -705,6 +705,7 @@ class VerifyTests(DiagnosticsTests):
             "run_id": 200,
             "run_attempt": 2,
             "errors": [],
+            "unavailable_evidence": [],
             "analyses": [
                 {
                     "workflow_id": 7,
@@ -745,6 +746,16 @@ class VerifyTests(DiagnosticsTests):
         }
         issue.update(overrides)
         return issue
+
+    def evidence_gap(self, **overrides):
+        evidence = {
+            "workflow_id": 8,
+            "run_id": 150,
+            "reason": "expired_logs",
+            "details": "The API confirms that job logs expired at their retention limit.",
+        }
+        evidence.update(overrides)
+        return evidence
 
     def test_clean_report_requires_no_issue_and_writes_evidence_summary(self):
         self.summary.write_text("Existing collection summary.\n")
@@ -824,7 +835,101 @@ class VerifyTests(DiagnosticsTests):
                 self.assert_rejected("Incomplete diagnostics")
         self.api.assert_not_called()
 
-    def test_complete_must_be_literal_true_for_every_workflow(self):
+    def test_expected_evidence_gaps_are_nonfatal_and_visible(self):
+        for reason in ("expired_logs", "superseded_attempt_logs", "unfinished_run"):
+            for complete in (True, False):
+                with self.subTest(reason=reason, complete=complete):
+                    evidence = self.evidence_gap(reason=reason)
+                    self.report["unavailable_evidence"] = [evidence]
+                    self.report["analyses"][1]["complete"] = complete
+                    with mock.patch("builtins.print") as warning:
+                        self.verify_report()
+                    summary = self.summary.read_text()
+                    self.assertIn("Verified with evidence limitations", summary)
+                    self.assertIn("## Unavailable evidence", summary)
+                    self.assertIn(reason, summary)
+                    self.assertIn(evidence["details"], summary)
+                    self.assertIn(
+                        f"Workflow 8, [run 150]({SERVER}/{REPOSITORY}/actions/runs/150)",
+                        summary,
+                    )
+                    warning.assert_called_once_with(
+                        "::warning::Diagnostics verified with 1 expected evidence gap(s); "
+                        "see the job summary."
+                    )
+                    self.summary.unlink()
+        self.api.assert_not_called()
+
+    def test_unavailable_evidence_requires_a_list_of_known_run_gaps(self):
+        for evidence in (
+            None,
+            "",
+            {},
+            ["Logs expired"],
+            [None],
+            [42],
+            [{}],
+            [self.evidence_gap(workflow_id=999)],
+            [self.evidence_gap(workflow_id=True)],
+            [self.evidence_gap(run_id=101)],
+            [self.evidence_gap(run_id=True)],
+            [self.evidence_gap(reason="api_error")],
+            [self.evidence_gap(reason="")],
+            [self.evidence_gap(details=" \n")],
+            [self.evidence_gap(details=None)],
+        ):
+            with self.subTest(evidence=evidence):
+                self.report["unavailable_evidence"] = evidence
+                self.assert_rejected("Unavailable evidence")
+        self.api.assert_not_called()
+
+    def test_report_must_explicitly_declare_unavailable_evidence(self):
+        del self.report["unavailable_evidence"]
+        self.assert_rejected("Unavailable evidence")
+
+    def test_evidence_gaps_cannot_excuse_missing_or_duplicate_run_coverage(self):
+        self.report["unavailable_evidence"] = [self.evidence_gap()]
+        self.report["analyses"][1]["complete"] = False
+        for run_ids in ([], [150, 150], [999]):
+            with self.subTest(run_ids=run_ids):
+                self.report["analyses"][1]["run_ids"] = run_ids
+                self.assert_rejected("Incomplete run coverage")
+
+    def test_evidence_gap_does_not_excuse_another_unfinished_workflow(self):
+        self.report["unavailable_evidence"] = [self.evidence_gap()]
+        self.report["analyses"][0]["complete"] = False
+        self.assert_rejected("Incomplete run coverage for workflow 7")
+
+    def test_evidence_gaps_cannot_hide_api_or_tooling_errors(self):
+        self.report["unavailable_evidence"] = [self.evidence_gap()]
+        for error in ("HTTP 403 fetching a log", "Rate limit exceeded", "Subagent failed"):
+            with self.subTest(error=error):
+                self.report["errors"] = [error]
+                self.assert_rejected("Incomplete diagnostics")
+        self.api.assert_not_called()
+
+    def test_evidence_gaps_do_not_relax_completion_types(self):
+        self.report["unavailable_evidence"] = [self.evidence_gap()]
+        for complete in (None, 1, "true", "false"):
+            with self.subTest(complete=complete):
+                self.report["analyses"][1]["complete"] = complete
+                self.assert_rejected("Incomplete run coverage")
+
+    def test_evidence_gaps_still_require_verified_issue_receipts(self):
+        self.report["unavailable_evidence"] = [self.evidence_gap()]
+        self.report["analyses"][1]["complete"] = False
+        self.report["created_issues"] = [42]
+        self.api.return_value = self.issue(user={"login": "someone-else"})
+        self.assert_rejected("not a Factory-authored receipt from this attempt")
+        self.api.assert_called_once_with(f"repos/{REPOSITORY}/issues/42")
+
+    def test_evidence_gaps_still_require_unique_subagent_receipts(self):
+        self.report["unavailable_evidence"] = [self.evidence_gap()]
+        self.report["analyses"][1]["complete"] = False
+        self.report["analyses"][1]["subagent_id"] = self.report["analyses"][0]["subagent_id"]
+        self.assert_rejected("separate subagent")
+
+    def test_complete_must_be_literal_true_without_evidence_gaps(self):
         for complete in (False, None, 1, "true"):
             with self.subTest(complete=complete):
                 self.report["analyses"][1]["complete"] = complete

@@ -18,13 +18,16 @@ jobs:
       actions: read
       contents: read
       copilot-requests: write
+    outputs:
+      analyze: ${{ steps.window.outputs.analyze }}
+      manifest_sha256: ${{ steps.window.outputs.manifest_sha256 }}
     env:
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
-      - name: Check out default branch
+      - name: Check out invocation revision
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Collect diagnostics window
@@ -101,21 +104,23 @@ jobs:
           verifying every created issue via the API. Its exact shape is:
           {\"run_id\": ${GITHUB_RUN_ID}, \"run_attempt\": ${GITHUB_RUN_ATTEMPT},
           \"analyses\": [{\"workflow_id\": 123, \"run_ids\": [456], \"subagent_id\": \"actual agent ID\",
-          \"complete\": true, \"summary\": \"evidence-based outcome and limitations\"}],
-          \"created_issues\": [789], \"duplicates\": [\"existing issue or PR URL\"], \"errors\": []}.
+          \"complete\": false, \"summary\": \"evidence-based outcome and limitations\"}],
+          \"created_issues\": [789], \"duplicates\": [\"existing issue or PR URL\"],
+          \"unavailable_evidence\": [{\"workflow_id\": 123, \"run_id\": 456,
+          \"reason\": \"expired_logs\", \"details\": \"confirmed cause and supporting run/job URL\"}],
+          \"errors\": []}.
           Replace example values with actual results; include exactly one analysis for each manifest
-          workflow and every run ID exactly once. Use empty arrays for no issues/duplicates/errors.
-          Mark incomplete analyses complete=false and include all unavailable evidence/API errors
-          in errors; never claim full coverage or successful creation after a failure.
-          The verifier will fail an incomplete or missing report. Explain the actual outcome in the log."
-
-      - name: Verify diagnostics result
-        if: steps.window.outputs.analyze == 'true'
-        env:
-          MANIFEST_SHA256: ${{ steps.window.outputs.manifest_sha256 }}
-          GH_TOKEN: ${{ steps.factory-token.outputs.token }}
-          FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
-        run: python3 scripts/workflow-diagnostics.py verify "$DIAGNOSTICS_DIR"
+          workflow and every run ID exactly once. Use empty arrays for no issues, duplicates,
+          unavailable evidence, or errors. Use unavailable_evidence only for confirmed expired_logs,
+          superseded_attempt_logs, or unfinished_run (logs not yet available), identifying the
+          collected workflow/run and explaining the evidence for that classification.
+          Never assume an unexplained HTTP 404 means expiration. Permission failures, rate limits,
+          other API/tooling failures, and unfinished or missing subagent analysis belong in errors.
+          Mark analyses with missing required evidence or unfinished analysis complete=false.
+          The verifier accepts expected evidence gaps with visible limitations, not as a clean result;
+          it still requires every workflow/run and subagent receipt, and fails on errors or a missing
+          report. Never claim full evidence or successful creation after a failure.
+          Explain the actual outcome in the log."
 
       - name: Retain diagnostics manifest and report
         if: always()
@@ -125,3 +130,39 @@ jobs:
           path: ${{ runner.temp }}/workflow-diagnostics/*.json
           if-no-files-found: warn
           retention-days: 14
+
+  verify:
+    needs: diagnose
+    if: ${{ !cancelled() && needs.diagnose.outputs.analyze == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out invocation revision
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Download diagnostics evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: workflow-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/workflow-diagnostics
+
+      - name: Create Factory verification token
+        id: factory-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.FACTORY_CLIENT_ID }}
+          private-key: ${{ secrets.FACTORY_PRIVATE_KEY }}
+          permission-issues: read
+
+      - name: Verify diagnostics result
+        env:
+          MANIFEST_SHA256: ${{ needs.diagnose.outputs.manifest_sha256 }}
+          GH_TOKEN: ${{ steps.factory-token.outputs.token }}
+          FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
+        run: python3 scripts/workflow-diagnostics.py verify "${RUNNER_TEMP}/workflow-diagnostics"

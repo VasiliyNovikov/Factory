@@ -190,6 +190,24 @@ def verify(directory):
         group["workflow_id"]: {run["id"] for run in group["runs"]}
         for group in manifest["workflows"]
     }
+    unavailable = report.get("unavailable_evidence")
+    require(isinstance(unavailable, list), "Unavailable evidence must be a list")
+    unavailable_workflows = set()
+    for evidence in unavailable:
+        require(
+            isinstance(evidence, dict)
+            and type(evidence.get("workflow_id")) is int
+            and evidence["workflow_id"] in expected
+            and type(evidence.get("run_id")) is int
+            and evidence["run_id"] in expected[evidence["workflow_id"]]
+            and evidence.get("reason") in (
+                "expired_logs", "superseded_attempt_logs", "unfinished_run",
+            )
+            and isinstance(evidence.get("details"), str) and evidence["details"].strip(),
+            "Unavailable evidence must identify a collected workflow/run, "
+            "an expected reason, and details",
+        )
+        unavailable_workflows.add(evidence["workflow_id"])
     analyses = report["analyses"]
     require(
         len(analyses) == len(expected)
@@ -199,7 +217,9 @@ def verify(directory):
     agent_ids = set()
     for analysis in analyses:
         require(
-            analysis["complete"] is True
+            (analysis["complete"] is True
+             or (analysis["complete"] is False
+                 and analysis["workflow_id"] in unavailable_workflows))
             and len(analysis["run_ids"]) == len(expected[analysis["workflow_id"]])
             and set(analysis["run_ids"]) == expected[analysis["workflow_id"]],
             f"Incomplete run coverage for workflow {analysis['workflow_id']}",
@@ -240,10 +260,29 @@ def verify(directory):
         issue_urls.append(issue["html_url"])
     with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
         summary.write("\n## Diagnostics results\n\n")
+        if unavailable:
+            summary.write("**Verified with evidence limitations**, not a clean result.\n\n")
         for analysis in analyses:
             summary.write(f"- Workflow {analysis['workflow_id']}: {analysis['summary']}\n")
         summary.write(f"\nCreated issues: {', '.join(issue_urls) or 'none'}.\n\n")
         summary.write(f"Existing findings: {', '.join(report['duplicates']) or 'none'}.\n")
+        if unavailable:
+            summary.write("\n## Unavailable evidence\n\n")
+            for evidence in unavailable:
+                run_url = (
+                    f"{os.environ['GITHUB_SERVER_URL']}/{manifest['repository']}"
+                    f"/actions/runs/{evidence['run_id']}"
+                )
+                summary.write(
+                    f"- Workflow {evidence['workflow_id']}, "
+                    f"[run {evidence['run_id']}]({run_url}) "
+                    f"({evidence['reason']}): {evidence['details']}\n"
+                )
+    if unavailable:
+        print(
+            f"::warning::Diagnostics verified with {len(unavailable)} expected evidence gap(s); "
+            "see the job summary."
+        )
 
 
 def main():

@@ -62,8 +62,10 @@ installation. Workflow-write access is required when pushing workflow changes
 to a PR branch, before merge; the token-generation input must already be on the
 default branch before Factory can implement such an issue.
 [Workflow diagnostics](workflow-diagnostics.md) requests only Contents read,
-Pull requests read, and Issues write on its App token. It uses the built-in
-token's `actions: read` permission for run/job/log analysis.
+Pull requests read, and Issues write on its analysis App token. Its isolated
+verification job creates a separate App token with only Issues read access.
+It uses the built-in token's `actions: read` permission for run/job/log analysis
+and artifact download.
 
 Set these variables on the AI invocation, keeping any Git author/committer variables:
 
