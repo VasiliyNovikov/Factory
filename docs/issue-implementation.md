@@ -64,9 +64,8 @@ The `workflow_run` completion trigger uses `workflows: ['*']` to receive all
 workflow completions (GitHub requires a nonempty `workflows` filter). Before
 minting an App token, installing tools, or invoking Copilot, the routing job
 requires the run's head repository to match this repository and its branch to
-start with `factory/issue-`. Fork test failures and default-branch push failures
-therefore skip routing; the Tests workflow still runs on fork PRs with read-only
-access and no App secrets. Eligible runs must still be linked to an open,
+start with `factory/issue-`. Fork workflow failures and default-branch push
+failures therefore skip routing. Eligible runs must still be linked to an open,
 labeled Factory PR at its current head or current synthetic merge commit.
 It prefers the run's explicit PR association;
 when absent, PR and push runs may resolve through a unique open PR on that branch.

@@ -29,7 +29,6 @@ feedback on their Factory PRs. See
 Workflow diagnostics runs daily at 00:00 UTC or manually. Copilot selects the
 run window, analyzes workflows with parallel subagents, and sends actionable
 findings through triage; a read-only job checks its report and issue receipts.
-[Unit tests](.github/workflows/tests.yml) run on pull requests and pushes to `master`.
 
 1. [Install AI tools and run a prompt](docs/ai-tools.md)
 2. [Create a pull request](docs/create-pull-request.md) — tested successfully.

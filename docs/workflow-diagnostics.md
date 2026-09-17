@@ -128,11 +128,5 @@ Runner termination, initialization/upload failure, or artifact expiration/deleti
 can still leave no downloadable report; inspect the diagnosis/upload logs and
 rerun all jobs. A failed run is not evidence of no findings.
 
-The dependency-free [Tests workflow](../.github/workflows/tests.yml) exercises
-the inline receipt check and workflow/prompt contracts on PRs (including forks)
-and pushes to `master`. It does not test model decisions or live orchestration.
-Run it locally with:
-
-```sh
-python3 -m unittest discover -s tests -v
-```
+Automated tests are deferred for now; no test suite or test-running CI workflow
+is configured. The runtime report and issue-receipt checks above remain enabled.
