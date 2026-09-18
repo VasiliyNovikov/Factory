@@ -929,14 +929,15 @@ class StaticContractTests(unittest.TestCase):
         self.assertIn("contents: read", workflow)
         self.assertIn("persist-credentials: false", workflow)
 
-    def test_static_regression_checks_cancel_superseded_runs_per_ref(self):
+    def test_static_regression_checks_cancel_only_superseded_pr_runs(self):
         workflow = (ROOT / ".github/workflows/workflow-checks.yml").read_text()
-        self.assertIn(
-            "\nconcurrency:\n"
-            "  group: workflow-checks-${{ github.ref }}\n"
-            "  cancel-in-progress: true\n",
-            workflow,
-        )
+        concurrency = workflow.split("\nconcurrency:\n", 1)[1].split("\njobs:\n", 1)[0]
+        for setting in (
+            "  group: workflow-checks-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}\n",
+            "  cancel-in-progress: ${{ github.event_name == 'pull_request' }}\n",
+        ):
+            with self.subTest(setting=setting):
+                self.assertIn(setting, concurrency)
 
     def test_static_tested_steps_use_explicit_bash_failure_semantics(self):
         for path, names in (

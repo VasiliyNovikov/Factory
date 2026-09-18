@@ -150,9 +150,10 @@ See [issue implementation](issue-implementation.md) for the next stage.
 
 Regression coverage runs locally with `python3 -B -m unittest discover -s tests -v`
 and in [Workflow checks](../.github/workflows/workflow-checks.yml) on every PR and
-push to `master` (Python standard library, Bash, and `jq`). New runs cancel
-in-progress checks for the same PR or branch. The suite executes the
-workflows' actual eligibility and result-check scripts against mocked `gh`
+push to `master` (Python standard library, Bash, and `jq`). New PR runs cancel
+superseded checks for the same PR. Each push to `master` has its own concurrency
+group and does not cancel earlier runs, including pending checks. The suite
+executes the workflows' actual eligibility and result-check scripts against mocked `gh`
 responses, covering ready/reply/decomposed outcomes, partial states, pagination,
 conflicts, and API failures. Static contracts cover prompt ordering and
 per-event routing/recovery safeguards.
