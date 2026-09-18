@@ -56,6 +56,33 @@ from [`.github/model-config.json`](../.github/model-config.json). Event routing
 passes `--profile triage`, using the same configured `triage` profile as
 [issue triage](issue-triage.md).
 
+### Routing profile rollout
+
+For `pull_request_review`, GitHub can run the PR revision of this workflow while
+the routing job still checks out the default branch. A profile selected by that
+workflow must therefore already exist in the default-branch configuration.
+Keep the launcher, installation scripts, and configuration on that trusted
+checkout; do not execute PR-controlled scripts or substitute another profile
+when a name is missing.
+
+The `route` profile is registered ahead of the consumer change in
+[#36](https://github.com/VasiliyNovikov/Factory/pull/36). Land this compatibility
+addition on `master` first, then retry the failed review-event run or submit new
+feedback on #36. Its workflow can then select `route` before #36 is merged.
+The triage upgrade and router switch remain in #36; this prerequisite changes
+neither existing profile settings nor the current workflow's selection. When
+updating #36 against the new base, remove its duplicate profile addition and run
+the check below: Git can merge both additions without a textual conflict while
+leaving two `route` keys. Retain exactly one entry. Use the same
+configuration-first rollout for future profile additions.
+
+Run `bash scripts/test-route-profile.sh` (Bash, `jq`, and Python 3) for a local
+startup regression check. It rejects duplicate configuration keys, reproduces
+the missing-profile failure, checks the pre-merge consumer against the
+compatibility configuration, and checks routing after the triage upgrade.
+It captures arguments from the real launcher without invoking a model; it does
+not verify live GitHub routing, permissions, or agent behavior.
+
 ## Follow-ups and PR tracking
 
 Each issue owns branch `factory/issue-<number>` and tracking label

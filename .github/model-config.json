@@ -9,6 +9,11 @@
     "reasoningEffort": "high",
     "longContext": false
   },
+  "route": {
+    "model": "gpt-6-astra",
+    "reasoningEffort": "high",
+    "longContext": false
+  },
   "implement": {
     "model": "gpt-6-astra",
     "reasoningEffort": "max",

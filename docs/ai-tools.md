@@ -39,8 +39,8 @@ jobs:
 
 Use `--harness opencode` to run the same prompt through OpenCode. Both harnesses
 read named profiles from [`.github/model-config.json`](../.github/model-config.json).
-`--profile NAME` defaults to `default`; select `triage`, `implement`, `review`, or any
-other configured name explicitly:
+`--profile NAME` defaults to `default`; select `route`, `triage`, `implement`,
+`review`, or any other configured name explicitly:
 
 ```sh
 ./scripts/ai.sh --harness copilot --profile triage --prompt "Assess whether the issue is ready for implementation."
@@ -51,6 +51,10 @@ other configured name explicitly:
 Profiles supply `model`, `reasoningEffort`, and `longContext` without schema
 validation. `longContext` applies only to Copilot. Unknown names fail rather than
 falling back to `default`.
+
+For workflows that check out the default branch, register new profiles there
+before changing consumers in a PR. See the
+[routing profile rollout](issue-implementation.md#routing-profile-rollout).
 
 Build on this setup to [create a pull request](create-pull-request.md) or
 [create an issue](create-issue.md).
