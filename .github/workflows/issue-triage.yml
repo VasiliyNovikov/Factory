@@ -46,6 +46,7 @@ jobs:
 
       - name: Check live triage eligibility
         id: eligible
+        shell: bash
         env:
           GH_TOKEN: ${{ steps.factory-token.outputs.token }}
           FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
@@ -140,6 +141,8 @@ jobs:
           Recheck parent and child state before child mutations; preserve independently changed work.
           After ALL intended links, scopes, and dependency references are verified, remove
           factory-triage-pending from each open pending child using the App token.
+          A closed pending child still blocks completed setup: preserve its state and labels
+          and report factory-triage:reply instead of clearing the label or claiming decomposition.
           That unlabeled event starts normal child triage; do not triage children yourself.
           Do not re-add pending to already released children or release unrelated pending issues.
           Children may need clarification or further decomposition; only their own normal ready
@@ -157,6 +160,7 @@ jobs:
 
       - name: Verify triage result
         if: steps.eligible.outputs.ready == 'true'
+        shell: bash
         env:
           GH_TOKEN: ${{ steps.factory-token.outputs.token }}
           FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]

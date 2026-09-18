@@ -151,7 +151,7 @@ class ShellStepTests(unittest.TestCase):
                 "GH_PROMPT_DISABLED": "1",
             }
             result = subprocess.run(
-                ["bash", "--noprofile", "--norc", "-euo", "pipefail", "-c", script],
+                ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", script],
                 cwd=work, env=env, text=True, capture_output=True, timeout=10,
             )
             calls = work / "calls.jsonl"
@@ -322,6 +322,13 @@ class ShellStepTests(unittest.TestCase):
                 self.assert_rejected(failed)
                 self.assertIn("mock GitHub API unavailable", failed.stderr)
 
+    def test_implementation_result_api_failure_is_not_verified(self):
+        result, _ = self.run_step(self.implementation_verify, [
+            response(ISSUE_API + "/comments", paginated=True, error=True),
+        ])
+        self.assert_rejected(result)
+        self.assertIn("mock GitHub API unavailable", result.stderr)
+
     def test_ready_accepts_own_tracking_and_unrelated_labels(self):
         self.assert_ok(self.verify_result("ready", issue([TRACKING, "triaged", "bug"])))
 
@@ -455,6 +462,7 @@ class ShellStepTests(unittest.TestCase):
     def test_decomposed_checks_every_child_on_every_page(self):
         cases = {
             "pending": issue(["factory-triage-pending"], number=28),
+            "closed pending": issue(["factory-triage-pending"], number=28, state="closed"),
             "inherited parent tracking": issue([TRACKING], number=28),
             "other tracking": issue(["factory-issue-29"], number=28),
             "own and inherited tracking": issue(["factory-issue-28", TRACKING], number=28),
@@ -580,6 +588,8 @@ class StaticContractTests(unittest.TestCase):
             "Include factory-triage-pending IN the creation request",
             "After ALL intended links, scopes, and dependency references are verified, remove",
             "factory-triage-pending from each open pending child using the App token",
+            "A closed pending child still blocks completed setup",
+            "report factory-triage:reply instead of clearing the label or claiming decomposition",
             "That unlabeled event starts normal child triage; do not triage children yourself",
             "Do not re-add pending to already released children",
             "Children may need clarification or further decomposition",
@@ -644,6 +654,19 @@ class StaticContractTests(unittest.TestCase):
         self.assertIn("run: python3 -B -m unittest discover -s tests -v", workflow)
         self.assertIn("contents: read", workflow)
         self.assertIn("persist-credentials: false", workflow)
+
+    def test_static_tested_steps_use_explicit_bash_failure_semantics(self):
+        for path, names in (
+            (TRIAGE, ("Check live triage eligibility", "Verify triage result")),
+            (IMPLEMENTATION, ("Check implementation eligibility", "Report blocked implementation",
+                              "Verify Factory result")),
+        ):
+            for name in names:
+                with self.subTest(workflow=path.name, step=name):
+                    step = path.read_text().split(f"      - name: {name}\n", 1)[1].split(
+                        "      - name:", 1,
+                    )[0]
+                    self.assertIn("        shell: bash\n", step)
 
 
 if __name__ == "__main__":

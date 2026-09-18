@@ -161,6 +161,7 @@ jobs:
 
       - name: Check implementation eligibility
         id: eligibility
+        shell: bash
         env:
           GH_TOKEN: ${{ steps.factory-token.outputs.token }}
         run: |
@@ -189,6 +190,7 @@ jobs:
 
       - name: Report blocked implementation
         if: failure() && steps.eligibility.outcome == 'failure'
+        shell: bash
         env:
           GH_TOKEN: ${{ steps.factory-token.outputs.token }}
         run: |
@@ -270,6 +272,7 @@ jobs:
 
       - name: Verify Factory result
         if: ${{ !cancelled() && (success() || steps.eligibility.outcome == 'failure') }}
+        shell: bash
         env:
           GH_TOKEN: ${{ steps.factory-token.outputs.token }}
         run: |

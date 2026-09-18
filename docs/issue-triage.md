@@ -74,7 +74,10 @@ Copilot uses this sequence rather than a separate scripted planning engine:
    parentage. Never replace an existing different parent.
 4. Once **all** intended relationships, scopes, and dependency references are
    verified, remove `factory-triage-pending` from open pending children with the
-   App token. Its `issues: unlabeled` event starts ordinary child triage.
+   App token. A closed pending child still blocks completed setup: preserve its
+   state and labels and post a reply explaining the blocker, not a completed
+   decomposition marker. Removing the label from an open child emits the
+   `issues: unlabeled` event that starts ordinary child triage.
    Each child can need clarification or further decomposition; only its own
    ready path applies its own tracking label before `triaged`.
 5. Verify the parent remains open with `decomposed` and without `triaged`, all
@@ -149,6 +152,8 @@ workflows' actual eligibility and result-check scripts against mocked `gh`
 responses, covering ready/reply/decomposed outcomes, partial states, pagination,
 conflicts, and API failures. Static contracts cover prompt ordering and
 per-event routing/recovery safeguards.
+The exercised steps declare `shell: bash`; the harness matches Actions'
+`bash --noprofile --norc -eo pipefail` semantics without adding `nounset`.
 These checks do not execute Copilot or deliver real GitHub webhooks. Child
 creation, release events, and end-to-end decomposition still need live CI
 verification; inspect native links, parent/child labels, and individual triage
