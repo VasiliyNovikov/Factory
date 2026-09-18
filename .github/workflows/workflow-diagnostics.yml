@@ -33,12 +33,12 @@ jobs:
           printf 'artifact_name=workflow-diagnostics-%s-%s\n' \
             "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
           mkdir -p "$DIAGNOSTICS_DIR"
-          jq -n --argjson run "$GITHUB_RUN_ID" --argjson attempt "$GITHUB_RUN_ATTEMPT" '{
-            run_id: $run, run_attempt: $attempt, outcome: "incomplete",
-            summary: "Diagnostics did not complete; no final report was written.",
-            created_issues: [], unavailable_evidence: [],
-            errors: ["Diagnostics did not replace the initial incomplete report."]
-          }' > "$DIAGNOSTICS_DIR/report.json"
+          printf '{
+            "run_id": %s, "run_attempt": %s, "outcome": "incomplete",
+            "summary": "Diagnostics did not complete; no final report was written.",
+            "created_issues": [], "unavailable_evidence": [],
+            "errors": ["Diagnostics did not replace the initial incomplete report."]
+          }\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > "$DIAGNOSTICS_DIR/report.json"
 
       - name: Check out invocation revision
         uses: actions/checkout@v6
@@ -173,6 +173,14 @@ jobs:
         with:
           name: ${{ needs.diagnose.outputs.artifact_name }}
           path: ${{ runner.temp }}/workflow-diagnostics
+
+      - name: Install jq if missing
+        shell: bash
+        run: |
+          if ! command -v jq >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y jq
+          fi
 
       - name: Create Factory verification token
         id: factory-token

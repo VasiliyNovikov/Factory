@@ -77,8 +77,9 @@ issue, and PR operations use the App token. Model requests use
 `COPILOT_GITHUB_TOKEN`.
 
 Before checkout or tool/token setup, the workflow seeds an `incomplete` report
-with a fatal error, so an early failure or a model that never writes its report
-does not leave a success-shaped result. Copilot replaces this placeholder in
+with a fatal error using Bash's built-in `printf`, without requiring `jq`.
+An early failure or a model that never writes its report therefore does not
+leave a success-shaped result. Copilot replaces this placeholder in
 `report.json` with the run ID, producing attempt, outcome,
 Markdown summary, unique created issue numbers, expected evidence limitations,
 and fatal errors. The summary records boundary URLs/timestamps, selected
@@ -86,7 +87,8 @@ workflow/run IDs, actual subagent IDs and results, duplicate links, and created
 issue URLs. Outcomes are `initialized`, `analyzed`, or `incomplete`.
 
 A small inline check on a **fresh read-only runner**, without checkout or
-Copilot, requires a well-formed report for the producing run/attempt, a nonempty
+Copilot, installs `jq` only if missing, without installing the AI tools.
+It requires a well-formed report for the producing run/attempt, a nonempty
 summary, no fatal errors, and an `initialized` or `analyzed` outcome. An
 initialized report cannot claim created issues or evidence gaps. Every reported
 issue must exist in this repository with the Factory author and attempt marker;
