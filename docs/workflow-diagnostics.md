@@ -2,8 +2,9 @@
 
 [Workflow diagnostics](../.github/workflows/workflow-diagnostics.yml) runs daily
 at **00:00 UTC** (`0 0 * * *`) or manually from **Actions → Workflow diagnostics
-→ Run workflow** once it lands on the default branch. Select that branch;
-dispatches on other branches are skipped. GitHub can delay scheduled runs.
+→ Run workflow** once it lands on the default branch. Manual runs use the branch
+you select, including its workflow and scripts. Scheduled runs use the default
+branch and can be delayed by GitHub.
 
 Copilot owns history selection, investigation, duplicate checks, issue creation,
 and result verification. It reuses `scripts/install-tools.sh`,
@@ -13,7 +14,8 @@ and result verification. It reuses `scripts/install-tools.sh`,
 
 The first invocation establishes a boundary with **no analysis or findings
 issues**. Later invocations cover the interval from the preceding scheduled or
-manual invocation, regardless of its conclusion, up to the current invocation.
+manual invocation, regardless of its conclusion or branch, up to the current
+invocation. Scheduled and manual runs across branches share the same history.
 The preceding diagnostics run is included; the current one is inspected next
 time. Retries use the original invocation times. Older runs updated in the
 interval are included with a 90-day creation lookback before the window start.

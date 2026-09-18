@@ -87,8 +87,9 @@ labeled Factory PR at its current head or current synthetic merge commit.
 It prefers the run's explicit PR association;
 when absent, PR and push runs may resolve through a unique open PR on that branch.
 Ambiguous associations, unrelated runs, and completions of triage, implementation,
-or workflow diagnostics are skipped. Diagnostics runs only on the default branch;
-its next invocation analyzes its predecessor without invoking the PR-feedback router.
+or workflow diagnostics are skipped, including diagnostics manually run on a
+Factory branch. Its next invocation analyzes its predecessor without invoking
+the PR-feedback router.
 
 - Successful `.github/workflows/pr-review.yml` runs require a bot review with
   findings matching that run's marker and the current PR head.

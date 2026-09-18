@@ -38,7 +38,7 @@ flowchart TD
     pr -->|Discussion or review| feedback
     ci -->|Current-revision failure or timeout| implementation
 
-    diagnosticsTrigger["Automation: daily 00:00 UTC / manual trigger<br/>Default branch only"] --> diagnostics{"Agentic: workflow diagnostics<br/>Identity: Factory"}
+    diagnosticsTrigger["Automation: daily 00:00 UTC on default branch<br/>Manual trigger on selected branch"] --> diagnostics{"Agentic: workflow diagnostics<br/>Identity: Factory"}
     diagnostics -->|First invocation| boundary["Agentic: establish boundary only<br/>No analysis or findings"]
     diagnostics -->|Later invocations| workflowAnalysis["Agentic: analyze same-repository runs since previous diagnostics<br/>All workflows / outcomes; include previous run<br/>Parallel read-only Copilot subagents"]
     workflowAnalysis --> findings["Agentic: consolidate findings<br/>Check issues / PRs in all states for duplicates"]
