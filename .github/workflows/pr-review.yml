@@ -35,68 +35,16 @@ jobs:
           ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
 
-      - name: Check live review eligibility
-        id: eligible
-        shell: bash
-        run: |
-          event=$(jq -c . "$GITHUB_EVENT_PATH")
-          pr=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}")
-          jq -e '
-            (.state == "open" or .state == "closed") and
-            (.draft | type == "boolean") and (.head.sha | type == "string") and
-            (.head.repo.full_name | type == "string")
-          ' <<< "$pr" >/dev/null
-          requested=$(jq -r '[.labels[].name] | index("factory-review-requested") != null' <<< "$pr")
-          if ! jq -en --argjson event "$event" --argjson pr "$pr" \
-            --argjson requested "$requested" \
-            --arg repo "$GITHUB_REPOSITORY" --arg sha "$PR_HEAD_SHA" '
-              $pr.state == "open" and ($pr.draft | not) and
-              $pr.head.repo.full_name == $repo and $pr.head.sha == $sha and
-              (if $event.action == "edited" then
-                ($event.changes | has("body")) and
-                ($requested or (
-                  ($event.changes.body.from // "") != ($pr.body // "") and
-                  ($event.pull_request.body // "") == ($pr.body // "")))
-              elif $event.action == "labeled" then
-                $event.label.name == "factory-review-requested" and
-                $event.sender.login == "factory-identity[bot]" and $requested
-              else
-                (["opened", "synchronize", "reopened", "ready_for_review"] |
-                  index($event.action) != null)
-              end)
-            ' >/dev/null; then
-            echo 'Skipping stale, duplicate, or ineligible PR review event.'
-            exit 0
-          fi
-          if [[ "$requested" == "false" ]]; then
-            updated_at=$(jq -er '.pull_request.updated_at | select(type == "string" and length > 0)' <<< "$event")
-            reviews=$(gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews")
-            jq -e 'type == "array" and all(.[]; type == "array")' <<< "$reviews" >/dev/null
-            if jq -e --arg sha "$PR_HEAD_SHA" --arg updated_at "$updated_at" '
-              any(.[][];
-                .user.login == "github-actions[bot]" and .commit_id == $sha and
-                (.state == "COMMENTED" or .state == "APPROVED") and
-                .submitted_at > $updated_at and
-                ((.body // "") | contains("factory-review:")))
-            ' <<< "$reviews" >/dev/null; then
-              echo 'Skipping event already covered by a current-head review.'
-              exit 0
-            fi
-          fi
-          printf 'ready=true\nrequested=%s\n' "$requested" >> "$GITHUB_OUTPUT"
-
       - name: Set up Node.js
-        if: steps.eligible.outputs.ready == 'true'
         uses: actions/setup-node@v7
         with:
           node-version: '24'
 
       - name: Install AI tools
-        if: steps.eligible.outputs.ready == 'true'
         run: ./scripts/install-tools.sh
 
       - name: Review PR with Copilot
-        if: steps.eligible.outputs.ready == 'true'
+        id: review
         run: >-
           ./scripts/ai.sh
           --harness copilot
@@ -106,8 +54,21 @@ jobs:
           Budget the remaining time, reserving time for required GitHub reporting and final verification.
           Do not relax required checks to meet the deadline.
           The checkout is the base revision; read the proposed changes and context with gh.
+          Own the live eligibility, duplicate-event, and request-acknowledgement decisions.
+          Read GITHUB_EVENT_PATH and the live PR before assessment. Capture whether
+          factory-review-requested is present now, not in the event snapshot, and append
+          requested=true or requested=false to GITHUB_OUTPUT. Skip closed, draft, fork, or
+          superseded-head events without submitting or acknowledging anything.
+          Without a captured request, skip consumed label events, unchanged/superseded description
+          edits, and events already covered by a github-actions[bot] COMMENTED or APPROVED review
+          at this head with a factory-review: marker submitted strictly after the event PR updated_at.
+          A pending request needs assessment even if the surviving event predates its label or
+          description; GitHub can replace queued runs. A later request must not be consumed.
+          For a justified skip, explain the evidence in the log, append result=skipped to
+          GITHUB_OUTPUT, and stop. API failures or incomplete work are errors, never skips:
+          report them and leave result unset so verification fails.
           Refresh the live diff, PR description, full discussion, reviews, and review threads,
-          including feedback addressed without a new commit. Read GITHUB_EVENT_PATH for context.
+          including feedback addressed without a new commit.
           A description edit or factory-review-requested label asks for a fresh assessment,
           not approval. Neither thread resolution nor an implementation-success report proves
           the PR is clean. Independently verify every actionable finding against the live context.
@@ -118,69 +79,74 @@ jobs:
           findings must name a concrete uncovered risk, the observable behavior to check, and why
           existing coverage is insufficient; do not request tests merely because files changed
           or to pin incidental wording. Preserve necessary regression and safety coverage.
-          Submit exactly one GitHub review with commit_id ${PR_HEAD_SHA} and ${REVIEW_MARKER} in its body,
+          Submit exactly one GitHub review with commit_id ${PR_HEAD_SHA} and
+          <!-- ${REVIEW_MARKER} --> in its body,
           only while the PR remains open, non-draft, in this repository, and at that head.
           Immediately before submitting, refresh the description and discussion as well as the head;
           reassess any changes rather than approving an obsolete snapshot.
           Use COMMENT for findings, with paths, lines, impact, suggested fixes, and inline comments
           where possible. If clean, use APPROVE; for github-actions[bot]-authored PRs use COMMENT
           explaining the self-approval restriction. Never approve an incomplete review.
-          Report the submitted review URL or the actual failure."
+          Read back the submitted review and verify its github-actions[bot] author, commit_id,
+          COMMENTED or APPROVED state, exact run marker, and self-approval restriction.
+          Only after that verification, if you captured a pending request, recheck live eligibility
+          and head, remove only factory-review-requested with the Actions token, and read back
+          the labels to verify removal. Preserve all other labels and requests added after capture.
+          A revision change before acknowledgement or any API/read-back error is a failure;
+          leave result unset. If no request was captured, do not mutate labels.
+          After successful verification and any acknowledgement, append result=reviewed to
+          GITHUB_OUTPUT. Report the actual review state, commit, marker, and URL, not just job success."
 
-      - name: Verify review was posted
-        id: verified
-        if: steps.eligible.outputs.ready == 'true'
-        shell: bash
-        run: |
-          pr=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}")
-          jq -e '
-            (.state == "open" or .state == "closed") and
-            (.draft | type == "boolean") and (.head.sha | type == "string") and
-            (.head.repo.full_name | type == "string")
-          ' <<< "$pr" >/dev/null
-          jq -e --arg repo "$GITHUB_REPOSITORY" --arg sha "$PR_HEAD_SHA" '
-            .state == "open" and (.draft | not) and
-            .head.repo.full_name == $repo and .head.sha == $sha
-          ' <<< "$pr" >/dev/null || {
-            echo '::notice::PR is no longer eligible at the reviewed head; skipping the superseded assessment.'
-            exit 0
-          }
-          gh api --paginate --slurp \
-            "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews" |
-            jq -e --arg sha "$PR_HEAD_SHA" --arg marker "$REVIEW_MARKER" \
-              --arg author "$(jq -r '.user.login' <<< "$pr")" '
-              [.[][] | select(
-                .user.login == "github-actions[bot]" and
-                .commit_id == $sha and
-                (.state == "COMMENTED" or .state == "APPROVED") and
-                ((.body // "") | contains($marker)))] |
-              if length != 1 then error("Expected exactly one matching submitted review")
-              elif .[0].state == "APPROVED" and $author == "github-actions[bot]" then
-                error("The reviewer cannot approve its own PR")
-              else .[0] | {state, commit_id, html_url}
-              end
-            '
-          printf 'posted=true\n' >> "$GITHUB_OUTPUT"
-
-      - name: Acknowledge review request
-        if: steps.verified.outputs.posted == 'true'
+      - name: Verify review result
         env:
-          REVIEW_REQUESTED: ${{ steps.eligible.outputs.requested }}
+          REVIEW_RESULT: ${{ steps.review.outputs.result }}
+          REVIEW_REQUESTED: ${{ steps.review.outputs.requested }}
         shell: bash
         run: |
           pr=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}")
-          jq -e --arg repo "$GITHUB_REPOSITORY" --arg sha "$PR_HEAD_SHA" '
-            .state == "open" and (.draft | not) and
-            .head.repo.full_name == $repo and .head.sha == $sha
-          ' <<< "$pr" >/dev/null || {
-            echo '::error::PR changed before the review request could be acknowledged.'
-            exit 1
-          }
-          if [[ "$REVIEW_REQUESTED" == "true" ]] &&
-            jq -e '[.labels[].name] | index("factory-review-requested") != null' <<< "$pr" >/dev/null; then
-            gh api --method DELETE \
-              "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels/factory-review-requested" >/dev/null
-            gh api --paginate --slurp \
-              "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels" |
-              jq -e 'all(.[][]; .name != "factory-review-requested")' >/dev/null
-          fi
+          reviews=$(gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews")
+          jq -en --argjson pr "$pr" --argjson reviews "$reviews" \
+            --slurpfile event "$GITHUB_EVENT_PATH" \
+            --arg repo "$GITHUB_REPOSITORY" --arg sha "$PR_HEAD_SHA" \
+            --arg marker "<!-- ${REVIEW_MARKER} -->" \
+            --arg result "$REVIEW_RESULT" --arg requested "$REVIEW_REQUESTED" '
+            def submitted:
+              .user.login == "github-actions[bot]" and .commit_id == $sha and
+              (.state == "COMMENTED" or
+                (.state == "APPROVED" and $pr.user.login != "github-actions[bot]"));
+            if (["reviewed", "skipped"] | index($result)) == null or
+               (["true", "false"] | index($requested)) == null then
+              error("Missing or invalid Copilot result/request capture")
+            elif ($pr.state != "open" and $pr.state != "closed") or
+                 ($pr.draft | type) != "boolean" or ($pr.head.sha | type) != "string" or
+                 ($pr.head.repo.full_name | type) != "string" or
+                 ($pr.user.login | type) != "string" or ($pr.labels | type) != "array" or
+                 ($reviews | type) != "array" or any($reviews[]; type != "array") then
+              error("Malformed GitHub response")
+            elif $pr.state != "open" or $pr.draft or
+                 $pr.head.repo.full_name != $repo or $pr.head.sha != $sha then
+              {outcome: "superseded"}
+            elif $result == "skipped" then
+              if $requested == "false" and (
+                ($event[0].action == "labeled" and
+                  all($pr.labels[]; .name != "factory-review-requested")) or
+                ($event[0].action == "edited" and (
+                  ($event[0].changes.body.from // "") == ($pr.body // "") or
+                  ($event[0].pull_request.body // "") != ($pr.body // ""))) or
+                any($reviews[][]; submitted and
+                  ($event[0].pull_request.updated_at | type) == "string" and
+                  ($event[0].pull_request.updated_at | length) > 0 and
+                  (.submitted_at | type) == "string" and
+                  .submitted_at > $event[0].pull_request.updated_at and
+                  ((.body // "") | contains("factory-review:")))
+              ) then {outcome: "skipped"}
+              else error("Skip is not supported by live GitHub evidence") end
+            else
+              [$reviews[][] | select(submitted and ((.body // "") | contains($marker)))] |
+              if length != 1 then error("Expected exactly one matching submitted review")
+              elif $requested == "true" and
+                   any($pr.labels[]; .name == "factory-review-requested") then
+                error("Captured review request was not acknowledged")
+              else .[0] | {outcome: "reviewed", state, commit_id, html_url} end
+            end
+          '

@@ -102,10 +102,10 @@ current synthetic merge commit. It prefers the run's explicit PR association;
 when absent, PR and push runs may resolve through a unique open PR on that branch.
 Ambiguous associations, unrelated runs, and completions of triage or implementation
 itself are skipped.
-For PR-review completions with one explicit PR association, an App-authenticated
-live head/merge check skips superseded runs before installing tools or invoking
-the AI router. Missing or ambiguous associations still go to normal routing;
-API failures fail explicitly rather than masquerading as stale completions.
+The AI router owns the live head/merge check, using the App token before assessing
+a completion's findings. There is no separate scripted revision preflight;
+stale completions incur routing setup but must produce no implementation outputs.
+API failures must be reported explicitly, not described as stale completions.
 
 - Successful `.github/workflows/pr-review.yml` runs require a bot review with
   findings matching that run's marker and the current PR head.
