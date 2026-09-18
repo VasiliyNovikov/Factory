@@ -115,6 +115,9 @@ events incur a Copilot invocation even when routing decides there is no work.
 Routing checks out the default branch and has a 15-minute timeout. Its App token
 has only Contents, Issues, and Pull requests read access; the built-in token
 provides `copilot-requests: write` for model requests.
+Push routing shares a job-level concurrency group with cancellation, so a later
+push supersedes an older routing pass. Feedback routing uses run-specific groups
+and is not cancelled by pushes; already-running implementers are unaffected.
 
 Copilot writes one compact JSON array to `GITHUB_OUTPUT`, for example:
 
@@ -133,16 +136,21 @@ that invocation must not maintain other issues' PRs.
 
 A verified skip produces `work_items=[]`. Missing or malformed output fails the
 JSON contract check rather than silently skipping implementation. The check
-requires string IDs, matching tracking labels/reply targets, and unique issue
-labels and reply targets, preventing separate issue jobs from targeting the same
-PR; push items must include a nonempty PR number. The matrix supports up to 256
-items (GitHub's job limit); incomplete enumeration, API failures, or more items
+requires objects with exactly the four documented keys, string IDs, matching
+tracking labels/reply targets, and unique issue labels and reply targets,
+preventing separate issue jobs from targeting the same PR; push items must
+include a nonempty PR number. Extra keys are rejected, not passed through as
+unvalidated matrix variables. The matrix supports up to 256 items (GitHub's job
+limit); incomplete enumeration, API failures, or more items
 must be reported without emitting a partial matrix. Validation checks the output
 shape, not live eligibility or the completeness of the agent's enumeration.
 Implementation rechecks live state before changing a PR.
 
 Each matrix job uses the shared tracking label for concurrency; `fail-fast: false`
-keeps a failure for one issue from cancelling other issues:
+keeps a failure for one issue from cancelling other issues. `max-parallel: 4`
+limits each workflow run to four implementer jobs at a time, without changing
+each invocation's single-PR scope. This is a per-run limit, not an account-wide
+quota:
 
 ```yaml
 concurrency:

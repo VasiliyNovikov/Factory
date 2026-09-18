@@ -35,6 +35,9 @@ jobs:
          (contains(fromJSON('["failure", "timed_out"]'), github.event.workflow_run.conclusion) ||
           (github.event.workflow_run.conclusion == 'success' &&
            github.event.workflow_run.path == '.github/workflows/pr-review.yml'))))
+    concurrency:
+      group: issue-implementation-route-${{ github.event_name == 'push' && 'push' || github.run_id }}
+      cancel-in-progress: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -110,6 +113,8 @@ jobs:
             (if length == 1 then .[0] else error("Expected one implementation matrix") end) |
             if type == "array" and length <= (if $event == "push" then 256 else 1 end) and
               all(.[];
+                type == "object" and
+                (keys == ["issue_number", "reply_number", "source_pr", "tracking_label"]) and
                 (.issue_number | type == "string" and test("^[1-9][0-9]*$")) and
                 (.source_pr | type == "string" and test("^([1-9][0-9]*)?$")) and
                 ($event != "push" or .source_pr != "") and
@@ -128,6 +133,7 @@ jobs:
     if: needs.route.outputs.work_items != '[]'
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
         include: ${{ fromJSON(needs.route.outputs.work_items) }}
     concurrency:
