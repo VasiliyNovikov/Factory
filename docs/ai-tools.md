@@ -49,9 +49,6 @@ read named profiles from [`.github/model-config.json`](../.github/model-config.j
 ./scripts/ai.sh --harness opencode --profile review --prompt "Review the current diff."
 ```
 
-`route` keeps event routing on `high` reasoning without long context. `triage`
-uses `max` reasoning with long context for issue assessment.
-
 Profiles supply `model`, `reasoningEffort`, and `longContext` without schema
 validation. `longContext` applies only to Copilot. Unknown names fail rather than
 falling back to `default`.
