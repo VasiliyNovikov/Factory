@@ -12,7 +12,7 @@ Starting with small things:
 
 Triage applies the unique `factory-issue-<number>` tracking label before `triaged`
 starts implementation. The resulting Factory PR carries both labels. Larger
-requests can instead become open `decomposed` parents with native sub-issues;
+requests can instead remain open and untriaged with native sub-issues;
 each prepared child enters normal triage with its own tracking identity.
 
 **Actors:** Agentic blocks use Copilot in CI; human / bot input can come from a
@@ -27,7 +27,7 @@ flowchart TD
     triage -->|Not ready| clarification["Agentic: clarification or explanation<br/>Comment author: Factory"]
     clarification --> answer["Human / bot: answer or comment<br/>Author: submitting account"]
     answer --> triage
-    triage -->|Independent child work is useful| decomposition["Agentic: durable plan + decomposed parent<br/>Identity: Factory; no parent implementation"]
+    triage -->|Independent child work is useful| decomposition["Agentic: durable plan; parent stays untriaged<br/>Identity: Factory; no parent implementation"]
     decomposition --> children["Agentic: create / reuse native sub-issues<br/>Identity: Factory; new children start pending"]
     children -->|Verified setup and child release| triage
     decomposition -->|Parent comment: reconcile or resume partial split| triage

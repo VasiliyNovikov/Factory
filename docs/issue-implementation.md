@@ -13,9 +13,10 @@ relevant code before acting:
   specific questions in the conversation where the request was posted.
 
 Decomposition is handled by [triage](issue-triage.md), not by implementing its
-tracking parent. Issues labeled `decomposed` or `factory-triage-pending`, or
-having native children or a Factory decomposition plan, are not eligible for
-direct implementation, even if they also have `triaged`. Before the implementation
+tracking parent: triage simply leaves `triaged` off when it chooses a split.
+Native children, a Factory decomposition plan, and existing `decomposed` or
+`factory-triage-pending` labels still block direct implementation if someone
+later adds `triaged`. Before the implementation
 agent runs, a scripted precondition checks the live original issue and its
 paginated comments on every event path, including PR and CI follow-ups. After
 route validation establishes the destination, failed or unverifiable issue
@@ -25,6 +26,19 @@ stop without commenting on an untrusted destination and are reported in Actions 
 Copilot still rechecks issue/PR eligibility and revisions before editing or
 pushing. Prepared children enter normal triage and use their own issue number,
 tracking label, branch, and PR; they never inherit their parent's identity.
+
+There is no automatic revocation of a Factory decomposition plan. Its historical
+comment permanently blocks direct handoff of that parent, even after labels or
+native links are removed, because an unlinked child may still need recovery.
+Re-scoped work needing direct implementation must use a new issue; do not edit
+or delete the plan to bypass this guard. Supporting same-parent cancellation
+would require an explicit policy for reconciling all intended children and PRs.
+
+Implementation follows the shared [test-value policy](../AGENTS.md#test-value-and-verification):
+choose checks for concrete requirements and uncovered regression risks, not merely
+changed files or incidental wording. Guidance-only changes may use direct inspection;
+required checks and useful regression/safety coverage remain in place. Report each
+check's scope and limits rather than claiming it proves agent or live GitHub behavior.
 
 Replies, PRs, and commits use the Factory App identity. Copilot model requests
 use the built-in Actions token. PR creation and subsequent App-authenticated

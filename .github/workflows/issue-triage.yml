@@ -110,12 +110,12 @@ jobs:
           then add ${TRACKING_LABEL} FIRST and verify it is the only tracking label before adding
           triaged in a separate request. Recheck that no decomposition or pending state appeared.
           For decomposition, act autonomously without asking for confirmation of a clear split.
-          First persist a parent comment marked <!-- factory-decomposition-plan --> with stable
+          First persist and verify a parent comment marked <!-- factory-decomposition-plan --> with stable
           per-child keys, bounded scopes, acceptance criteria, context, and explicit dependencies.
           Reuse and reconcile an existing Factory plan rather than assigning new keys on retries.
-          Create the decomposed and factory-triage-pending repository labels if missing.
-          Add decomposed to the parent and verify it BEFORE creating any children; do not add
-          triaged or a new tracking label to the parent. This label protects incomplete attempts too.
+          Leave the parent untriaged; no separate parent label is needed. The verified plan protects
+          incomplete attempts before any child exists. Do not add triaged or a new parent tracking
+          label, or remove existing protective labels. Create factory-triage-pending if missing.
           List native children with paginated GET repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/sub_issues.
           Also list repository issues in ALL states with pagination, not search alone, to recover
           children created before a failed link or a lost creation response.
@@ -147,7 +147,7 @@ jobs:
           Do not re-add pending to already released children or release unrelated pending issues.
           Children may need clarification or further decomposition; only their own normal ready
           path assigns factory-issue-CHILD_NUMBER, verifies it, then adds triaged separately.
-          Verify the parent remains open and decomposed without triaged, all intended children
+          Verify the parent remains open without triaged, all intended children
           are linked, and none is still pending before posting <!-- factory-triage:decomposed -->
           with the split, child links, and dependencies. This marker means completed setup,
           not completed child implementation. A partial failure gets factory-triage:reply with
@@ -173,12 +173,13 @@ jobs:
             [scan("<!-- factory-triage:(ready|reply|decomposed) -->") | .[0]] |
             if length != 1 then error("Expected one triage decision marker") else .[0] end
           ' <<< "$comments")
-          if [[ "$decision" == ready ]]; then
-            jq -e --arg login "$FACTORY_LOGIN" '
+          if [[ "$decision" != reply ]]; then
+            jq -e --arg login "$FACTORY_LOGIN" --arg decision "$decision" '
               any(.[][]; .user.login == $login and
-                ((.body // "") | contains("<!-- factory-decomposition-plan -->"))) | not
+                ((.body // "") | contains("<!-- factory-decomposition-plan -->"))) ==
+                ($decision == "decomposed")
             ' <<< "$comments" >/dev/null || {
-              printf '::error::A planned decomposition cannot be handed directly to implementation.\n'
+              printf '::error::Ready work must have no Factory decomposition plan; decomposed work requires one.\n'
               exit 1
             }
           fi
@@ -201,20 +202,13 @@ jobs:
               ($labels | index($tracking) != null and index("triaged") != null and
                 (index("decomposed") | not)) and ((.sub_issues_summary.total // 0) == 0)
             else
-              ($labels | index("decomposed") != null and (index("triaged") | not))
+              ($labels | index("triaged") | not)
             end)
           ' <<< "$issue" >/dev/null || {
             printf '::error::Live issue state does not match the claimed triage outcome.\n'
             exit 1
           }
           if [[ "$decision" == decomposed ]]; then
-            jq -e --arg login "$FACTORY_LOGIN" '
-              any(.[][]; .user.login == $login and
-                ((.body // "") | contains("<!-- factory-decomposition-plan -->")))
-            ' <<< "$comments" >/dev/null || {
-              printf '::error::A decomposed result requires the durable Factory decomposition plan.\n'
-              exit 1
-            }
             children=$(gh api --paginate --slurp \
               "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/sub_issues")
             jq -e '

@@ -45,18 +45,19 @@ the PR; the shared tracking label becomes its implementation concurrency key.
 
 ## Decomposition and recovery
 
-The parent remains open and untriaged. `decomposed` reserves it for child work;
-it protects both completed splits and partial attempts, not just successful runs.
-It must never be directly implemented, even if a later comment requests work or
-someone also adds `triaged`. Implementation routing rechecks this guard, including
-when feedback arrives through a PR or CI run.
+The parent remains open and untriaged: decomposition does not add `triaged` or
+require a separate parent-label mutation. The durable plan and native children
+identify tracking parents, including partial attempts. Existing `decomposed`
+labels remain protective and are not removed. A parent must never be directly
+implemented, even if someone later adds `triaged`; implementation checks the
+original issue on PR and CI follow-ups too.
 
 Copilot uses this sequence rather than a separate scripted planning engine:
 
 1. Persist a Factory-authored `<!-- factory-decomposition-plan -->` comment with
    stable child keys, bounded scopes, acceptance criteria, context, and dependencies.
-   Add and verify `decomposed` before creating children. Preserve unrelated labels;
-   do not add `triaged` or a new parent tracking label.
+   Verify it before creating children. Preserve existing labels; do not add
+   `triaged` or a new parent tracking label.
 2. Read native children and paginate repository issues in **all states** before
    creating missing work. Each new child includes
    `<!-- factory-child:OWNER/REPO#PARENT_NUMBER:KEY -->` in its body and
@@ -80,7 +81,7 @@ Copilot uses this sequence rather than a separate scripted planning engine:
    `issues: unlabeled` event that starts ordinary child triage.
    Each child can need clarification or further decomposition; only its own
    ready path applies its own tracking label before `triaged`.
-5. Verify the parent remains open with `decomposed` and without `triaged`, all
+5. Verify the parent remains open without `triaged`, all
    intended links exist, and no child is pending. Post the completed split,
    child links, and dependencies with the decomposed decision marker.
 
@@ -99,9 +100,11 @@ or overwrite conflicting ownership or parentage.
 An uncertain API outcome that cannot be resolved gets an explicit reply, not a
 blind retry. Partial failures retain the plan and protective labels and report
 created links, errors, and unfinished steps. A later non-Factory parent comment
-resumes reconciliation. Already-decomposed parents stay on this path; they never
-fall back to direct handoff. This is not automatic completion tracking, merging,
-or parent/child closure.
+resumes reconciliation. Planned parents stay on this path; they never fall back
+to direct handoff. A historical Factory plan permanently blocks direct handoff
+of that parent; removing labels or native links is not cancellation. Use a new
+issue for re-scoped direct implementation rather than deleting the recovery
+record. This is not automatic completion tracking, merging, or parent/child closure.
 
 Triage runs are serialized per issue using `issue-triage-<number>`. Live state is
 checked after waiting so a comment queued before handoff does not retriage an

@@ -33,8 +33,8 @@
   - [Issue triage and label handoff](docs/issue-triage.md)
   - [Issue implementation and follow-ups](docs/issue-implementation.md)
 - No application toolchain, dependency manifest, or build/test/lint commands are
-  configured. Verify workflow behavior through live CI runs and the result checks
-  documented in the linked examples.
+  configured. Use proportionate pre-merge checks under the policy below; live
+  event-workflow verification requires the workflows on the default branch.
 - `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
   Copilot PR-creation test. See the linked examples for setup, permissions,
   invocation, and result verification.
@@ -43,8 +43,31 @@
   for triggering and bot-approval constraints.
 - `.github/workflows/issue-triage.yml` assesses untriaged issues and clarification
   comments, then either hands off ready work with its own tracking label and
-  `triaged`, or protects a `decomposed` parent and creates native sub-issues for
+  `triaged`, or leaves the parent untriaged and creates native sub-issues for
   normal child triage. See its example for partial-attempt recovery.
 - `.github/workflows/issue-implementation.yml` implements triaged issues and feedback on
   their Factory PRs using the Factory App. See its example for permissions,
   shared-label concurrency, PR tracking, and result checks.
+
+## Test value and verification
+
+- Before adding or requesting a test, identify the requirement or credible
+  regression it protects, the observable outcome, and why existing coverage is
+  insufficient. Prefer the smallest useful check with existing tools; do not add
+  tests, harnesses, or dependencies merely because files changed or to meet a
+  test-count expectation.
+- Test behavior or a required contract, not a copy of the implementation,
+  incidental source/prompt/documentation wording, or the mock setup itself.
+  Behavior tests should fail for the targeted regression and survive harmless
+  refactoring or equivalent prose.
+- Static/contract checks are useful when the checked representation is itself a
+  requirement, such as a schema, protocol token, or workflow permission.
+  Focused mocked tests should exercise real production logic and check relevant
+  outputs, side effects, or rejected operations, rather than only replay fixtures.
+- Preserve necessary regression and safety coverage and all required checks.
+  Guidance-only changes may use direct inspection instead of a new suite of
+  wording assertions; this is not permission to skip meaningful verification.
+- In review, missing-test findings must name a concrete uncovered risk, the
+  observable behavior to check, and why existing coverage is insufficient.
+- Report what checks actually establish and their limits. Source-text assertions
+  and mocked tests do not prove AI adherence or live end-to-end GitHub behavior.
