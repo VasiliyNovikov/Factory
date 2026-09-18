@@ -12,6 +12,12 @@ relevant code before acting:
 - Unclear, unsuitable, already satisfied, or blocked request: explain or ask
   specific questions in the conversation where the request was posted.
 
+Implementation follows the shared [test-value policy](../AGENTS.md#test-value-and-verification):
+choose checks for concrete requirements and uncovered regression risks, not merely
+changed files or incidental wording. Guidance-only changes may use direct inspection;
+required checks and useful regression/safety coverage remain in place. Report each
+check's scope and limits rather than claiming it proves agent or live GitHub behavior.
+
 Replies, PRs, and commits use the Factory App identity. Copilot model requests
 use the built-in Actions token. PR creation and subsequent App-authenticated
 pushes trigger the separate [PR-review workflow](pr-review.md).
