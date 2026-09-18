@@ -33,7 +33,7 @@ does not implement code or open PRs.
 ## Direct implementation handoff
 
 Copilot rechecks that the issue is open and untriaged, with no pending label,
-decomposition plan, or native children. For a ready decision, it:
+Factory-authored decomposition plan, or native children. For a ready decision, it:
 
 1. Creates repository labels if needed.
 2. Posts the agreed scope and acceptance criteria before labeling.
@@ -50,9 +50,10 @@ the PR; the shared tracking label becomes its implementation concurrency key.
 ## Decomposition and recovery
 
 The parent remains open and untriaged: decomposition does not add `triaged` or
-require a separate parent-label mutation. The durable plan and native children
+require a separate parent-label mutation. The Factory-authored durable plan and native children
 identify tracking parents, including partial attempts. A `decomposed` label is
 not part of this protocol or its gates; unrelated existing labels are preserved.
+Plan markers posted by other authors are not Factory recovery state.
 Triage owns the decision not to hand off parents; the implementer is unchanged.
 There is no additional implementation-side plan, child, or pending-label gate.
 Manually applying `triaged` bypasses this decision, so resume partial setup with
@@ -111,7 +112,7 @@ An uncertain API outcome that cannot be resolved gets an explicit reply, not a
 blind retry. Partial failures retain the plan and protective labels and report
 created links, errors, and unfinished steps. A later non-Factory parent comment
 resumes reconciliation. Planned parents stay on this path; they never fall back
-to direct handoff. Triage treats a historical Factory plan as a continuing
+to direct handoff. Triage treats a historical Factory-authored plan as a continuing
 recovery obligation; removing labels or native links is not cancellation. Use a new
 issue for re-scoped direct implementation rather than deleting the recovery
 record. This is not automatic completion tracking, merging, or parent/child closure.
@@ -148,6 +149,8 @@ with this run's marker and exactly one `ready`, `reply`, or `decomposed` decisio
 marker. Missing, duplicate, or malformed results and API read failures fail the
 step. This retains the existing authored-result check without a scripted planning
 engine or a second implementation eligibility layer.
+Extra failure-detail comments after that result must omit both the run marker
+and all triage decision markers.
 
 Copilot must verify actual outcomes using live read-backs before claiming success:
 ready work has its own unique tracking label and `triaged`; a split has its
