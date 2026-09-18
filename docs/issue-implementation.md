@@ -153,6 +153,9 @@ jobs can run in parallel. GitHub concurrency retains at most one pending job,
 so bursts of comments can replace pending jobs. Every implementation reads the
 full issue and PR discussions to include that feedback; the surviving run posts
 its result in its triggering conversation (the PR for a push-triggered check).
+Push-triggered jobs also handle unaddressed feedback within the existing issue
+scope, even if the conflict probe is clean, so they do not drop feedback from a
+replaced pending job. They must not expand the issue scope or create a new PR.
 
 ## Merge-conflict maintenance
 

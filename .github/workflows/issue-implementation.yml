@@ -83,7 +83,7 @@ jobs:
           to an open ${FACTORY_LOGIN} PR in this repository, targeting the default branch,
           on factory/issue-NUMBER with the same labels; check the original issue too.
           For a non-deletion push to the default branch, enumerate ALL pages of open PRs and
-          return one work item per eligible Factory PR for a conflict-only check. Include clean,
+          return one work item per eligible Factory PR for conflict maintenance. Include clean,
           behind, and unknown-mergeability PRs: implementation checks the latest head/base locally.
           Do not route pushes to other branches. Never create an issue or PR for a push event.
           Workflow completions must concern that PR's current head or merge revision:
@@ -220,8 +220,11 @@ jobs:
           preserve commits. Recover partial work only with clear ownership and issue linkage.
           Explain ownership/tracking conflicts or closed/merged PRs; never reopen, duplicate,
           or overwrite them. Branch new work as ${ISSUE_BRANCH} from origin/${DEFAULT_BRANCH}.
-          On a default-branch push, this is conflict-only maintenance of the existing SOURCE_PR:
+          On a default-branch push, maintain the existing SOURCE_PR:
           do not create a PR or implement unrelated outstanding requests.
+          Shared concurrency can replace a pending feedback job, so also address previously
+          unhandled issue/PR feedback within this issue's existing scope. A clean conflict
+          probe must not cause that feedback to be dropped.
           On ordinary implementation/follow-up events, also check the PR for merge conflicts.
           Use a non-working-tree merge probe such as git merge-tree --write-tree with the exact
           fetched head/base OIDs. Exit 0 means no conflict; exit 1 with conflict details means
@@ -243,8 +246,8 @@ jobs:
           Repeat the conflict probe after implementation changes and before pushing; handle
           conflicts introduced by this work too. Run appropriate checks on the combined result
           before committing/pushing.
-          After pushing a conflict repair normally, verify the remote head equals the checked commit and that both
-          the previous PR head and integrated base are ancestors. Refresh the live default
+          After pushing a conflict repair normally, verify the remote head equals the checked
+          commit and that both the previous PR head and integrated base are ancestors. Refresh the live default
           branch and repeat the conflict probe for the current remote pair.
           Read GitHub mergeability for that same head/base, retrying pending results briefly.
           Claim resolution only when the revisions still match, the probe is clean, and GitHub
@@ -290,7 +293,7 @@ jobs:
           whether conflicts were confirmed, changes or blockers, and actual verification limits.
           If an issue-triggered run encounters an unresolved merge conflict, also explain the
           blocker on the existing PR. Factory comments and PR-branch pushes do not start another
-          conflict-only check; do not manufacture events or retry loops."
+          push-triggered check; do not manufacture events or retry loops."
 
       - name: Verify Factory result
         env:

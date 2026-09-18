@@ -48,8 +48,8 @@ triaged issue and, when present, a matching open Factory PR. CI must match the
 PR's current head or merge revision. Default-branch updates check all eligible
 Factory PRs for merge conflicts; ordinary follow-ups check too. Confirmed conflicts
 are resolved with a verified merge into the PR branch, not a history rewrite.
-Clean/behind branches stay unchanged; ambiguous resolutions get a blocker on the
-PR. Factory does not automatically merge PRs or close issues.
+Clean/behind branches get no conflict-repair commit; ambiguous resolutions get a
+blocker on the PR. Factory does not automatically merge PRs or close issues.
 
 ## CI examples
 
