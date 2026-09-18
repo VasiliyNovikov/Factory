@@ -30,7 +30,8 @@ jobs:
          contains(github.event.pull_request.labels.*.name, 'triaged') &&
          contains(fromJSON('["commented", "changes_requested"]'), github.event.review.state))) &&
       (github.event_name != 'workflow_run' ||
-        (github.event.workflow_run.path != '.github/workflows/issue-implementation.yml' &&
+        (github.event.workflow_run.head_repository.full_name == github.repository &&
+         github.event.workflow_run.path != '.github/workflows/issue-implementation.yml' &&
          github.event.workflow_run.path != '.github/workflows/issue-triage.yml' &&
          (contains(fromJSON('["failure", "timed_out"]'), github.event.workflow_run.conclusion) ||
           (github.event.workflow_run.conclusion == 'success' &&
@@ -165,6 +166,10 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.factory-token.outputs.token }}
         run: |
+          [[ "$ISSUE_NUMBER" =~ ^[1-9][0-9]*$ ]] || {
+            printf '::error::Routed issue number must be a positive integer.\n'
+            exit 1
+          }
           issue=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}")
           jq -e --arg tracking "$TRACKING_LABEL" --arg expected "factory-issue-${ISSUE_NUMBER}" '
             [.labels[].name] as $labels |

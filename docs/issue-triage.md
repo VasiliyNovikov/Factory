@@ -137,8 +137,11 @@ An existing Factory decomposition plan also rejects a ready result.
 Decomposed results require an open protected parent, a persisted Factory
 decomposition plan, native children, and no pending or inherited child tracking
 labels; ready children need their own tracking identity. Missing comments,
-inconsistent success claims, and API failures fail the step. A reply can describe
-a partial failure; a green reply run does not mean decomposition or handoff succeeded.
+inconsistent success claims, and API failures fail the step. Reply results also
+read the live issue and require `triaged` to be absent; `decomposed` and partial
+setup state remain allowed. A conflicting handoff fails verification rather
+than removing independently changed labels. A reply can describe a partial
+failure; a green reply run does not mean decomposition or handoff succeeded.
 
 Scope quality, the complete intended child set, dependency correctness, and API
 mutations remain Copilot's responsibility. The verifier checks live postconditions,

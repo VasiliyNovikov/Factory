@@ -173,10 +173,6 @@ jobs:
             [scan("<!-- factory-triage:(ready|reply|decomposed) -->") | .[0]] |
             if length != 1 then error("Expected one triage decision marker") else .[0] end
           ' <<< "$comments")
-          if [[ "$decision" == reply ]]; then
-            printf 'Verified Factory reply; no completed handoff or decomposition claimed.\n'
-            exit 0
-          fi
           if [[ "$decision" == ready ]]; then
             jq -e --arg login "$FACTORY_LOGIN" '
               any(.[][]; .user.login == $login and
@@ -187,6 +183,14 @@ jobs:
             }
           fi
           issue=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}")
+          if [[ "$decision" == reply ]]; then
+            jq -e '[.labels[].name] | index("triaged") | not' <<< "$issue" >/dev/null || {
+              printf '::error::A reply requires the live issue to remain untriaged.\n'
+              exit 1
+            }
+            printf 'Verified Factory reply; no completed handoff or decomposition claimed.\n'
+            exit 0
+          fi
           jq -e --arg tracking "$TRACKING_LABEL" --arg decision "$decision" '
             [.labels[].name] as $labels |
             .state == "open" and .pull_request == null and

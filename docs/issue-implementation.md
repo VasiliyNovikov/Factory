@@ -85,9 +85,11 @@ accepted. Comments do not need a command prefix or a collaborator role.
 Reviews posted using `GITHUB_TOKEN` do not directly trigger another workflow.
 The `workflow_run` completion trigger uses `workflows: ['*']` to receive all
 workflow completions (GitHub requires a nonempty `workflows` filter), then
-routes only runs linked to an open, labeled Factory PR at its current head or
-current synthetic merge commit. It prefers the run's explicit PR association;
-when absent, PR and push runs may resolve through a unique open PR on that branch.
+rejects fork-originated runs before starting the routing job or issuing its App
+token. Same-repository runs can route only when linked to an open, labeled Factory
+PR at its current head or current synthetic merge commit. It prefers the run's
+explicit PR association; when absent, PR and push runs may resolve through a
+unique open PR on that branch.
 Ambiguous associations, unrelated runs, and completions of triage or implementation
 itself are skipped.
 
@@ -112,9 +114,10 @@ closed, or mismatched PRs should produce no routing outputs.
 
 YAML conditions skip direct issue handoffs/comments carrying decomposition or
 pending labels, `factory-identity[bot]` comments/reviews, comments or reviews
-on closed or untriaged items, unrelated issue labels, approvals, successful non-review
-workflows, and triage/implementation completions before starting routing. Keep
-the early author filter aligned with the installed Factory App's login. Other
+on closed or untriaged items, unrelated issue labels, approvals, successful
+non-review workflows, fork-originated runs, and triage/implementation completions
+before starting routing. Keep the early author filter aligned with the installed
+Factory App's login. Other
 events incur a Copilot invocation even when routing decides there is no work.
 Routing checks out the default branch and has a 15-minute timeout. Its App token
 has only Contents, Issues, and Pull requests read access; the built-in token
@@ -132,9 +135,10 @@ tracking_label=factory-issue-12
 For issue events, `source_pr` is empty and `reply_number` equals `issue_number`.
 Copilot writes no outputs when skipping and explains its decision or API failure
 in the log. An absent `issue_number` skips implementation, including if routing
-failed to produce it. The implementation precondition rejects closed or non-issue
-work, missing/conflicting tracking labels, and decomposition/pending state even
-if routing emitted outputs. PR identity and revision checks remain Copilot's
+failed to produce it. The implementation precondition requires a positive integer
+issue number before using it in API paths, then rejects closed or non-issue work,
+missing/conflicting tracking labels, and decomposition/pending state even if
+routing emitted outputs. PR identity and revision checks remain Copilot's
 responsibility, as do repeat live checks before changing the PR. Conflicting
 parent handoffs receive an explanation rather than removing decomposition safeguards.
 

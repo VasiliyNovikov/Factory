@@ -117,7 +117,7 @@ class ShellStepTests(unittest.TestCase):
         cls.implementation_verify = step_run(IMPLEMENTATION, "Verify Factory result")
 
     def run_step(self, script, responses, *, event_name="issues", login="contributor",
-                 source_pr="", tracking=TRACKING):
+                 source_pr="", tracking=TRACKING, issue_number="26"):
         # The gh shim must be executable even on systems with a noexec temp dir.
         with tempfile.TemporaryDirectory(prefix=".issue-workflows-", dir=ROOT / "tests") as directory:
             work = Path(directory)
@@ -137,9 +137,9 @@ class ShellStepTests(unittest.TestCase):
                 "GITHUB_SERVER_URL": "https://github.com",
                 "GITHUB_RUN_ID": "123",
                 "GITHUB_RUN_ATTEMPT": "2",
-                "ISSUE_NUMBER": "26",
+                "ISSUE_NUMBER": issue_number,
                 "SOURCE_PR": source_pr,
-                "REPLY_NUMBER": source_pr or "26",
+                "REPLY_NUMBER": source_pr or issue_number,
                 "TRACKING_LABEL": tracking,
                 "RESULT_MARKER": MARKER,
                 "FACTORY_LOGIN": LOGIN,
@@ -261,6 +261,15 @@ class ShellStepTests(unittest.TestCase):
         ], tracking="factory-issue-27")
         self.assert_rejected(result)
 
+    def test_implementation_precondition_rejects_invalid_issue_numbers_before_api_reads(self):
+        for number in ("", "0", "026", "-26", "26/comments", "26?state=all", "26\n27", "issue-26"):
+            with self.subTest(issue_number=number):
+                result, _ = self.run_step(
+                    self.implementation_eligibility, [], issue_number=number,
+                )
+                self.assert_rejected(result)
+                self.assertIn("Routed issue number must be a positive integer", result.stdout)
+
     def test_implementation_precondition_checks_factory_plans_on_all_comment_pages(self):
         for author in (LOGIN, "contributor", "another[bot]"):
             with self.subTest(author=author):
@@ -363,7 +372,9 @@ class ShellStepTests(unittest.TestCase):
 
     def test_factory_decomposition_plan_still_allows_reply_or_completed_decomposition(self):
         plan = comment(body="<!-- factory-decomposition-plan -->\nExisting stable child keys.")
-        self.assert_ok(self.verify_result("reply", comments=[[plan], [comment("reply")]]))
+        self.assert_ok(self.verify_result(
+            "reply", issue(["decomposed"], children=1), comments=[[plan], [comment("reply")]],
+        ))
         self.assert_ok(self.verify_result(
             "decomposed", issue(["decomposed"], children=1), [[issue(number=27)]],
             comments=[[plan], [comment("decomposed")]],
@@ -388,16 +399,31 @@ class ShellStepTests(unittest.TestCase):
                 self.assert_rejected(self.verify_result("ready", parent))
 
     def test_reply_accepts_clarification_or_partial_failure_without_claiming_success(self):
-        for explanation in (
-            "Please clarify the expected behavior.",
-            "API failure after the plan and decomposed label; child #27 remains pending.",
+        for parent, explanation in (
+            (issue(["bug"]), "Please clarify the expected behavior."),
+            (issue([TRACKING]), "Adding triaged failed after the tracking label was verified."),
+            (issue(["decomposed"], children=1),
+             "API failure after the plan and decomposed label; child #27 remains pending."),
+            (issue(state="closed"), "The issue was closed during assessment; no changes made."),
         ):
             with self.subTest(explanation=explanation):
-                result = self.verify_result("reply", comments=[[
+                result = self.verify_result("reply", parent, comments=[[
                     comment(body=f"<!-- {MARKER} -->\n<!-- factory-triage:reply -->\n{explanation}")
                 ]])
                 self.assert_ok(result)
                 self.assertIn("no completed handoff or decomposition claimed", result.stdout)
+
+    def test_reply_rejects_a_live_implementation_handoff(self):
+        for parent in (
+            issue(["triaged"]),
+            issue([TRACKING, "triaged"]),
+            issue(["decomposed", "triaged"], children=1),
+            issue(["triaged"], state="closed"),
+        ):
+            with self.subTest(parent=parent):
+                result = self.verify_result("reply", parent)
+                self.assert_rejected(result)
+                self.assertIn("A reply requires the live issue to remain untriaged", result.stdout)
 
     def test_result_comment_pagination_ignores_other_runs_authors_and_null_bodies(self):
         pages = [
@@ -524,6 +550,10 @@ class ShellStepTests(unittest.TestCase):
             "comments": [response(ISSUE_API + "/comments", paginated=True, error=True)],
             "parent": [
                 response(ISSUE_API + "/comments", [[comment()]], paginated=True),
+                response(ISSUE_API, error=True),
+            ],
+            "reply parent": [
+                response(ISSUE_API + "/comments", [[comment("reply")]], paginated=True),
                 response(ISSUE_API, error=True),
             ],
             "native children": [
@@ -679,6 +709,20 @@ class StaticContractTests(unittest.TestCase):
             for label in ("decomposed", "factory-triage-pending"):
                 with self.subTest(event=event, label=label):
                     self.assertIn(f"!contains(github.event.issue.labels.*.name, '{label}')", clause)
+
+    def test_static_workflow_runs_require_same_repository_before_routing(self):
+        clause = " ".join(self.route_condition.split(
+            "(github.event_name != 'workflow_run' ||", 1,
+        )[1].split())
+        self.assertTrue(clause.startswith(
+            "(github.event.workflow_run.head_repository.full_name == github.repository &&"
+        ), clause)
+        self.assertIn(
+            """contains(fromJSON('["failure", "timed_out"]'), github.event.workflow_run.conclusion)""",
+            clause,
+        )
+        self.assertIn("github.event.workflow_run.conclusion == 'success'", clause)
+        self.assertIn("github.event.workflow_run.path == '.github/workflows/pr-review.yml'", clause)
 
     def test_static_failed_precondition_blocks_agent_but_reports_and_verifies(self):
         self.assertLess(
