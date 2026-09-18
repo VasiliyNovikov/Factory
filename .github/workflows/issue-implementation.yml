@@ -93,7 +93,8 @@ jobs:
           issue_number, source_pr, reply_number, and tracking_label, all as strings.
           Use positive numeric IDs, source_pr empty for issue events, reply_number equal to
           source_pr for PR feedback/push checks or issue_number otherwise, and
-          tracking_label=factory-issue-NUMBER. Deduplicate by tracking label.
+          tracking_label=factory-issue-NUMBER. Return unique tracking labels and reply targets;
+          reject ambiguous associations.
           Ordinary events have at most one item; default-branch pushes may have multiple.
           Write work_items=[] only for a verified skip or no eligible PRs.
           Never truncate enumeration or emit a partial matrix. On an API failure, incomplete
@@ -116,7 +117,8 @@ jobs:
                 .tracking_label == ("factory-issue-" + .issue_number) and
                 .reply_number == (if .source_pr == "" then .issue_number else .source_pr end)
               ) and
-              ([.[].tracking_label] | length == (unique | length))
+              ([.[].tracking_label] | length == (unique | length)) and
+              ([.[].reply_number] | length == (unique | length))
             then . else error("Invalid or oversized implementation matrix") end
           ' <<< "$WORK_ITEMS")
           printf 'work_items=%s\n' "$items" >> "$GITHUB_OUTPUT"
@@ -144,7 +146,7 @@ jobs:
       TRACKING_LABEL: ${{ matrix.tracking_label }}
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
       ISSUE_BRANCH: factory/issue-${{ matrix.issue_number }}
-      RESULT_MARKER: factory-issue-run:${{ github.run_id }}:${{ github.run_attempt }}
+      RESULT_MARKER: factory-issue-run:${{ github.run_id }}:${{ github.run_attempt }}:${{ matrix.tracking_label }}
     steps:
       - name: Create Factory App token
         id: factory-token
@@ -197,7 +199,9 @@ jobs:
           --harness copilot
           --profile implement
           --prompt "Implement issue ${ISSUE_NUMBER} in ${GITHUB_REPOSITORY}; source PR: ${SOURCE_PR}
-          (empty for issue events). Read GITHUB_EVENT_PATH, repository guidance, and full issue/PR
+          (empty for issue events). Work only on this issue and its own PR; never maintain other
+          issues' PRs in this invocation. Repository-wide candidate enumeration belongs only to
+          the read-only routing job. Read GITHUB_EVENT_PATH, repository guidance, and full issue/PR
           discussions and reviews. Address the triggering feedback; for CI inspect its run/attempt
           and failed logs.
           This job has a 30-minute total time limit, including setup time already elapsed.
@@ -224,7 +228,9 @@ jobs:
           do not create a PR or implement unrelated outstanding requests.
           Shared concurrency can replace a pending feedback job, so also address previously
           unhandled issue/PR feedback within this issue's existing scope. A clean conflict
-          probe must not cause that feedback to be dropped.
+          probe must not cause that feedback to be dropped. Post its outcome in the conversation
+          where it was raised as well, in addition to the required result on ${REPLY_NUMBER}.
+          Read back those additional replies in their original conversations.
           On ordinary implementation/follow-up events, also check the PR for merge conflicts.
           Use a non-working-tree merge probe such as git merge-tree --write-tree with the exact
           fetched head/base OIDs. Exit 0 means no conflict; exit 1 with conflict details means
@@ -287,10 +293,18 @@ jobs:
           read-backs as failures, never success.
           Answer ordinary issue/PR comments and review summaries in their main conversation;
           they are not resolvable threads.
-          Always post a new ${FACTORY_LOGIN} comment on conversation ${REPLY_NUMBER}, even after
-          deduplication or mutation failure: outcome, addressed/outstanding feedback with thread links,
-          PR link, and <!-- ${RESULT_MARKER} -->. For conflict checks include the checked head/base,
-          whether conflicts were confirmed, changes or blockers, and actual verification limits.
+          Always report on conversation ${REPLY_NUMBER} with a ${FACTORY_LOGIN} comment:
+          outcome, addressed/outstanding feedback with thread links, PR link, and <!-- ${RESULT_MARKER} -->.
+          Post a new comment even after deduplication or mutation failure, with one exception:
+          for a default-branch push with a verified clean probe, no repository changes, no feedback
+          handled or pending, and no errors or blockers, update the existing conflict-status comment
+          in place, or create it if absent. Identify that dedicated comment by
+          <!-- factory-conflict-status:${TRACKING_LABEL} --> in this PR's API-returned comments.
+          Re-read it and verify its PR, ${FACTORY_LOGIN} author, and stable marker before editing;
+          multiple matches are a blocker. Never overwrite an ordinary result comment.
+          Refresh the outcome, checked revisions, and run marker, retaining the stable status marker.
+          For conflict checks include the checked head/base, whether conflicts were confirmed,
+          changes or blockers, and actual verification limits.
           If an issue-triggered run encounters an unresolved merge conflict, also explain the
           blocker on the existing PR. Factory comments and PR-branch pushes do not start another
           push-triggered check; do not manufacture events or retry loops."

@@ -46,10 +46,13 @@ flowchart TD
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
 triaged issue and, when present, a matching open Factory PR. CI must match the
 PR's current head or merge revision. Default-branch updates check all eligible
-Factory PRs for merge conflicts; ordinary follow-ups check too. Confirmed conflicts
-are resolved with a verified merge into the PR branch, not a history rewrite.
-Clean/behind branches get no conflict-repair commit; ambiguous resolutions get a
-blocker on the PR. Factory does not automatically merge PRs or close issues.
+Factory PRs for merge conflicts through separate, single-PR implementer jobs;
+ordinary follow-ups check too. Confirmed conflicts are resolved with a verified
+merge into the PR branch, not a history rewrite.
+Clean/behind branches get no conflict-repair commit, and no-op push checks reuse
+a dedicated status comment. Absorbed feedback is also answered in its original
+conversation; ambiguous resolutions get a blocker on the PR. Factory does not
+automatically merge PRs or close issues.
 
 ## CI examples
 

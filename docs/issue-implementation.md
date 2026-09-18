@@ -127,11 +127,15 @@ Ordinary events produce at most one item. A default-branch push enumerates all
 pages of open PRs and produces one item per eligible Factory PR, with the PR as
 `source_pr` and `reply_number`, even if mergeability is clean or unknown.
 Implementation, not the router, checks the latest head/base for conflicts.
+Only the read-only router enumerates repository-wide candidates. Each matrix item
+starts a separate implementer invocation scoped to one issue and its own PR;
+that invocation must not maintain other issues' PRs.
 
 A verified skip produces `work_items=[]`. Missing or malformed output fails the
 JSON contract check rather than silently skipping implementation. The check
 requires string IDs, matching tracking labels/reply targets, and unique issue
-labels; push items must include a nonempty PR number. The matrix supports up to 256
+labels and reply targets, preventing separate issue jobs from targeting the same
+PR; push items must include a nonempty PR number. The matrix supports up to 256
 items (GitHub's job limit); incomplete enumeration, API failures, or more items
 must be reported without emitting a partial matrix. Validation checks the output
 shape, not live eligibility or the completeness of the agent's enumeration.
@@ -155,7 +159,10 @@ full issue and PR discussions to include that feedback; the surviving run posts
 its result in its triggering conversation (the PR for a push-triggered check).
 Push-triggered jobs also handle unaddressed feedback within the existing issue
 scope, even if the conflict probe is clean, so they do not drop feedback from a
-replaced pending job. They must not expand the issue scope or create a new PR.
+replaced pending job. Outcomes for that absorbed feedback also go to the
+conversation where it was raised, in addition to the required result on the PR,
+and are read back there.
+They must not expand the issue scope or create a new PR.
 
 ## Merge-conflict maintenance
 
@@ -199,6 +206,17 @@ Each result comment includes the checked head/base, conflict classification,
 changes or blockers, and verification limits. An issue-triggered run that cannot
 resolve a conflict also explains the blocker on the existing PR.
 
+For a default-branch push with a verified clean probe, no repository changes,
+no handled or pending feedback, and no errors or blockers, Copilot updates a
+dedicated Factory-authored conflict-status comment instead of adding a comment
+on every push. It creates that comment only if absent, using
+`<!-- factory-conflict-status:<tracking_label> -->` as its stable marker.
+Before editing, it re-reads the comment from that PR's API results and verifies
+its conversation, App author, and marker; multiple matches are a blocker.
+Ordinary result comments are never reused. The refreshed status retains its
+stable marker and includes the current checked revisions, outcome, limits, PR
+link, and current run marker. All other outcomes still require a new comment.
+
 ## Review-thread feedback
 
 Using `gh api graphql` with the App token, Copilot paginates the eligible PR's
@@ -228,13 +246,20 @@ threads stay untouched. No additional App permissions are needed.
 
 ## Result verification
 
-Every implementation run must post a new App-authored comment in the triggering
-conversation with its outcome, unique run marker, PR link, and addressed/outstanding
-feedback with thread links, even after deduplication or mutation failures.
+Every implementation job must report in an App-authored comment in the triggering
+conversation with its outcome, PR link, and addressed/outstanding feedback with
+thread links. Its marker is scoped to both the run attempt and matrix item:
+`<!-- factory-issue-run:<run_id>:<run_attempt>:<tracking_label> -->`.
+One matrix item's comment cannot satisfy another item's result check.
+A new comment is required even after deduplication or mutation failures, except
+for the clean no-op push status update described above.
 
-`Verify Factory result` checks only for that comment; a missing comment fails the
-job. A green run does not prove correct PR changes, successful conflict repair,
-or successful thread mutations; Copilot verifies those separately, including
+`Verify Factory result` checks for the App-authored comment containing that exact
+job marker, whether newly posted or updated in place; a missing result fails the
+job. It does not verify additional replies to absorbed feedback in other
+conversations, which Copilot must read back separately. A green run does not prove
+correct PR changes, successful conflict repair, or successful thread mutations;
+Copilot verifies those separately, including
 mutation read-backs. PR creation,
 updates, and labels remain Copilot's responsibility. Setup failures before Copilot
 starts appear only in Actions logs.
@@ -242,5 +267,6 @@ starts appear only in Actions logs.
 **CI status:** Issue-to-PR implementation and addressed-thread resolution have run
 in CI. Clarification replies, duplicate-reply prevention, and denied-resolution
 handling have not yet been exercised live. Default-branch fan-out and conflict
-repair also require live event-to-PR verification after deployment; local Git
-probes and workflow checks do not establish AI resolution quality or live routing.
+repair, in-place no-op status updates, and absorbed-feedback replies also require
+live event-to-PR verification after deployment; local Git probes and workflow
+checks do not establish AI resolution quality or live routing.
