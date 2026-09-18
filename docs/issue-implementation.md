@@ -94,6 +94,11 @@ itself are skipped.
   blockers in the PR conversation.
 - Successful checks, approvals, cancellations, and stale revisions are skipped.
 
+Before minting an App token or invoking Copilot, the routing job requires a
+workflow completion's `head_repository.full_name` to match `github.repository`.
+Fork or missing-head-repository completions do not start routing, even on failure.
+Fork PRs still receive the separate read-only PR-head validator checks in CI.
+
 No list of test workflow names needs maintaining. Implementation uses the same
 tracking-label concurrency group for eligible CI feedback and comments, rechecks
 the revision before acting, pushes fixes, and lets the relevant CI run again.
@@ -184,6 +189,14 @@ and are read back there.
 They must not expand the issue scope or create a new PR.
 
 ## Merge-conflict maintenance
+
+GitHub documents no [mergeability-change event](https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request).
+[`synchronize`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request)
+follows PR head updates, not base-only advances affecting other PRs. The
+[UI/API mergeability calculation](https://docs.github.com/en/rest/guides/using-the-rest-api-to-interact-with-your-git-database#checking-mergeability-of-pull-requests)
+does not provide a separate trigger. A custom `repository_dispatch` would still
+need a detector to send it, so it would add orchestration rather than replace
+default-branch discovery. Each implementer remains scoped to one issue/PR.
 
 Default-branch pushes fan out to eligible Factory PRs using the same issue
 concurrency groups as comments and CI feedback. The push trigger explicitly lists
