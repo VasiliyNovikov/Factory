@@ -36,7 +36,7 @@ flowchart TD
     implementation -->|Already addressed, no commit or description change<br/>Factory adds factory-review-requested| review
     review -->|Current-revision findings| implementation
     review -->|Clean and approval permitted| approval["Agentic: approval<br/>Review author: Actions"]
-    review -->|Verified submitted review| consumed["Automation: remove factory-review-requested<br/>Identity: Actions"]
+    review -->|Verified review of captured request| consumed["Automation: remove factory-review-requested<br/>Identity: Actions"]
     pr --> ci["Automation: PR-linked CI<br/>Checks produced by: GitHub Actions"]
     pr -->|Discussion or review| feedback
     ci -->|Current-revision failure or timeout| implementation

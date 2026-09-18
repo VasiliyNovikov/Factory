@@ -41,28 +41,49 @@ jobs:
         run: |
           event=$(jq -c . "$GITHUB_EVENT_PATH")
           pr=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}")
-          jq -e 'type == "object"' <<< "$pr" >/dev/null
-          if jq -en --argjson event "$event" --argjson pr "$pr" \
+          jq -e '
+            (.state == "open" or .state == "closed") and
+            (.draft | type == "boolean") and (.head.sha | type == "string") and
+            (.head.repo.full_name | type == "string")
+          ' <<< "$pr" >/dev/null
+          requested=$(jq -r '[.labels[].name] | index("factory-review-requested") != null' <<< "$pr")
+          if ! jq -en --argjson event "$event" --argjson pr "$pr" \
+            --argjson requested "$requested" \
             --arg repo "$GITHUB_REPOSITORY" --arg sha "$PR_HEAD_SHA" '
               $pr.state == "open" and ($pr.draft | not) and
               $pr.head.repo.full_name == $repo and $pr.head.sha == $sha and
               (if $event.action == "edited" then
                 ($event.changes | has("body")) and
-                ($event.changes.body.from // "") != ($pr.body // "") and
-                ($event.pull_request.body // "") == ($pr.body // "")
+                ($requested or (
+                  ($event.changes.body.from // "") != ($pr.body // "") and
+                  ($event.pull_request.body // "") == ($pr.body // "")))
               elif $event.action == "labeled" then
                 $event.label.name == "factory-review-requested" and
-                $event.sender.login == "factory-identity[bot]" and
-                ([$pr.labels[].name] | index("factory-review-requested") != null)
+                $event.sender.login == "factory-identity[bot]" and $requested
               else
                 (["opened", "synchronize", "reopened", "ready_for_review"] |
                   index($event.action) != null)
               end)
             ' >/dev/null; then
-            printf 'ready=true\n' >> "$GITHUB_OUTPUT"
-          else
             echo 'Skipping stale, duplicate, or ineligible PR review event.'
+            exit 0
           fi
+          if [[ "$requested" == "false" ]]; then
+            updated_at=$(jq -er '.pull_request.updated_at | select(type == "string" and length > 0)' <<< "$event")
+            reviews=$(gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews")
+            jq -e 'type == "array" and all(.[]; type == "array")' <<< "$reviews" >/dev/null
+            if jq -e --arg sha "$PR_HEAD_SHA" --arg updated_at "$updated_at" '
+              any(.[][];
+                .user.login == "github-actions[bot]" and .commit_id == $sha and
+                (.state == "COMMENTED" or .state == "APPROVED") and
+                .submitted_at > $updated_at and
+                ((.body // "") | contains("factory-review:")))
+            ' <<< "$reviews" >/dev/null; then
+              echo 'Skipping event already covered by a current-head review.'
+              exit 0
+            fi
+          fi
+          printf 'ready=true\nrequested=%s\n' "$requested" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js
         if: steps.eligible.outputs.ready == 'true'
@@ -107,16 +128,22 @@ jobs:
           Report the submitted review URL or the actual failure."
 
       - name: Verify review was posted
+        id: verified
         if: steps.eligible.outputs.ready == 'true'
         shell: bash
         run: |
           pr=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}")
+          jq -e '
+            (.state == "open" or .state == "closed") and
+            (.draft | type == "boolean") and (.head.sha | type == "string") and
+            (.head.repo.full_name | type == "string")
+          ' <<< "$pr" >/dev/null
           jq -e --arg repo "$GITHUB_REPOSITORY" --arg sha "$PR_HEAD_SHA" '
             .state == "open" and (.draft | not) and
             .head.repo.full_name == $repo and .head.sha == $sha
           ' <<< "$pr" >/dev/null || {
-            echo '::error::PR is no longer eligible at the reviewed head.'
-            exit 1
+            echo '::notice::PR is no longer eligible at the reviewed head; skipping the superseded assessment.'
+            exit 0
           }
           gh api --paginate --slurp \
             "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews" |
@@ -133,9 +160,12 @@ jobs:
               else .[0] | {state, commit_id, html_url}
               end
             '
+          printf 'posted=true\n' >> "$GITHUB_OUTPUT"
 
       - name: Acknowledge review request
-        if: steps.eligible.outputs.ready == 'true'
+        if: steps.verified.outputs.posted == 'true'
+        env:
+          REVIEW_REQUESTED: ${{ steps.eligible.outputs.requested }}
         shell: bash
         run: |
           pr=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}")
@@ -146,11 +176,8 @@ jobs:
             echo '::error::PR changed before the review request could be acknowledged.'
             exit 1
           }
-          event=$(jq -c . "$GITHUB_EVENT_PATH")
-          if jq -en --argjson event "$event" --argjson pr "$pr" '
-            ([$event.pull_request.labels[].name] | index("factory-review-requested") != null) and
-            ([$pr.labels[].name] | index("factory-review-requested") != null)
-          ' >/dev/null; then
+          if [[ "$REVIEW_REQUESTED" == "true" ]] &&
+            jq -e '[.labels[].name] | index("factory-review-requested") != null' <<< "$pr" >/dev/null; then
             gh api --method DELETE \
               "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels/factory-review-requested" >/dev/null
             gh api --paginate --slurp \

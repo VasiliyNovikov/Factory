@@ -9,10 +9,15 @@ Draft, closed, and fork PRs are skipped; the example uses the repository's
 write-capable Actions token.
 
 Reviews are serialized per PR without cancelling an active review. This keeps a
-late duplicate or stale follow-up from cancelling a valid assessment. Before
-installing tools, a live API check rejects stale heads, superseded description
-edits, and label events whose request has already been consumed. Existing commit
-events still schedule review; every submission must match the current head.
+late duplicate or stale follow-up from cancelling a valid assessment. GitHub
+retains at most one pending run; a newer arrival can replace it. Before installing
+tools, a live API check rejects stale heads and consumed requests. Without a live
+pending request, it also rejects superseded description edits and events covered
+by an Actions review submitted at the current head after the event's PR update.
+Thus a queued description update need not repeat the commit-triggered assessment
+(or vice versa). If no such review exists, the surviving event still schedules
+review, even if it replaced the commit event. Same-second timestamps conservatively
+permit another assessment. Every submission must match the current head.
 
 The workflow uses the shared [AI tool setup](ai-tools.md) with these permissions:
 
@@ -58,6 +63,10 @@ PR is still open, ready, in this repository, and at that commit before posting.
 A final API check requires exactly one submitted Actions review matching that
 commit and the unique run marker, rejects self-approval, and prints its actual
 state and URL. A green job can represent COMMENT, not just APPROVE.
+If the PR advances, closes, or becomes draft during assessment, verification
+reports a superseded skip, not a failed or verified review. That skip cannot
+acknowledge a request. Missing/invalid reviews at an eligible head and API errors
+still fail; a revision change immediately before acknowledgement also fails.
 
 ## No-commit handoff
 
@@ -69,11 +78,17 @@ No new credential or workflow permission is required.
 
 The native `pull_request.labeled` event retains the PR's head/merge association,
 so the existing implementation routing still recognizes the review's findings.
-Only Factory-authored additions of this label enter review. The reviewer removes
-it with the Actions token only if it was present in the triggering event, after
-verifying a submitted review and rechecking the live PR, then verifies removal.
-A request added during an older review stays pending for its own assessment.
-Failed reviews leave the request pending.
+Only Factory-authored additions of this label enter review. Each eligible run
+captures the live pending request before assessment, not the event's label
+snapshot. A surviving current-head event can therefore service a request whose
+queued label run was replaced, even if its own event predates the request or
+carries a superseded description. The reviewer removes the captured request with
+the Actions token only after verifying a submitted review and rechecking the live
+PR, then verifies removal. A request added after that capture remains pending for
+a later assessment; it cannot be consumed by the older review.
+Failed or cancelled assessments leave requests pending, with no automatic retry
+guarantee. Report a blocked request in the main PR conversation instead of
+removing and re-adding the label.
 API or removal read-back errors fail the job
 rather than representing approval or successful acknowledgement.
 
@@ -111,4 +126,7 @@ standard library, Bash, and `jq`). They execute the workflow's actual inline
 eligibility, result-verification, and acknowledgement steps against a fake `gh`:
 unchanged-head follow-ups, stale/ineligible events, duplicate consumed requests,
 review state/commit/run-marker matching, and API failures. These mocked checks
-do not establish AI review quality, real event delivery, or live approval.
+also cover superseded assessments, queued-edit deduplication, live request
+capture, and the implementation router's stale-review preflight. They do not
+establish AI review quality, GitHub queue scheduling, real event delivery, or live
+approval.
