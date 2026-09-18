@@ -95,8 +95,9 @@ jobs:
           Workflow completions must concern that PR's current head or merge revision:
           handle failed/timed-out CI or successful PR review with findings from the matching run.
           For other events, skip unrelated, ambiguous, stale, approved, or otherwise non-actionable feedback.
-          Append one work_items=JSON_ARRAY line to GITHUB_OUTPUT. Each object must contain
-          issue_number, source_pr, reply_number, and tracking_label, all as strings.
+          Append one work_items=JSON_ARRAY line to GITHUB_OUTPUT. Each object must contain exactly
+          these four keys and no others: issue_number, source_pr, reply_number, and tracking_label,
+          all as strings.
           Use positive numeric IDs, source_pr empty for issue events, reply_number equal to
           source_pr for PR feedback/push checks or issue_number otherwise, and
           tracking_label=factory-issue-NUMBER. Return unique tracking labels and reply targets;
