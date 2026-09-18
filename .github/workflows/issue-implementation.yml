@@ -25,8 +25,11 @@ jobs:
          contains(github.event.pull_request.labels.*.name, 'triaged') &&
          contains(fromJSON('["commented", "changes_requested"]'), github.event.review.state))) &&
       (github.event_name != 'workflow_run' ||
-        (github.event.workflow_run.path != '.github/workflows/issue-implementation.yml' &&
+        (github.event.workflow_run.head_repository.full_name == github.repository &&
+         startsWith(github.event.workflow_run.head_branch, 'factory/issue-') &&
+         github.event.workflow_run.path != '.github/workflows/issue-implementation.yml' &&
          github.event.workflow_run.path != '.github/workflows/issue-triage.yml' &&
+         github.event.workflow_run.path != '.github/workflows/workflow-diagnostics.yml' &&
          (contains(fromJSON('["failure", "timed_out"]'), github.event.workflow_run.conclusion) ||
           (github.event.workflow_run.conclusion == 'success' &&
            github.event.workflow_run.path == '.github/workflows/pr-review.yml'))))

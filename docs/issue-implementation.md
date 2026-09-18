@@ -78,12 +78,18 @@ accepted. Comments do not need a command prefix or a collaborator role.
 
 Reviews posted using `GITHUB_TOKEN` do not directly trigger another workflow.
 The `workflow_run` completion trigger uses `workflows: ['*']` to receive all
-workflow completions (GitHub requires a nonempty `workflows` filter), then
-routes only runs linked to an open, labeled Factory PR at its current head or
-current synthetic merge commit. It prefers the run's explicit PR association;
+workflow completions (GitHub requires a nonempty `workflows` filter). Before
+minting an App token, installing tools, or invoking Copilot, the routing job
+requires the run's head repository to match this repository and its branch to
+start with `factory/issue-`. Fork workflow failures and default-branch push
+failures therefore skip routing. Eligible runs must still be linked to an open,
+labeled Factory PR at its current head or current synthetic merge commit.
+It prefers the run's explicit PR association;
 when absent, PR and push runs may resolve through a unique open PR on that branch.
-Ambiguous associations, unrelated runs, and completions of triage or implementation
-itself are skipped.
+Ambiguous associations, unrelated runs, and completions of triage, implementation,
+or workflow diagnostics are skipped, including diagnostics manually run on a
+Factory branch. Its next invocation analyzes its predecessor without invoking
+the PR-feedback router.
 
 - Successful `.github/workflows/pr-review.yml` runs require a bot review with
   findings matching that run's marker and the current PR head.
@@ -106,8 +112,9 @@ closed, or mismatched PRs should produce no routing outputs.
 
 YAML conditions skip `factory-identity[bot]` comments/reviews, comments or reviews
 on closed or untriaged items, unrelated issue labels, approvals, successful non-review
-workflows, and triage/implementation completions before starting routing. Keep
-the early author filter aligned with the installed Factory App's login. Other
+workflows, fork or non-Factory-branch workflow runs, and triage/implementation/diagnostics
+completions before starting routing. Keep the early author filter aligned with
+the installed Factory App's login. Other
 events incur a Copilot invocation even when routing decides there is no work.
 Routing checks out the default branch and has a 15-minute timeout. Its App token
 has only Contents, Issues, and Pull requests read access; the built-in token

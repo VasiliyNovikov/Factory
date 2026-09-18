@@ -37,6 +37,16 @@ flowchart TD
     pr --> ci["Automation: PR-linked CI<br/>Checks produced by: GitHub Actions"]
     pr -->|Discussion or review| feedback
     ci -->|Current-revision failure or timeout| implementation
+
+    diagnosticsTrigger["Automation: daily 00:00 UTC on default branch<br/>Manual trigger on selected branch"] --> diagnostics{"Agentic: workflow diagnostics<br/>Identity: Factory"}
+    diagnostics -->|First invocation| boundary["Agentic: establish boundary only<br/>No analysis or findings"]
+    diagnostics -->|Later invocations| workflowAnalysis["Agentic: analyze same-repository runs since previous diagnostics<br/>All workflows / outcomes; include previous run<br/>Parallel read-only Copilot subagents"]
+    workflowAnalysis --> findings["Agentic: consolidate findings<br/>Check issues / PRs in all states for duplicates"]
+    findings -->|New actionable findings only| diagnosticsIssue["Agentic: new unlabeled issue per finding<br/>Author: Factory"]
+    diagnosticsIssue --> triage
+    boundary --> diagnosticsSummary["Agentic: verify actions and summarize results<br/>Job summary and logs"]
+    findings --> diagnosticsSummary
+    diagnosticsIssue --> diagnosticsSummary
 ```
 
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
@@ -62,6 +72,10 @@ on the default branch. PR review runs on PR events. Issue triage assesses new
 issues and clarification comments; implementation handles triaged issues and
 feedback on their Factory PRs. See
 [GitHub's Copilot CLI Actions guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli-in-actions).
+Workflow diagnostics runs daily at 00:00 UTC or manually. Copilot selects the
+same-repository run window, analyzes workflows with parallel subagents, and sends
+actionable findings through triage. It verifies its actions and summarizes results
+in the job summary and logs.
 
 1. [Install AI tools and run a prompt](docs/ai-tools.md)
 2. [Create a pull request](docs/create-pull-request.md) — tested successfully.
@@ -69,3 +83,4 @@ feedback on their Factory PRs. See
 4. [PR review](docs/pr-review.md) — comment reviews tested successfully; approvals pending.
 5. [Triage issues before implementation](docs/issue-triage.md)
 6. [Turn a triaged issue or follow-up comment into a PR](docs/issue-implementation.md)
+7. [Diagnose workflow runs and create actionable issues](docs/workflow-diagnostics.md)

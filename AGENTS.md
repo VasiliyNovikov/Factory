@@ -32,8 +32,9 @@
   - [PR review](docs/pr-review.md)
   - [Issue triage and label handoff](docs/issue-triage.md)
   - [Issue implementation and follow-ups](docs/issue-implementation.md)
+  - [Periodic workflow diagnostics](docs/workflow-diagnostics.md)
 - No application toolchain, dependency manifest, or build/test/lint commands are
-  configured.
+  configured. Automated workflow tests are deferred for now.
 - `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
   Copilot PR-creation test. See the linked examples for setup, permissions,
   invocation, and result verification.
@@ -45,6 +46,12 @@
 - `.github/workflows/issue-implementation.yml` implements triaged issues and feedback on
   their Factory PRs using the Factory App. See its example for permissions,
   shared-label concurrency, PR tracking, and result checks.
+- `.github/workflows/workflow-diagnostics.yml` analyzes repository workflow runs
+  daily or manually with parallel Copilot subagents and creates findings issues
+  for normal triage. Copilot selects same-repository runs, verifies its actions,
+  and records results in the job summary. Its first invocation establishes a
+  boundary without analysis. Diagnostics verification is AI-owned; no separate
+  report/receipt-check job is required.
 
 ## Test value and verification
 
