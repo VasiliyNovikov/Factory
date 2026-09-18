@@ -11,7 +11,9 @@ Starting with small things:
 ## Factory workflow
 
 Triage applies the unique `factory-issue-<number>` tracking label before `triaged`
-starts implementation. The resulting Factory PR carries both labels.
+starts implementation. The resulting Factory PR carries both labels. Larger
+requests can instead become open `decomposed` parents with native sub-issues;
+each prepared child enters normal triage with its own tracking identity.
 
 **Actors:** Agentic blocks use Copilot in CI; human / bot input can come from a
 human or another bot under its own account. Automation denotes CI runs and checks.
@@ -25,6 +27,10 @@ flowchart TD
     triage -->|Not ready| clarification["Agentic: clarification or explanation<br/>Comment author: Factory"]
     clarification --> answer["Human / bot: answer or comment<br/>Author: submitting account"]
     answer --> triage
+    triage -->|Independent child work is useful| decomposition["Agentic: durable plan + decomposed parent<br/>Identity: Factory; no parent implementation"]
+    decomposition --> children["Agentic: create / reuse native sub-issues<br/>Identity: Factory; new children start pending"]
+    children -->|Verified setup and child release| triage
+    decomposition -->|Parent comment: reconcile or resume partial split| triage
     triage -->|Ready| tracking["Agentic: ready comment + factory-issue-NUMBER<br/>Created / applied by: Factory"]
     tracking -->|Factory then applies triaged| implementation["Agentic: issue implementation<br/>Identity: Factory"]
     implementation -->|Actionable| pr["Agentic: create / update PR + commits<br/>Author: Factory"]
@@ -42,7 +48,8 @@ flowchart TD
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
 triaged issue and, when present, a matching open Factory PR. CI must match the
 PR's current head or merge revision. Factory does not automatically merge PRs
-or close issues.
+or close issues. Decomposed parents and pending children cannot be handed
+directly to implementation; retries reuse planned children instead of duplicating work.
 
 ## CI examples
 

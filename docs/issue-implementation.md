@@ -12,6 +12,14 @@ relevant code before acting:
 - Unclear, unsuitable, already satisfied, or blocked request: explain or ask
   specific questions in the conversation where the request was posted.
 
+Decomposition is handled by [triage](issue-triage.md), not by implementing its
+tracking parent. Issues labeled `decomposed` or `factory-triage-pending`, or
+having native children or a Factory decomposition plan, are not eligible for
+direct implementation, even if they also have `triaged`. This is checked against
+the original issue for PR and CI follow-ups too, and rechecked before editing or
+pushing. Prepared children enter normal triage and use their own issue number,
+tracking label, branch, and PR; they never inherit their parent's identity.
+
 Replies, PRs, and commits use the Factory App identity. Copilot model requests
 use the built-in Actions token. PR creation and subsequent App-authenticated
 pushes trigger the separate [PR-review workflow](pr-review.md).
@@ -98,7 +106,8 @@ repository, base, branch, and unique tracking label, and require the original
 issue to remain open with matching labels. Untriaged issues and unrelated,
 closed, or mismatched PRs should produce no routing outputs.
 
-YAML conditions skip `factory-identity[bot]` comments/reviews, comments or reviews
+YAML conditions skip direct issue handoffs/comments carrying decomposition or
+pending labels, `factory-identity[bot]` comments/reviews, comments or reviews
 on closed or untriaged items, unrelated issue labels, approvals, successful non-review
 workflows, and triage/implementation completions before starting routing. Keep
 the early author filter aligned with the installed Factory App's login. Other
@@ -120,7 +129,8 @@ For issue events, `source_pr` is empty and `reply_number` equals `issue_number`.
 Copilot writes no outputs when skipping and explains its decision or API failure
 in the log. There is no separate parser or output validation; an absent
 `issue_number` skips implementation, including if routing failed to produce it.
-Implementation rechecks live state before changing the PR.
+Implementation rechecks live state before changing the PR. Conflicting parent
+handoffs receive an explanation rather than removing decomposition safeguards.
 
 The implementation job uses the shared tracking label for concurrency:
 
