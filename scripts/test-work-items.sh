@@ -62,6 +62,8 @@ check 'malformed output' reject push '['
 check 'multiple JSON values' reject push '[] []'
 check 'mismatched reply target' reject push \
   "$(jq -c 'map(.reply_number = "35")' <<< "$matrix")"
+check 'mismatched tracking label' reject push \
+  "$(jq -c 'map(.tracking_label = "factory-issue-99")' <<< "$matrix")"
 
 many=$(jq -cn '[range(1; 258) | tostring | {
   issue_number: ., source_pr: ., reply_number: ., tracking_label: ("factory-issue-" + .)
