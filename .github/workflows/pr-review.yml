@@ -91,7 +91,9 @@ jobs:
           COMMENTED or APPROVED state, exact run marker, and self-approval restriction.
           Only after that verification, if you captured a pending request, recheck live eligibility
           and head, remove only factory-review-requested with the Actions token, and read back
-          the labels to verify removal. Preserve all other labels and requests added after capture.
+          the labels to verify removal. Only after that read-back passes, append acknowledged=true
+          to GITHUB_OUTPUT; this receipt distinguishes removal from a later request.
+          Preserve all other labels and requests added after capture.
           A revision change before acknowledgement or any API/read-back error is a failure;
           leave result unset. If no request was captured, do not mutate labels.
           After successful verification and any acknowledgement, append result=reviewed to
@@ -101,6 +103,7 @@ jobs:
         env:
           REVIEW_RESULT: ${{ steps.review.outputs.result }}
           REVIEW_REQUESTED: ${{ steps.review.outputs.requested }}
+          REVIEW_ACKNOWLEDGED: ${{ steps.review.outputs.acknowledged }}
         shell: bash
         run: |
           pr=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}")
@@ -109,6 +112,7 @@ jobs:
             --slurpfile event "$GITHUB_EVENT_PATH" \
             --arg repo "$GITHUB_REPOSITORY" --arg sha "$PR_HEAD_SHA" \
             --arg marker "<!-- ${REVIEW_MARKER} -->" \
+            --arg acknowledged "$REVIEW_ACKNOWLEDGED" \
             --arg result "$REVIEW_RESULT" --arg requested "$REVIEW_REQUESTED" '
             def submitted:
               .user.login == "github-actions[bot]" and .commit_id == $sha and
@@ -144,7 +148,7 @@ jobs:
             else
               [$reviews[][] | select(submitted and ((.body // "") | contains($marker)))] |
               if length != 1 then error("Expected exactly one matching submitted review")
-              elif $requested == "true" and
+              elif $requested == "true" and $acknowledged != "true" and
                    any($pr.labels[]; .name == "factory-review-requested") then
                 error("Captured review request was not acknowledged")
               else .[0] | {outcome: "reviewed", state, commit_id, html_url} end

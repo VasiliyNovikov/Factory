@@ -64,8 +64,9 @@ Copilot verifies its submission and acknowledges any captured request, then
 reports `result=reviewed` to `GITHUB_OUTPUT`. It reports `result=skipped` only for
 an evidenced skip, and leaves the result unset on incomplete work or API failure.
 A read-only final check independently requires exactly one submitted Actions
-review matching the commit and exact run marker, rejects self-approval, checks
-captured-request removal, and prints the actual state and URL. It accepts a skip
+review matching the commit and exact run marker, rejects self-approval, requires
+either an acknowledgement receipt or an absent request label for a captured
+request, and prints the actual state and URL. It accepts a skip
 only with live evidence, never simply because Copilot says it skipped.
 A green job can represent COMMENT or a skip, not just APPROVE.
 If the PR advances, closes, or becomes draft during assessment, verification
@@ -93,6 +94,10 @@ The reviewer removes the captured request with
 the Actions token only after verifying a submitted review and rechecking the live
 PR, then verifies removal. A request added after that capture remains pending for
 a later assessment; it cannot be consumed by the older review.
+After its successful removal read-back, the reviewer records `acknowledged=true`
+in `GITHUB_OUTPUT`. The final guard accepts that receipt even if a new request
+arrives before its label read, rather than misreporting the preserved request as
+a failed acknowledgement. The receipt never substitutes for a verified review.
 Failed or cancelled assessments leave requests pending, with no automatic retry
 guarantee. Report a blocked request in the main PR conversation instead of
 removing and re-adding the label.

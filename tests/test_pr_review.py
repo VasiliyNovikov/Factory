@@ -76,7 +76,7 @@ class ReviewWorkflowTest(unittest.TestCase):
         """))
         fake_gh.chmod(0o755)
 
-    def execute(self, *, result="reviewed", requested="true", reviews=None,
+    def execute(self, *, result="reviewed", requested="true", acknowledged="", reviews=None,
                 failure=None, overrides=None):
         responses = {
             f"GET {PR}": self.pr,
@@ -93,6 +93,7 @@ class ReviewWorkflowTest(unittest.TestCase):
                    GH_TOKEN="test-only", GITHUB_TOKEN="test-only",
                    GITHUB_REPOSITORY=REPO, GITHUB_EVENT_PATH=str(event),
                    PR_NUMBER="41", PR_HEAD_SHA=SHA, REVIEW_RESULT=result,
+                   REVIEW_ACKNOWLEDGED=acknowledged,
                    REVIEW_MARKER=MARKER, REVIEW_REQUESTED=requested, FAKE_GH_FIXTURE=str(fixture),
                    FAKE_GH_CALLS=str(calls))
         process = subprocess.run(
@@ -220,6 +221,12 @@ class ReviewWorkflowTest(unittest.TestCase):
     def test_acknowledgement_is_required_only_for_captured_requests(self):
         self.pr["labels"].append({"name": "factory-review-requested"})
         result, _ = self.execute()
+        self.assertNotEqual(result.returncode, 0)
+        result, calls = self.execute(acknowledged="true")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["outcome"], "reviewed")
+        self.assertEqual(calls, [f"GET {PR}", f"GET {PR}/reviews"])
+        result, _ = self.execute(acknowledged="true", reviews=[])
         self.assertNotEqual(result.returncode, 0)
         result, calls = self.execute(requested="false")
         self.assertEqual(result.returncode, 0, result.stderr)
