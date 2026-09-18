@@ -5,12 +5,14 @@ on:
     - cron: '0 0 * * *'
   workflow_dispatch:
 
-concurrency:
-  group: workflow-diagnostics
-  cancel-in-progress: false
-
 jobs:
   diagnose:
+    if: >-
+      github.event_name == 'schedule' ||
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    concurrency:
+      group: workflow-diagnostics
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -21,6 +23,7 @@ jobs:
       - name: Check out invocation revision
         uses: actions/checkout@v6
         with:
+          ref: ${{ github.workflow_sha }}
           persist-credentials: false
 
       - name: Create Factory diagnostics token
@@ -51,7 +54,7 @@ jobs:
         run: >-
           ./scripts/ai.sh --harness copilot
           --prompt "Research ${GITHUB_REPOSITORY}'s workflow runs since this workflow's
-          previous scheduled/manual invocation across branches, regardless of its conclusion,
+          previous default-branch scheduled/manual invocation, regardless of its conclusion,
           and create issues for evidenced fixes, optimizations, or improvements when needed.
           Read repository guidance. If this is the first invocation, establish the boundary
           without analysis or issues. API failures do not mean empty history.

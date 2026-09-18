@@ -66,6 +66,11 @@ Pull requests read, and Issues write on its App token. The built-in token suppli
 `actions: read` for same-repository run/job/log analysis. Copilot verifies issue
 creation with the App token and reports results in the job summary.
 
+The [Factory router](factory-router.md) uses the built-in token with Actions write
+for worker dispatch and Contents/Issues/Pull requests read for analysis. It needs
+no App token or additional App installation permission. Worker dispatches target
+the default branch and use the workers' own token permissions.
+
 Set these variables on the AI invocation, keeping any Git author/committer variables:
 
 ```yaml

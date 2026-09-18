@@ -1,9 +1,10 @@
 # Triage issues before implementation
 
-[Issue triage](../.github/workflows/issue-triage.yml) handles newly opened issues
-and new comments on open issues that do not have `triaged`. PR comments go to
-the separate [implementation workflow](issue-implementation.md). Only Factory's own comments are
-ignored by author; other bots and humans can provide clarification.
+[Issue triage](../.github/workflows/issue-triage.yml) is dispatched on the default
+branch by the [Factory router](factory-router.md) for newly opened issues and
+clarification comments on untriaged issues. The router owns eligibility analysis;
+the worker AI checks mutable state before acting. Stale/already-handled tasks skip
+with evidence in the summary. Other bots and humans can provide clarification.
 
 The workflow runs `scripts/ai.sh --harness copilot --profile triage`, using the
 `triage` profile's model, reasoning effort, and context settings from
@@ -30,7 +31,7 @@ Copilot rechecks that the issue is open and untriaged. For a ready decision, it:
 4. Adds `triaged` in a separate API request, emitting the implementation handoff event.
 
 The labels are applied using the Factory App token so the `issues: labeled`
-event starts the implementation workflow. Copilot is instructed to reply about a conflicting
+event enters the router for implementation dispatch. Copilot is instructed to reply about a conflicting
 `factory-issue-*` label instead of assigning multiple identities. Retrying a partially completed
 handoff reuses the existing tracking label. Both labels are later copied onto
 the PR; the shared tracking label becomes its implementation concurrency key.
@@ -62,7 +63,7 @@ merge. After resolving a blocked prerequisite, post a new issue comment to
 trigger reassessment.
 
 A short read-only verification step confirms that Factory posted a comment
-with this run's marker. Label assignment and decision content are left to
+with this run's marker, unless the AI skipped before mutation. Label assignment and decision content are left to
 Copilot. A green triage run confirms a response, not a successful label handoff
 or completed implementation; check the issue labels for handoff readiness.
 See [issue implementation](issue-implementation.md) for the next stage.
