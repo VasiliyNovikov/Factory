@@ -82,6 +82,11 @@ jobs:
           on factory/issue-NUMBER with the same labels; check the original issue too.
           Workflow completions must concern that PR's current head or merge revision:
           handle failed/timed-out CI or successful PR review with findings from the matching run.
+          Already-addressed review findings still need handoff when no later review has assessed
+          the corrected context: route them so implementation can request re-review without a commit.
+          Skip duplicate handoffs when a review request is pending or the same unchanged feedback
+          and context have already been re-reviewed; persistent disagreement needs an explanation,
+          not another automatic review request.
           Skip unrelated, ambiguous, stale, approved, or otherwise non-actionable events.
           For an eligible event, append four key=value lines to GITHUB_OUTPUT:
           issue_number=NUMBER, source_pr=PR_NUMBER (empty for issue events),
@@ -185,7 +190,8 @@ jobs:
           Run appropriate checks and commit with the provided identity. Never force-push, push to
           the default branch, merge PRs, or close issues.
           Create/update one PR labeled ${TRACKING_LABEL} and triaged, with Fixes #${ISSUE_NUMBER}, a summary,
-          and actual verification results. For unclear, blocked, stale, or already-satisfied requests,
+          and actual verification results. Do not rewrite an unchanged description just to trigger review.
+          For unclear, blocked, stale, or already-satisfied requests,
           explain or ask; no speculative edits or empty commits.
           Using gh api graphql with the App token, read all the eligible PR's reviewThreads pages
           and each thread's comment pages: IDs, authors, bodies, reply relationships, isResolved,
@@ -212,6 +218,20 @@ jobs:
           read-backs as failures, never success.
           Answer ordinary issue/PR comments and review summaries in their main conversation;
           they are not resolvable threads.
+          After addressing review feedback, refresh the current-head reviews and relevant discussion.
+          New commits and actual PR-description edits already trigger PR review. If neither occurred
+          and verified already-addressed findings still need a fresh reviewer assessment, request it
+          by adding factory-review-requested to the eligible PR with the App token.
+          Create that repository label if missing; preserve an existing label's definition.
+          Recheck issue/PR eligibility and remote head immediately before adding it and verify the label
+          read-back. Reuse a pending request; never remove/re-add it to retrigger.
+          Inspect prior requests in the PR timeline and subsequent reviews. Do not request again
+          for the same unchanged feedback/context already re-reviewed, or for unclear, partial, blocked,
+          or disputed fixes; explain the outstanding points instead. A new substantive correction
+          can justify another request. The reviewer alone decides whether to approve and removes
+          the request label only after verifying its submitted review. Do not approve, manufacture
+          an empty commit, or claim that a request, resolved thread, or green run is approval.
+          When reporting a review outcome, read its actual state, commit_id, and run marker.
           Always post a new ${FACTORY_LOGIN} comment on conversation ${REPLY_NUMBER}, even after
           deduplication or mutation failure: outcome, addressed/outstanding feedback with thread links,
           PR link, and <!-- ${RESULT_MARKER} -->."

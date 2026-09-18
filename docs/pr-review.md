@@ -2,8 +2,17 @@
 
 [PR review](../.github/workflows/pr-review.yml) is a separate workflow that runs
 when a PR is opened, updated with new commits, reopened, or marked ready for
-review. Draft PRs and fork PRs are skipped; the example uses the repository's
-write-capable Actions token. New runs cancel older reviews of the same PR.
+review. It also reviews actual description edits and Factory's
+`factory-review-requested` label, so addressed feedback can receive a fresh
+assessment without a new commit. Other edits and labels are ignored.
+Draft, closed, and fork PRs are skipped; the example uses the repository's
+write-capable Actions token.
+
+Reviews are serialized per PR without cancelling an active review. This keeps a
+late duplicate or stale follow-up from cancelling a valid assessment. Before
+installing tools, a live API check rejects stale heads, superseded description
+edits, and label events whose request has already been consumed. Existing commit
+events still schedule review; every submission must match the current head.
 
 The workflow uses the shared [AI tool setup](ai-tools.md) with these permissions:
 
@@ -41,10 +50,37 @@ checks, real-logic mocked tests, and necessary regression/safety coverage remain
   because the same bot identity cannot approve its own PR.
 - Incomplete review or API failure: report the error without approving.
 
-The review is attached to the event's head commit. Copilot is instructed to check
-that the PR is still open, ready, and at that commit before posting. A final API
-check requires a submitted bot review matching that commit and a unique run
-marker, so a successful Copilot exit alone does not make the job pass.
+The reviewer refreshes the live diff, description, full discussion, reviews, and
+threads, and reassesses changes before submitting. A resolved thread, request
+label, or implementation-success report is not evidence that the PR is clean.
+The review is attached to the event's head commit. Copilot must check that the
+PR is still open, ready, in this repository, and at that commit before posting.
+A final API check requires exactly one submitted Actions review matching that
+commit and the unique run marker, rejects self-approval, and prints its actual
+state and URL. A green job can represent COMMENT, not just APPROVE.
+
+## No-commit handoff
+
+Actual description corrections use the native `pull_request.edited` event.
+For verified already-addressed feedback with no commit or description change,
+the implementer uses the App token to add `factory-review-requested` to the PR.
+It creates the repository label only if missing, using existing Issues access.
+No new credential or workflow permission is required.
+
+The native `pull_request.labeled` event retains the PR's head/merge association,
+so the existing implementation routing still recognizes the review's findings.
+Only Factory-authored additions of this label enter review. The reviewer removes
+it with the Actions token only after verifying a submitted review and rechecking
+the live PR, then verifies removal. Failed reviews leave the request pending.
+API or removal read-back errors fail the job
+rather than representing approval or successful acknowledgement.
+
+Pending requests are reused, not removed and re-added. The implementer inspects
+the PR timeline and subsequent reviews and does not request another assessment
+of identical feedback and unchanged context that has already been re-reviewed.
+Unclear, partial, blocked, or disputed feedback gets an explanation, not a
+request loop. New substantive corrections may warrant a fresh request.
+Approvals do not trigger implementation; request removal is not a review trigger.
 
 ## Run and verify
 
@@ -67,3 +103,10 @@ To enable automatic runs and let `github-actions[bot]` approve clean PRs, follow
 the [Factory GitHub App setup](github-app.md).
 The App creates PRs under a separate identity; the review workflow keeps using
 its built-in token.
+
+Focused local checks run with `python -m unittest discover -s tests -v` (Python's
+standard library, Bash, and `jq`). They execute the workflow's actual inline
+eligibility, result-verification, and acknowledgement steps against a fake `gh`:
+unchanged-head follow-ups, stale/ineligible events, duplicate consumed requests,
+review state/commit/run-marker matching, and API failures. These mocked checks
+do not establish AI review quality, real event delivery, or live approval.

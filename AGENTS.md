@@ -32,14 +32,16 @@
   - [PR review](docs/pr-review.md)
   - [Issue triage and label handoff](docs/issue-triage.md)
   - [Issue implementation and follow-ups](docs/issue-implementation.md)
-- No application toolchain, dependency manifest, or build/test/lint commands are
-  configured.
+- No application toolchain or dependency manifest is configured. Focused workflow
+  checks use `python -m unittest discover -s tests -v` with Python's standard
+  library, Bash, and `jq`; see the PR-review example for their scope and limits.
 - `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
   Copilot PR-creation test. See the linked examples for setup, permissions,
   invocation, and result verification.
-- `.github/workflows/pr-review.yml` reviews non-draft, same-repository PRs on
-  PR events and verifies that Copilot posted a review. See the PR-review example
-  for triggering and bot-approval constraints.
+- `.github/workflows/pr-review.yml` reviews open, non-draft, same-repository PRs on
+  commit, description-edit, and Factory review-request label events, then verifies
+  the posted review. See the PR-review example for triggering and bot-approval
+  constraints.
 - `.github/workflows/issue-triage.yml` assesses untriaged issues and clarification
   comments, then applies a unique tracking label followed by `triaged` when ready.
 - `.github/workflows/issue-implementation.yml` implements triaged issues and feedback on

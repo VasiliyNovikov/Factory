@@ -12,6 +12,24 @@ relevant code before acting:
 - Unclear, unsuitable, already satisfied, or blocked request: explain or ask
   specific questions in the conversation where the request was posted.
 
+Already-addressed review findings can still require a reviewer handoff rather
+than another code change. Actual commits and description corrections trigger
+[PR review](pr-review.md) automatically. If neither changed, but verified
+addressed feedback has not been reassessed, Factory adds the one-shot
+`factory-review-requested` label to the eligible PR and verifies the read-back.
+It creates the label if missing without changing an existing definition.
+Eligibility and the remote head are rechecked immediately before requesting.
+The reviewer independently assesses the live context and removes the label only
+after verifying its submitted review; the implementer never decides approval.
+
+Reuse a pending request. Inspect prior label requests and subsequent reviews;
+do not request another review of the same unchanged feedback/context already
+re-reviewed, remove/re-add the label to retrigger, rewrite an unchanged
+description, or manufacture an empty commit. Explain unclear, partial, blocked,
+or disputed findings instead. A new substantive correction can warrant a new
+request. Report the actual review state, commit, and run marker when available;
+a successful implementation or review workflow alone does not mean approval.
+
 Implementation follows the shared [test-value policy](../AGENTS.md#test-value-and-verification):
 choose checks for concrete requirements and uncovered regression risks, not merely
 changed files or incidental wording. Guidance-only changes may use direct inspection;
@@ -87,6 +105,9 @@ itself are skipped.
 
 - Successful `.github/workflows/pr-review.yml` runs require a bot review with
   findings matching that run's marker and the current PR head.
+  Already-addressed findings still route to implementation if the corrected
+  context needs its first reviewer reassessment. Pending requests and feedback
+  already re-reviewed in unchanged context do not cause duplicate handoffs.
 - Failed or timed-out workflows (including future test/validation CI) provide
   their jobs and logs as feedback. Copilot fixes actionable failures or explains
   blockers in the PR conversation.
