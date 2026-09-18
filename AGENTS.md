@@ -40,9 +40,10 @@
   shared-label concurrency, PR tracking, and result checks.
 - `.github/workflows/workflow-diagnostics.yml` analyzes repository workflow runs
   daily or manually with parallel Copilot subagents and creates findings issues
-  for normal triage. Copilot selects the window and records a report; a small
-  read-only job checks report status and issue receipts. Its first invocation
-  establishes a boundary without analysis.
+  for normal triage. Copilot selects same-repository runs, verifies its actions,
+  and records results in the job summary. Its first invocation establishes a
+  boundary without analysis. Diagnostics verification is AI-owned; no separate
+  report/receipt-check job is required.
 
 ## Test value and verification
 

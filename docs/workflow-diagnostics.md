@@ -1,146 +1,78 @@
 # Diagnose workflow runs
 
 [Workflow diagnostics](../.github/workflows/workflow-diagnostics.yml) runs daily
-at **00:00 UTC** (`0 0 * * *`). After it lands on the default branch, it can also
-be started from **Actions -> Workflow diagnostics -> Run workflow**. Select the
-default branch; dispatches on other branches are skipped. GitHub can delay
-scheduled runs. GitHub runs schedules only on the default branch, so scheduled
-invocations do not depend on repository metadata in the event payload to pass
-the job gate. If that metadata is absent, the analysis uses `github.ref_name`
-as the default-branch hint.
+at **00:00 UTC** (`0 0 * * *`) or manually from **Actions → Workflow diagnostics
+→ Run workflow** once it lands on the default branch. Select that branch;
+dispatches on other branches are skipped. GitHub can delay scheduled runs.
 
-Copilot owns history collection, workflow analysis, duplicate detection, and
-issue creation. The prompt states the goal, scope, safety boundaries, and report
-contract; Copilot chooses the API queries and investigation strategy rather than
-following a scripted collection recipe. It reuses
-`scripts/install-tools.sh`, `scripts/ai.sh --harness copilot`, and the `default`
-profile in `.github/model-config.json`.
+Copilot owns history selection, investigation, duplicate checks, issue creation,
+and result verification. It reuses `scripts/install-tools.sh`,
+`scripts/ai.sh --harness copilot`, and the `default` model profile.
 
-## Analysis window
+## Scope and investigation
 
-Copilot reads the current run and pages its workflow history to find the
-preceding default-branch scheduled or manual invocation by `run_number`,
-regardless of conclusion. If there is no predecessor, it records an
-`initialized` report and stops: **no run/log analysis, subagents, or findings
-issues**. Setup and Copilot still run to make that boundary decision. API errors
-must not be treated as empty history.
+The first invocation establishes a boundary with **no analysis or findings
+issues**. Later invocations cover the interval from the preceding scheduled or
+manual invocation, regardless of its conclusion, up to the current invocation.
+The preceding diagnostics run is included; the current one is inspected next
+time. Retries use the original invocation times. Older runs updated in the
+interval are included with a 90-day creation lookback before the window start.
 
-Later invocations inspect all workflows, branches, and outcomes between that
-predecessor (inclusive) and the current invocation (exclusive). The preceding
-diagnostics run is included; the current one is inspected next time. Original
-`created_at` timestamps and run IDs break same-second ties and preserve the
-window on retries, rather than advancing it to the retry time.
+All workflows, branches, and outcomes are eligible, but only runs whose
+`head_repository.full_name` matches this repository are analyzed. Fork-originated
+and unknown-origin runs are recorded as out of scope: their logs, artifacts, and
+revisions are not fetched, including through related PR code/diff links.
+This intentionally narrows the original repository-wide scope following the
+maintainer's PR review decision.
 
-The prompt also covers older runs updated during the interval, using a bounded
-creation lookback of **90 days before the window start**. This supplemental
-lookback does not shorten the primary interval, even after a longer gap.
-Copilot must handle pagination and API result limits without missing or
-double-counting runs. Missing or inconsistent history and API failures must be
-reported rather than hidden as complete coverage. Collection strategy and
-completeness remain model responsibilities, not a separate deterministic gate.
+Copilot uses parallel read-only subagents per workflow, waits for their results,
+and consolidates actionable findings. It chooses the queries and evidence needed
+from jobs, attempts, logs, workflow code, and related discussions, handling
+pagination and API limits. Successful runs can also reveal optimizations.
 
 One concurrency group serializes scheduled and manual runs without cancelling
-an active run. GitHub retains at most one pending invocation, so dispatch bursts
-can replace pending runs. The boundary is the preceding invocation, not the last
-successful analysis: failed/cancelled windows are not automatically replayed.
-Rerun the original invocation to retry its window. If all preceding history is
-deleted, Copilot can only establish a new initial boundary.
+an active run. GitHub keeps at most one pending invocation. Failed windows are
+not automatically replayed because the boundary is the preceding invocation,
+not the last successful analysis; rerun the original invocation to retry it.
+API failures must not be mistaken for empty history or a first invocation.
 
-## Analysis and issue handoff
+## Findings and reporting
 
-Copilot must launch one read-only subagent per selected workflow concurrently
-(parallel batches if tool limits require), wait for every result, and consolidate
-findings. Each subagent receives the complete selected run list and inspects
-attempts, jobs, relevant logs, and workflow revisions through read-only APIs.
-Successful, failed, cancelled, skipped, and unfinished runs are all in scope.
-Fetched code and log instructions must never be executed.
+Before creating an issue, Copilot checks issues and PRs in all states, including
+earlier attempts, for duplicates. Existing findings are linked, not changed.
+Each new actionable finding becomes one Factory-authored issue with evidence
+links, impact, proposed scope, acceptance criteria, and
+`<!-- factory-diagnostics:RUN_ID:ATTEMPT -->`. No findings means no issues.
 
-Before each new issue, the coordinator refreshes duplicate checks across
-issues **and PRs in all states**, including previous diagnostics attempts.
-Existing findings are linked in the report, not reopened, commented on, or
-duplicated. Create one issue per distinct evidenced fix, optimization, or other
-improvement, with impact, supporting run/job URLs, proposed scope, and acceptance
-criteria. No actionable findings means no issues.
+Issues are created **without labels**, so App-authored `issues.opened` events
+enter normal [triage](issue-triage.md). Copilot verifies creation responses and
+issue URLs and leaves later labels and triage updates alone. Diagnostics
+completions are excluded from the implementation event router.
 
-New issues use the Factory App identity, contain
-`<!-- factory-diagnostics:RUN_ID:ATTEMPT -->`, and have **no labels at creation**.
-Their App-authored `issues.opened` events enter normal [triage](issue-triage.md).
-Copilot checks the creation response and leaves later triage/human updates
-alone; it must not apply `triaged`, tracking labels, or triage-decision comments.
-Diagnostics completions remain excluded from the implementation event router.
+Within the 30-minute job budget, Copilot writes the window, per-workflow results,
+excluded runs, existing/new issue links, and evidence gaps or failures to the job
+summary and log. It distinguishes initialization, completed analysis, and
+incomplete analysis. Missing evidence must not be presented as a clean result.
 
-## Permissions and result checks
+Per the maintainer's simplification decision, there is no JSON report contract,
+report artifact, or separate verification job. Checks of investigation coverage
+and issue creation are AI-owned. Setup/CLI failures fail their normal workflow
+steps, but a successful CLI exit does **not** independently prove complete
+analysis or correct issue creation. Inspect the summary and logs; early failure
+can leave no AI summary. Automated workflow tests are deferred for now.
 
-Use the existing [Factory App setup](github-app.md). The analysis App token
-requests Contents read, Pull requests read, and Issues write, with no push or
-workflow-write access. Checkout uses the triggering event's revision by default
-and does not persist credentials. The built-in
-token has Contents/Actions read and `copilot-requests: write`. Read-only Actions
-queries use a command-local `GH_TOKEN="$GITHUB_TOKEN"` override; repository,
-issue, and PR operations use the App token. Model requests use
-`COPILOT_GITHUB_TOKEN`.
+## Permissions
 
-Before checkout or tool/token setup, the workflow seeds an `incomplete` report
-with a fatal error using Bash's built-in `printf`, without requiring `jq`.
-An early failure or a model that never writes its report therefore does not
-leave a success-shaped result. Copilot replaces this placeholder in `report.json`,
-preserving its schema, run ID, and producing attempt while recording the actual
-outcome, Markdown summary, unique created issue numbers, expected evidence
-limitations, and fatal errors. The summary records boundary URLs/timestamps, selected
-workflow/run IDs, actual subagent IDs and results, duplicate links, and created
-issue URLs. Outcomes are `initialized`, `analyzed`, or `incomplete`.
+The [Factory App token](github-app.md) has Contents read, Pull requests read, and
+Issues write, without push or workflow-write access. Checkout does not persist
+credentials. The built-in token supplies Contents/Actions read and
+`copilot-requests: write`. Individual read-only Actions commands use
+`GH_TOKEN="$GITHUB_TOKEN"`; repository, issue, and PR operations use the App token.
+`COPILOT_GITHUB_TOKEN` is reserved for model requests.
 
-A small inline check on a **fresh read-only runner**, without checkout or
-Copilot, installs `jq` only if missing, without installing the AI tools.
-It requires a well-formed report for the producing run/attempt, a nonempty
-summary, no fatal errors, and an `initialized` or `analyzed` outcome. An
-initialized report cannot claim created issues or evidence gaps. Every reported
-issue must exist in this repository with the Factory author and attempt marker;
-the verifier also paginates the Factory author's issues in all states, using
-`since` to exclude issues last updated before this invocation. Its lower bound
-is one second before the run's original `created_at`, read independently from
-the Actions API with a command-local built-in-token override. The one-second
-margin conservatively includes boundary-second updates.
-The original timestamp, rather than the retry time, preserves receipts on
-verification-only retries. The App token remains the default for all issue
-queries. The numbers carrying the exact marker must match `created_issues`.
-This catches omitted issues, including closed issues and findings hidden by an
-`initialized` report, without relying on search indexing. Other attempts and PRs
-are excluded. The verifier's fresh App token has only Issues read access.
-Missing reports, invalid or mismatched receipts, incomplete outcomes, and API
-errors fail explicitly. All inline scripts use explicit Bash with `pipefail`,
-so even a listing failure after valid partial output fails verification.
-
-Confirmed expired logs, superseded-attempt logs, or logs not yet available for
-unfinished runs go in `unavailable_evidence`, with cause and supporting URLs.
-They produce a visible warning and summary, not a clean result. Unexplained
-404s, permission failures, rate limits, other tooling failures, and unfinished
-subagent analysis belong in fatal `errors`.
-
-These checks verify **reported status and issue receipts, not independent
-coverage or reasoning**. First-run selection, collection completeness, actual
-subagent execution/concurrency, evidence classification, duplicate detection,
-and unlabeled creation are Copilot responsibilities. There is no pinned
-manifest or automated label-history audit. Receipt reconciliation cannot
-attribute issues without the marker or with a removed marker to this attempt.
-Issues are created during analysis,
-so the receipt check is not a gate before triage. The read-only subagent and
-untrusted-data rules are behavioral constraints, not a sandbox: the coordinator
-still handles repository-wide evidence, including forks, while holding Issues
-write access. The isolated check does not prevent analysis-time issue changes.
-
-The report, including the incomplete placeholder on early failure, is retained
-for 14 days as `workflow-diagnostics-RUN_ID-ATTEMPT` when initialization and
-upload can run. Initialization emits the artifact name once; the upload and
-producing job's output both use that value. A missing report makes upload fail
-rather than just warn.
-Verification also runs after a failed diagnosis unless
-the workflow was cancelled or diagnosis was skipped. **Re-run failed jobs**
-reuses the producing job's saved artifact name and attempt when only verification
-failed; **Re-run all jobs** repeats diagnosis for the original window.
-Runner termination, initialization/upload failure, or artifact expiration/deletion
-can still leave no downloadable report; inspect the diagnosis/upload logs and
-rerun all jobs. A failed run is not evidence of no findings.
-
-Automated tests are deferred for now; no test suite or test-running CI workflow
-is configured. The runtime report and issue-receipt checks above remain enabled.
+Same-repository scoping reduces fork-evidence exposure; it is not a sandbox.
+Logs and discussions can still contain untrusted text, and the coordinator holds
+Issues write access. Copilot and its subagents must treat fetched content as
+evidence, not instructions, never execute analyzed code, and make no GitHub
+changes except the coordinator's new findings issues. These are behavioral
+constraints, not enforced isolation between analysis and issue publication.

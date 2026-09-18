@@ -40,12 +40,13 @@ flowchart TD
 
     diagnosticsTrigger["Automation: daily 00:00 UTC / manual trigger<br/>Default branch only"] --> diagnostics{"Agentic: workflow diagnostics<br/>Identity: Factory"}
     diagnostics -->|First invocation| boundary["Agentic: establish boundary only<br/>No analysis or findings"]
-    diagnostics -->|Later invocations| workflowAnalysis["Agentic: analyze runs since previous diagnostics<br/>All workflows / outcomes; include previous run<br/>Parallel read-only Copilot subagents"]
+    diagnostics -->|Later invocations| workflowAnalysis["Agentic: analyze same-repository runs since previous diagnostics<br/>All workflows / outcomes; include previous run<br/>Parallel read-only Copilot subagents"]
     workflowAnalysis --> findings["Agentic: consolidate findings<br/>Check issues / PRs in all states for duplicates"]
     findings -->|New actionable findings only| diagnosticsIssue["Agentic: new unlabeled issue per finding<br/>Author: Factory"]
     diagnosticsIssue --> triage
-    boundary --> diagnosticsChecks["Automation: read-only diagnostics checks<br/>Report status and issue receipts"]
-    findings --> diagnosticsChecks
+    boundary --> diagnosticsSummary["Agentic: verify actions and summarize results<br/>Job summary and logs"]
+    findings --> diagnosticsSummary
+    diagnosticsIssue --> diagnosticsSummary
 ```
 
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
@@ -72,8 +73,9 @@ issues and clarification comments; implementation handles triaged issues and
 feedback on their Factory PRs. See
 [GitHub's Copilot CLI Actions guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli-in-actions).
 Workflow diagnostics runs daily at 00:00 UTC or manually. Copilot selects the
-run window, analyzes workflows with parallel subagents, and sends actionable
-findings through triage; a read-only job checks its report and issue receipts.
+same-repository run window, analyzes workflows with parallel subagents, and sends
+actionable findings through triage. It verifies its actions and summarizes results
+in the job summary and logs.
 
 1. [Install AI tools and run a prompt](docs/ai-tools.md)
 2. [Create a pull request](docs/create-pull-request.md) — tested successfully.

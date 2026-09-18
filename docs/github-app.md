@@ -62,10 +62,9 @@ installation. Workflow-write access is required when pushing workflow changes
 to a PR branch, before merge; the token-generation input must already be on the
 default branch before Factory can implement such an issue.
 [Workflow diagnostics](workflow-diagnostics.md) requests only Contents read,
-Pull requests read, and Issues write on its analysis App token. Its isolated
-receipt-check job creates a separate App token with only Issues read access.
-The built-in token supplies `actions: read` for run/job/log analysis and artifact
-download; the receipt-check job does not check out code or invoke Copilot.
+Pull requests read, and Issues write on its App token. The built-in token supplies
+`actions: read` for same-repository run/job/log analysis. Copilot verifies issue
+creation with the App token and reports results in the job summary.
 
 Set these variables on the AI invocation, keeping any Git author/committer variables:
 
