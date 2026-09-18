@@ -37,6 +37,15 @@ flowchart TD
     pr --> ci["Automation: PR-linked CI<br/>Checks produced by: GitHub Actions"]
     pr -->|Discussion or review| feedback
     ci -->|Current-revision failure or timeout| implementation
+
+    diagnosticsTrigger["Automation: daily 00:00 UTC / manual trigger<br/>Default branch only"] --> diagnostics{"Agentic: workflow diagnostics<br/>Identity: Factory"}
+    diagnostics -->|First invocation| boundary["Agentic: establish boundary only<br/>No analysis or findings"]
+    diagnostics -->|Later invocations| workflowAnalysis["Agentic: analyze runs since previous diagnostics<br/>All workflows / outcomes; include previous run<br/>Parallel read-only Copilot subagents"]
+    workflowAnalysis --> findings["Agentic: consolidate findings<br/>Check issues / PRs in all states for duplicates"]
+    findings -->|New actionable findings only| diagnosticsIssue["Agentic: new unlabeled issue per finding<br/>Author: Factory"]
+    diagnosticsIssue --> triage
+    boundary --> diagnosticsChecks["Automation: read-only diagnostics checks<br/>Report status and issue receipts"]
+    findings --> diagnosticsChecks
 ```
 
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
