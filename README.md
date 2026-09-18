@@ -48,8 +48,10 @@ flowchart TD
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
 triaged issue and, when present, a matching open Factory PR. CI must match the
 PR's current head or merge revision. Factory does not automatically merge PRs
-or close issues. Decomposed parents and pending children cannot be handed
-directly to implementation; retries reuse planned children instead of duplicating work.
+or close issues. Pending-child labels block direct handoff. Decomposition leaves
+the parent untriaged without a separate parent label; if `triaged` is added later,
+live native-child and durable-plan checks block implementation, not the early
+YAML label filter. Retries reuse planned children instead of duplicating work.
 
 ## CI examples
 

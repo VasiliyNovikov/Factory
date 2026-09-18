@@ -3,6 +3,8 @@
 [Issue triage](../.github/workflows/issue-triage.yml) handles newly opened issues,
 new comments on open untriaged issues, and removal of `factory-triage-pending`
 after a sub-issue is prepared. Pending children are skipped, including on comments.
+Their initial bodies link to the parent and explain how to resume interrupted
+setup there; do not manually remove pending just to force triage.
 PR comments go to the separate [implementation workflow](issue-implementation.md).
 Only Factory's own comments are ignored by author; other bots and humans can
 provide clarification. Factory's child-release label events are not ignored.
@@ -18,7 +20,9 @@ decomposition plans, and existing child work. It chooses one of three outcomes:
   then hand it off with `<!-- factory-triage:ready -->`.
 - **Decomposed:** autonomously split a larger request into native sub-issues when
   independent delivery is useful, with `<!-- factory-triage:decomposed -->`
-  only after their setup is verified. Do not split tightly coupled work just to
+  only after Copilot reconciles every planned child and verifies its setup.
+  This is the agent's completion claim, not an independent proof of plan
+  coverage by the workflow verifier. Do not split tightly coupled work just to
   create more issues.
 - **Reply:** ask specific questions or explain why the request is unsuitable,
   already satisfied, blocked, or only partially decomposed, with
@@ -30,7 +34,7 @@ does not implement code or open PRs.
 ## Direct implementation handoff
 
 Copilot rechecks that the issue is open and untriaged, with no pending label,
-decomposition plan, native children, or `decomposed` label. For a ready decision, it:
+decomposition plan, or native children. For a ready decision, it:
 
 1. Creates repository labels if needed.
 2. Posts the agreed scope and acceptance criteria in a marked decision comment.
@@ -47,9 +51,10 @@ the PR; the shared tracking label becomes its implementation concurrency key.
 
 The parent remains open and untriaged: decomposition does not add `triaged` or
 require a separate parent-label mutation. The durable plan and native children
-identify tracking parents, including partial attempts. Existing `decomposed`
-labels remain protective and are not removed. A parent must never be directly
-implemented, even if someone later adds `triaged`; implementation checks the
+identify tracking parents, including partial attempts. A `decomposed` label is
+not part of this protocol or its gates; unrelated existing labels are preserved.
+A parent must never be directly implemented, even if someone later adds
+`triaged`; implementation checks the
 original issue on PR and CI follow-ups too.
 
 Copilot uses this sequence rather than a separate scripted planning engine:
@@ -63,7 +68,10 @@ Copilot uses this sequence rather than a separate scripted planning engine:
    `<!-- factory-child:OWNER/REPO#PARENT_NUMBER:KEY -->` in its body and
    `factory-triage-pending` in its creation request. It has a parent link,
    actionable scope, acceptance criteria, relevant context, and explicit dependencies.
-   No parent tracking label or ready/decomposed state is copied.
+   Its initial body explains that Factory is still preparing it, pending-child
+   comments do not trigger triage, and a comment on the linked parent resumes
+   interrupted setup. This instruction must exist even if linking or release fails.
+   No parent tracking label or `triaged` label is copied.
 3. Create or reuse the native relationship using GitHub's
    [sub-issue API](https://docs.github.com/en/rest/issues/sub-issues).
    `POST .../issues/PARENT_NUMBER/sub_issues` takes the child's integer database
@@ -137,18 +145,25 @@ A read-only verification step requires exactly one Factory comment with this run
 marker and exactly one decision marker. Ready results must match live open-issue
 state, the unique tracking label, `triaged`, and no decomposition/pending state.
 An existing Factory decomposition plan also rejects a ready result.
-Decomposed results require an open protected parent, a persisted Factory
-decomposition plan, native children, and no pending or inherited child tracking
-labels; ready children need their own tracking identity. Missing comments,
+Decomposed results require an open untriaged parent, a persisted Factory
+decomposition plan, at least one native child, and no pending or inherited child
+tracking labels; ready children need their own tracking identity. Missing comments,
 inconsistent success claims, and API failures fail the step. Reply results also
-read the live issue and require `triaged` to be absent; `decomposed` and partial
-setup state remain allowed. A conflicting handoff fails verification rather
-than removing independently changed labels. A reply can describe a partial
-failure; a green reply run does not mean decomposition or handoff succeeded.
+read the live issue. If it became `triaged` after the eligibility check, paginated
+issue events must show an independent actor applied `triaged`, with no Factory
+or unattributed `triaged`/`factory-issue-*` label changes since that check. Otherwise
+verification fails; a Factory handoff cannot be reported as a reply. The timestamp
+boundary is inclusive, so ambiguous same-second activity fails conservatively.
+Labels are never removed to make verification pass. Untriaged partial setup
+remains allowed. A reply can describe a partial failure; a green reply run does
+not mean decomposition or handoff succeeded.
 
 Scope quality, the complete intended child set, dependency correctness, and API
 mutations remain Copilot's responsibility. The verifier checks live postconditions,
-not the quality of its decisions or completion of child implementation.
+not the quality of its decisions or completion of child implementation. It checks
+plan presence but does not parse planned keys or compare them with native children:
+a partial child set can satisfy those structural checks. A green run alone is
+therefore not proof that the agent's complete-setup claim is correct.
 See [issue implementation](issue-implementation.md) for the next stage.
 
 End-to-end verification requires live CI runs after these workflows are on the

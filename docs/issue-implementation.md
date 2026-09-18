@@ -14,10 +14,9 @@ relevant code before acting:
 
 Decomposition is handled by [triage](issue-triage.md), not by implementing its
 tracking parent: triage simply leaves `triaged` off when it chooses a split.
-Native children, a Factory decomposition plan, and existing `decomposed` or
-`factory-triage-pending` labels still block direct implementation if someone
-later adds `triaged`. Before the implementation
-agent runs, a scripted precondition checks the live original issue and its
+Native children, a Factory decomposition plan, and a `factory-triage-pending`
+label still block direct implementation if someone later adds `triaged`.
+Before the implementation agent runs, a scripted precondition checks the live original issue and its
 paginated comments on every event path, including PR and CI follow-ups. After
 route validation establishes the destination, failed or unverifiable issue
 eligibility stops the agent and attempts an App-authored failure explanation in
@@ -129,8 +128,13 @@ issue to remain open with matching labels. Untriaged issues and unrelated,
 closed, or mismatched PRs should produce no routing outputs.
 
 Before starting routing, YAML conditions skip direct issue handoffs, issue/PR
-comments, and submitted PR reviews carrying `decomposed` or
-`factory-triage-pending`. They also skip `factory-identity[bot]` comments/reviews,
+comments, and submitted PR reviews carrying `factory-triage-pending`.
+Decomposition has no parent-label gate: a later `triaged` event on a tracking
+parent can start routing, whose live plan/child checks must reject it. The
+scripted issue precondition independently enforces that rejection before the
+implementation agent. A legacy/manual `decomposed` label has no special meaning;
+native children and the durable plan are the protection, not that label.
+The YAML conditions also skip `factory-identity[bot]` comments/reviews,
 comments or reviews on closed or untriaged items, unrelated issue labels,
 approvals, successful non-review workflows, fork-originated runs, and
 triage/implementation completions. Keep the early author filter aligned with

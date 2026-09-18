@@ -55,12 +55,13 @@ jobs:
             [[ $(jq -r '.comment.user.login' "$GITHUB_EVENT_PATH") == "$FACTORY_LOGIN" ]]; then
             exit 0
           fi
+          checked_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           issue=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}")
           eligible=$(jq -r '.state == "open" and (.pull_request == null) and
             ([.labels[].name] | index("triaged") | not) and
             ([.labels[].name] | index("factory-triage-pending") | not)' <<< "$issue")
           if [[ "$eligible" == true ]]; then
-            printf 'ready=true\n' >> "$GITHUB_OUTPUT"
+            printf 'ready=true\nchecked_at=%s\n' "$checked_at" >> "$GITHUB_OUTPUT"
           else
             printf 'Skipping closed, already-triaged, pending, or non-issue work.\n'
           fi
@@ -102,7 +103,7 @@ jobs:
           Preserve unrelated labels. Never close issues, merge PRs, or overwrite conflicting work.
           Closed, already-triaged, conflicting, unclear, blocked, or satisfied requests get a reply
           with <!-- factory-triage:reply --> instead of new work; leave labels alone in those cases.
-          Once there is a decomposed label, a Factory decomposition plan, or native sub-issues,
+          Once there is a Factory decomposition plan or native sub-issues,
           NEVER hand the parent directly to implementation, even on retries or later comments.
           Reconcile the existing split or explain what is blocked instead.
           For a ready single implementation, post agreed scope and acceptance criteria with
@@ -127,8 +128,11 @@ jobs:
           require explanation, not duplicates, reopening, or reparenting. Do not use replace_parent.
           Create each genuinely missing child in this repository with its stable marker, a parent
           link, actionable scope, acceptance criteria, relevant context, and dependencies.
+          Its initial body must explain that Factory is still preparing it, that comments on a
+          pending child do not trigger triage, and that a comment on the linked parent resumes
+          interrupted setup; do not tell users to remove the pending label themselves.
           Include factory-triage-pending IN the creation request so its opened event cannot
-          triage it before setup is complete. Do not copy triaged, decomposed, or any parent
+          triage it before setup is complete. Do not copy triaged or any parent
           factory-issue- label to children. Record each child's URL in the durable parent plan.
           Link children using POST repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/sub_issues
           with integer sub_issue_id set to the child's database id, NOT its issue number.
@@ -149,8 +153,11 @@ jobs:
           path assigns factory-issue-CHILD_NUMBER, verifies it, then adds triaged separately.
           Verify the parent remains open without triaged, all intended children
           are linked, and none is still pending before posting <!-- factory-triage:decomposed -->
-          with the split, child links, and dependencies. This marker means completed setup,
-          not completed child implementation. A partial failure gets factory-triage:reply with
+          with the split, child links, and dependencies. This marker is your claim that every
+          planned child's setup is complete, not that child implementation is complete.
+          The scripted verifier checks native child state, not coverage of every planned key;
+          you must reconcile the complete intended set before making that claim.
+          A partial failure gets factory-triage:reply with
           actual errors, created child links, and remaining steps; keep the protective labels
           and durable plan so a later parent comment can resume without duplicates.
           If creation has an uncertain outcome, refresh all-state issues and recover the exact
@@ -164,6 +171,7 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.factory-token.outputs.token }}
           FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
+          TRIAGE_CHECKED_AT: ${{ steps.eligible.outputs.checked_at }}
         run: |
           comments=$(gh api --paginate --slurp \
             "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments")
@@ -185,10 +193,24 @@ jobs:
           fi
           issue=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}")
           if [[ "$decision" == reply ]]; then
-            jq -e '[.labels[].name] | index("triaged") | not' <<< "$issue" >/dev/null || {
-              printf '::error::A reply requires the live issue to remain untriaged.\n'
-              exit 1
-            }
+            triaged=$(jq -r '[.labels[].name] | index("triaged") != null' <<< "$issue")
+            if [[ "$triaged" == true ]]; then
+              events=$(gh api --paginate --slurp \
+                "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/events")
+              jq -e --arg login "$FACTORY_LOGIN" --arg since "$TRIAGE_CHECKED_AT" '
+                [.[][] | select(.created_at >= $since and
+                  (.event == "labeled" or .event == "unlabeled") and
+                  (.label.name == "triaged" or
+                    (.label.name | startswith("factory-issue-"))))] as $events |
+                $since != "" and
+                any($events[]; .event == "labeled" and .label.name == "triaged") and
+                all($events[]; (.actor.login // "") as $actor |
+                  $actor != "" and $actor != $login)
+              ' <<< "$events" >/dev/null || {
+                printf '::error::Cannot verify that the concurrent handoff was independently labeled, not a Factory handoff reported as a reply.\n'
+                exit 1
+              }
+            fi
             printf 'Verified Factory reply; no completed handoff or decomposition claimed.\n'
             exit 0
           fi
@@ -199,8 +221,8 @@ jobs:
             ([$labels[] | select(startswith("factory-issue-"))] |
               all(. == $tracking) and length <= 1) and
             (if $decision == "ready" then
-              ($labels | index($tracking) != null and index("triaged") != null and
-                (index("decomposed") | not)) and ((.sub_issues_summary.total // 0) == 0)
+              ($labels | index($tracking) != null and index("triaged") != null) and
+              ((.sub_issues_summary.total // 0) == 0)
             else
               ($labels | index("triaged") | not)
             end)
@@ -220,7 +242,7 @@ jobs:
                 ([$labels[] | select(startswith("factory-issue-"))] |
                   all(. == ("factory-issue-" + $number)) and length <= 1) and
                 ($labels | (index("triaged") | not) or
-                  (index("factory-issue-" + $number) != null and (index("decomposed") | not))))
+                  index("factory-issue-" + $number) != null))
             ' <<< "$children" >/dev/null || {
               printf '::error::Decomposition requires native children with no pending or inherited tracking labels.\n'
               exit 1
