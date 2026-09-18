@@ -159,9 +159,9 @@ these Bash/jq checks before invoking Copilot. [CI](../.github/workflows/ci.yml)
 also runs them at the exact PR head, with read-only Contents access, no persisted
 checkout credentials, and no App token or AI invocation. The separate PR-creation
 job remains manual. Run the script locally to check
-valid output, newline aliases, mismatched tracking labels/reply targets, duplicate
-targets, malformed output, and matrix limits. They verify the output contract,
-not AI routing or live GitHub behavior.
+accepted matrices, non-array output, newline aliases, mismatched tracking labels/reply
+targets, duplicate targets, malformed output, and matrix limits. They verify the
+output contract, not AI routing or live GitHub behavior.
 
 Each matrix job uses the shared tracking label for concurrency; `fail-fast: false`
 keeps a failure for one issue from cancelling other issues. `max-parallel: 4`

@@ -52,6 +52,8 @@ check 'extra key' reject push \
 check 'missing key' reject push \
   "$(jq -c 'map(del(.source_pr))' <<< "$matrix")"
 check 'non-object item' reject push '["invalid"]'
+check 'non-array output' reject push \
+  "$(jq -c '{item: .[0]}' <<< "$matrix")"
 check 'duplicate tracking label' reject push \
   "$(jq -c '. + map(.source_pr = "35" | .reply_number = "35")' <<< "$matrix")"
 check 'duplicate reply target' reject push \
