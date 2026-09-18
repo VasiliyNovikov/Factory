@@ -10,8 +10,9 @@ the job gate. If that metadata is absent, the analysis uses `github.ref_name`
 as the default-branch hint.
 
 Copilot owns history collection, workflow analysis, duplicate detection, and
-issue creation. The workflow prompt supplies the requirements and API hints
-instead of maintaining a separate diagnostics program. It reuses
+issue creation. The prompt states the goal, scope, safety boundaries, and report
+contract; Copilot chooses the API queries and investigation strategy rather than
+following a scripted collection recipe. It reuses
 `scripts/install-tools.sh`, `scripts/ai.sh --harness copilot`, and the `default`
 profile in `.github/model-config.json`.
 
@@ -33,11 +34,10 @@ window on retries, rather than advancing it to the retry time.
 The prompt also covers older runs updated during the interval, using a bounded
 creation lookback of **90 days before the window start**. This supplemental
 lookback does not shorten the primary interval, even after a longer gap.
-Collection hints require pagination, splitting time ranges at GitHub's
-1,000-result filtered-search cap, and reconciling distinct counts at every
-split. Missing history, inconsistent counts, an unsplittable saturated second,
-and API failures must be reported rather than hidden as complete coverage.
-The model carries out these checks; they are not a separate deterministic gate.
+Copilot must handle pagination and API result limits without missing or
+double-counting runs. Missing or inconsistent history and API failures must be
+reported rather than hidden as complete coverage. Collection strategy and
+completeness remain model responsibilities, not a separate deterministic gate.
 
 One concurrency group serializes scheduled and manual runs without cancelling
 an active run. GitHub retains at most one pending invocation, so dispatch bursts
@@ -73,7 +73,8 @@ Diagnostics completions remain excluded from the implementation event router.
 
 Use the existing [Factory App setup](github-app.md). The analysis App token
 requests Contents read, Pull requests read, and Issues write, with no push or
-workflow-write access. Checkout does not persist credentials. The built-in
+workflow-write access. Checkout uses the triggering event's revision by default
+and does not persist credentials. The built-in
 token has Contents/Actions read and `copilot-requests: write`. Read-only Actions
 queries use a command-local `GH_TOKEN="$GITHUB_TOKEN"` override; repository,
 issue, and PR operations use the App token. Model requests use
@@ -82,10 +83,10 @@ issue, and PR operations use the App token. Model requests use
 Before checkout or tool/token setup, the workflow seeds an `incomplete` report
 with a fatal error using Bash's built-in `printf`, without requiring `jq`.
 An early failure or a model that never writes its report therefore does not
-leave a success-shaped result. Copilot replaces this placeholder in
-`report.json` with the run ID, producing attempt, outcome,
-Markdown summary, unique created issue numbers, expected evidence limitations,
-and fatal errors. The summary records boundary URLs/timestamps, selected
+leave a success-shaped result. Copilot replaces this placeholder in `report.json`,
+preserving its schema, run ID, and producing attempt while recording the actual
+outcome, Markdown summary, unique created issue numbers, expected evidence
+limitations, and fatal errors. The summary records boundary URLs/timestamps, selected
 workflow/run IDs, actual subagent IDs and results, duplicate links, and created
 issue URLs. Outcomes are `initialized`, `analyzed`, or `incomplete`.
 
