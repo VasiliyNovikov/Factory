@@ -95,8 +95,14 @@ It requires a well-formed report for the producing run/attempt, a nonempty
 summary, no fatal errors, and an `initialized` or `analyzed` outcome. An
 initialized report cannot claim created issues or evidence gaps. Every reported
 issue must exist in this repository with the Factory author and attempt marker;
-the verifier also paginates the Factory author's issues in all states and
-requires the numbers carrying that exact marker to match `created_issues`.
+the verifier also paginates the Factory author's issues in all states, using
+`since` to exclude issues last updated before this invocation. Its lower bound
+is one second before the run's original `created_at`, read independently from
+the Actions API with a command-local built-in-token override. The one-second
+margin conservatively includes boundary-second updates.
+The original timestamp, rather than the retry time, preserves receipts on
+verification-only retries. The App token remains the default for all issue
+queries. The numbers carrying the exact marker must match `created_issues`.
 This catches omitted issues, including closed issues and findings hidden by an
 `initialized` report, without relying on search indexing. Other attempts and PRs
 are excluded. The verifier's fresh App token has only Issues read access.

@@ -196,6 +196,7 @@ jobs:
         shell: bash
         env:
           REPORT_ATTEMPT: ${{ needs.diagnose.outputs.report_attempt }}
+          GITHUB_TOKEN: ${{ github.token }}
           GH_TOKEN: ${{ steps.factory-token.outputs.token }}
           FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
         run: |
@@ -226,8 +227,14 @@ jobs:
                 exit 1
               }
           done
+          receipt_since=$(GH_TOKEN="$GITHUB_TOKEN" gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" |
+            jq -er '.created_at | fromdateiso8601 - 1 | todateiso8601') || {
+              echo "::error::Could not determine the original run timestamp for receipt reconciliation."
+              exit 1
+            }
           observed=$(gh api --paginate --slurp \
-            "repos/${GITHUB_REPOSITORY}/issues?state=all&creator=${FACTORY_LOGIN}&per_page=100" |
+            "repos/${GITHUB_REPOSITORY}/issues?state=all&creator=${FACTORY_LOGIN}&since=${receipt_since}&per_page=100" |
             jq -ce --arg login "$FACTORY_LOGIN" --arg marker "$marker" '
               [.[][] | select(.pull_request == null and .user.login == $login and
                 ((.body // "") | contains($marker))) | .number]
