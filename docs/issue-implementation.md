@@ -17,9 +17,11 @@ tracking parent. Issues labeled `decomposed` or `factory-triage-pending`, or
 having native children or a Factory decomposition plan, are not eligible for
 direct implementation, even if they also have `triaged`. Before the implementation
 agent runs, a scripted precondition checks the live original issue and its
-paginated comments on every event path, including PR and CI follow-ups. Failed
-or unverifiable eligibility stops the agent and attempts an App-authored failure
-explanation in the triggering conversation; API failures remain failures.
+paginated comments on every event path, including PR and CI follow-ups. After
+route validation establishes the destination, failed or unverifiable issue
+eligibility stops the agent and attempts an App-authored failure explanation in
+that conversation; API failures remain failures. Invalid or unverifiable routes
+stop without commenting on an untrusted destination and are reported in Actions logs.
 Copilot still rechecks issue/PR eligibility and revisions before editing or
 pushing. Prepared children enter normal triage and use their own issue number,
 tracking label, branch, and PR; they never inherit their parent's identity.
@@ -135,11 +137,19 @@ tracking_label=factory-issue-12
 For issue events, `source_pr` is empty and `reply_number` equals `issue_number`.
 Copilot writes no outputs when skipping and explains its decision or API failure
 in the log. An absent `issue_number` skips implementation, including if routing
-failed to produce it. The implementation precondition requires a positive integer
-issue number before using it in API paths, then rejects closed or non-issue work,
-missing/conflicting tracking labels, and decomposition/pending state even if
-routing emitted outputs. PR identity and revision checks remain Copilot's
-responsibility, as do repeat live checks before changing the PR. Conflicting
+failed to produce it. Before eligibility or reporting, route validation requires
+canonical positive integer issue/reply numbers and an empty or positive integer
+source PR, with matching reply and tracking identities. These checks precede all
+routed API calls. It binds the destination to event metadata, not comment bodies,
+and checks any source PR's live Factory author, repository, base, issue branch,
+and labels. CI feedback must match the live PR head or merge revision; runs
+without an explicit PR association still require the matching branch and revision.
+Only a validated route can reach blocked reporting or result verification.
+
+The issue precondition then rejects closed or non-issue work, missing/conflicting
+tracking labels, and decomposition/pending state even if routing emitted outputs.
+Copilot remains responsible for the full feedback association, all-state branch
+search, and repeat eligibility/revision checks before changing the PR. Conflicting
 parent handoffs receive an explanation rather than removing decomposition safeguards.
 
 The implementation job uses the shared tracking label for concurrency:
@@ -187,13 +197,15 @@ threads stay untouched. No additional App permissions are needed.
 
 ## Result verification
 
-Every implementation run must post a new App-authored comment in the triggering
-conversation with its outcome, unique run marker, PR link, and addressed/outstanding
-feedback with thread links, even after deduplication or mutation failures.
+Every implementation run with a validated route must post a new App-authored
+comment in the triggering conversation with its outcome, unique run marker,
+PR link, and addressed/outstanding feedback with thread links, even after
+deduplication or mutation failures.
 
-`Verify Factory result` checks only for that comment, including after a failed
-eligibility precondition; a missing comment fails the job. A blocked run stays
-failed even when its explanation was posted and verified. The precondition is a
+`Verify Factory result` requires successful route validation and checks for that
+comment, including after a failed issue-eligibility precondition; a missing comment
+fails the job. A blocked run stays failed even when its explanation was posted and
+verified. The precondition is a
 point-in-time check, not continuous enforcement. A green run does not prove
 correct PR changes or successful thread mutations; Copilot verifies those
 separately, including mutation read-backs. PR creation, updates, and labels remain

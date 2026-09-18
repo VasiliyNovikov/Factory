@@ -62,6 +62,36 @@ def issue(labels=(), *, number=26, state="open", children=0, pr=False):
     return result
 
 
+def factory_pr(**overrides):
+    return {
+        **issue([TRACKING, "triaged"], number=27, pr=True),
+        "user": {"login": LOGIN},
+        "merged": False,
+        "head": {
+            "ref": "factory/issue-26",
+            "sha": "head-sha",
+            "repo": {"full_name": "example/repository"},
+        },
+        "base": {"ref": "master", "repo": {"full_name": "example/repository"}},
+        "merge_commit_sha": "merge-sha",
+        **overrides,
+    }
+
+
+def implementation_event(*, source_pr=""):
+    return {
+        "repository": {"full_name": "example/repository"},
+        "issue": issue(number=27, pr=True) if source_pr else issue(),
+        "pull_request": factory_pr(),
+        "workflow_run": {
+            "head_repository": {"full_name": "example/repository"},
+            "head_branch": "factory/issue-26",
+            "head_sha": "head-sha",
+            "pull_requests": [{"number": 27}],
+        },
+    }
+
+
 def comment(decision="ready", *, login=LOGIN, marker=MARKER, body=None):
     return {
         "user": {"login": login},
@@ -112,12 +142,14 @@ class ShellStepTests(unittest.TestCase):
                 raise RuntimeError(f"{command} is required to test the workflow shell steps")
         cls.eligibility = step_run(TRIAGE, "Check live triage eligibility")
         cls.verify = step_run(TRIAGE, "Verify triage result")
+        cls.validate_route = step_run(IMPLEMENTATION, "Validate implementation route")
         cls.implementation_eligibility = step_run(IMPLEMENTATION, "Check implementation eligibility")
         cls.blocked_report = step_run(IMPLEMENTATION, "Report blocked implementation")
         cls.implementation_verify = step_run(IMPLEMENTATION, "Verify Factory result")
 
     def run_step(self, script, responses, *, event_name="issues", login="contributor",
-                 source_pr="", tracking=TRACKING, issue_number="26"):
+                 source_pr="", tracking=TRACKING, issue_number="26", reply_number=None,
+                 event_payload=None):
         # The gh shim must be executable even on systems with a noexec temp dir.
         with tempfile.TemporaryDirectory(prefix=".issue-workflows-", dir=ROOT / "tests") as directory:
             work = Path(directory)
@@ -125,8 +157,9 @@ class ShellStepTests(unittest.TestCase):
             (work / "gh").chmod(0o700)
             (work / "responses.json").write_text(json.dumps(responses))
             (work / "event.json").write_text(json.dumps({
+                **(implementation_event(source_pr=source_pr)
+                   if event_payload is None else event_payload),
                 "comment": {"user": {"login": login}},
-                "issue": issue(),
             }))
             (work / "output").touch()
             env = {
@@ -139,8 +172,9 @@ class ShellStepTests(unittest.TestCase):
                 "GITHUB_RUN_ATTEMPT": "2",
                 "ISSUE_NUMBER": issue_number,
                 "SOURCE_PR": source_pr,
-                "REPLY_NUMBER": source_pr or issue_number,
+                "REPLY_NUMBER": (source_pr or issue_number) if reply_number is None else reply_number,
                 "TRACKING_LABEL": tracking,
+                "DEFAULT_BRANCH": "master",
                 "RESULT_MARKER": MARKER,
                 "FACTORY_LOGIN": LOGIN,
                 "GH_TOKEN": "not-a-real-token",
@@ -261,14 +295,144 @@ class ShellStepTests(unittest.TestCase):
         ], tracking="factory-issue-27")
         self.assert_rejected(result)
 
-    def test_implementation_precondition_rejects_invalid_issue_numbers_before_api_reads(self):
-        for number in ("", "0", "026", "-26", "26/comments", "26?state=all", "26\n27", "issue-26"):
-            with self.subTest(issue_number=number):
+    def test_implementation_route_accepts_issue_and_pr_event_destinations(self):
+        for event, source_pr in (
+            ("issues", ""), ("issue_comment", ""), ("issue_comment", "27"),
+            ("pull_request_review", "27"), ("workflow_run", "27"),
+        ):
+            with self.subTest(event=event, source_pr=source_pr):
+                responses = (
+                    [response("repos/example/repository/pulls/27", factory_pr())]
+                    if source_pr else []
+                )
                 result, _ = self.run_step(
-                    self.implementation_eligibility, [], issue_number=number,
+                    self.validate_route, responses, event_name=event, source_pr=source_pr,
+                )
+                self.assert_ok(result)
+
+    def test_invalid_routed_identifiers_cannot_reach_any_consumer(self):
+        for field, error in (
+            ("issue_number", "Routed issue number must be a positive integer"),
+            ("reply_number", "Routed reply number must be a positive integer"),
+            ("source_pr", "Routed source PR must be empty or a positive integer"),
+        ):
+            invalid = ("", "0", "026", "-26", "26/comments", "26?state=all", "26\n27",
+                       "issue-26", " 26", "26 ", "+26", "26.0", "\u0662\u0666")
+            if field == "source_pr":
+                invalid = invalid[1:]
+            for value in invalid:
+                for consumer in (
+                    self.implementation_eligibility, self.blocked_report, self.implementation_verify,
+                ):
+                    with self.subTest(field=field, value=value, consumer=consumer[:40]):
+                        values = {field: value}
+                        if field == "source_pr":
+                            values["reply_number"] = "27"
+                        result, _ = self.run_step(
+                            self.validate_route + "\n" + consumer, [], **values,
+                        )
+                        self.assert_rejected(result)
+                        self.assertIn(error, result.stdout)
+
+    def test_inconsistent_routing_identity_is_rejected_before_api_calls(self):
+        for values in (
+            {"reply_number": "27"},
+            {"source_pr": "27", "reply_number": "26"},
+            {"source_pr": "27", "reply_number": "28"},
+            {"tracking": "factory-issue-27"},
+            {"tracking": "factory-issue-26\nfactory-issue-27"},
+        ):
+            with self.subTest(values=values):
+                result, _ = self.run_step(
+                    self.validate_route, [], **values,
                 )
                 self.assert_rejected(result)
-                self.assertIn("Routed issue number must be a positive integer", result.stdout)
+                self.assertIn("Routed tracking label or reply destination is inconsistent", result.stdout)
+
+    def test_routed_destinations_must_belong_to_the_triggering_event(self):
+        cases = [
+            ("issues", "27", implementation_event(source_pr="27")),
+            ("issue_comment", "27", implementation_event()),
+            ("issue_comment", "", implementation_event(source_pr="27")),
+            ("pull_request_review", "", implementation_event()),
+            ("pull_request_review", "28", implementation_event(source_pr="27")),
+            ("workflow_run", "", implementation_event()),
+            ("workflow_dispatch", "27", implementation_event(source_pr="27")),
+        ]
+        for overrides in (
+            {"head_repository": {"full_name": "another/repository"}},
+            {"head_branch": "factory/issue-28"},
+            {"pull_requests": [{"number": 28}]},
+            {"pull_requests": None},
+        ):
+            event = implementation_event(source_pr="27")
+            event["workflow_run"].update(overrides)
+            cases.append(("workflow_run", "27", event))
+        wrong_repository = implementation_event()
+        wrong_repository["repository"]["full_name"] = "another/repository"
+        cases.append(("issues", "", wrong_repository))
+        for event_name, source_pr, event in cases:
+            with self.subTest(event=event_name, source_pr=source_pr, payload=event):
+                result, _ = self.run_step(
+                    self.validate_route, [], event_name=event_name,
+                    source_pr=source_pr, event_payload=event,
+                )
+                self.assert_rejected(result)
+                self.assertIn("Routed destination does not match the triggering event", result.stdout)
+
+    def test_route_requires_an_eligible_live_source_pr(self):
+        valid = factory_pr()
+        for changes in (
+            {"number": 28}, {"state": "closed"}, {"merged": True},
+            {"user": {"login": "another[bot]"}},
+            {"head": {**valid["head"], "repo": {"full_name": "another/repository"}}},
+            {"head": {**valid["head"], "ref": "factory/issue-28"}},
+            {"base": {**valid["base"], "ref": "other"}},
+            {"base": {**valid["base"], "repo": {"full_name": "another/repository"}}},
+            *({"labels": issue(labels)["labels"]} for labels in (
+                [TRACKING], ["triaged"], ["factory-issue-28", "triaged"],
+                [TRACKING, TRACKING, "triaged"], [TRACKING, "factory-issue-28", "triaged"],
+                [TRACKING, "triaged", "decomposed"], [TRACKING, "triaged", "factory-triage-pending"],
+            )),
+        ):
+            with self.subTest(changes=changes):
+                result, _ = self.run_step(
+                    self.validate_route, [
+                        response("repos/example/repository/pulls/27", factory_pr(**changes)),
+                    ], event_name="pull_request_review", source_pr="27",
+                )
+                self.assert_rejected(result)
+                self.assertIn("Routed source PR is not eligible for this issue", result.stdout)
+
+    def test_ci_routes_require_current_revision_with_or_without_explicit_association(self):
+        for associations in ([], [{"number": 27}]):
+            for revision in ("head-sha", "merge-sha", "stale-sha"):
+                with self.subTest(associations=associations, revision=revision):
+                    event = implementation_event(source_pr="27")
+                    event["workflow_run"].update(
+                        pull_requests=associations, head_sha=revision,
+                    )
+                    result, _ = self.run_step(
+                        self.validate_route, [
+                            response("repos/example/repository/pulls/27", factory_pr()),
+                        ], event_name="workflow_run", source_pr="27", event_payload=event,
+                    )
+                    if revision == "stale-sha":
+                        self.assert_rejected(result)
+                        self.assertIn("CI revision no longer matches", result.stdout)
+                    else:
+                        self.assert_ok(result)
+
+    def test_route_api_failure_cannot_reach_reporting_or_verification(self):
+        for consumer in (self.blocked_report, self.implementation_verify):
+            with self.subTest(consumer=consumer[:40]):
+                result, _ = self.run_step(
+                    self.validate_route + "\n" + consumer, [
+                        response("repos/example/repository/pulls/27", error=True),
+                    ], event_name="pull_request_review", source_pr="27",
+                )
+                self.assert_rejected(result)
+                self.assertIn("mock GitHub API unavailable", result.stderr)
 
     def test_implementation_precondition_checks_factory_plans_on_all_comment_pages(self):
         for author in (LOGIN, "contributor", "another[bot]"):
@@ -725,15 +889,31 @@ class StaticContractTests(unittest.TestCase):
         self.assertIn("github.event.workflow_run.path == '.github/workflows/pr-review.yml'", clause)
 
     def test_static_failed_precondition_blocks_agent_but_reports_and_verifies(self):
+        validation = self.implementation.split(
+            "      - name: Validate implementation route\n", 1,
+        )[1].split("      - name:", 1)[0]
+        self.assertIn("        id: validated-route\n", validation)
+        self.assertLess(
+            self.implementation.index("- name: Validate implementation route"),
+            self.implementation.index("- name: Check implementation eligibility"),
+        )
         self.assertLess(
             self.implementation.index("- name: Check implementation eligibility"),
             self.implementation.index("- name: Reason about issue and implement or reply"),
         )
-        self.assertIn("if: failure() && steps.eligibility.outcome == 'failure'", self.implementation)
-        self.assertIn(
-            "if: ${{ !cancelled() && (success() || steps.eligibility.outcome == 'failure') }}",
-            self.implementation,
-        )
+        for name, condition in (
+            ("Report blocked implementation",
+             "if: failure() && steps.validated-route.outcome == 'success' && "
+             "steps.eligibility.outcome == 'failure'"),
+            ("Verify Factory result",
+             "if: ${{ !cancelled() && steps.validated-route.outcome == 'success' && "
+             "(success() || steps.eligibility.outcome == 'failure') }}"),
+        ):
+            with self.subTest(step=name):
+                step = self.implementation.split(
+                    f"      - name: {name}\n", 1,
+                )[1].split("      - name:", 1)[0]
+                self.assertIn(condition, step)
 
     def test_static_regression_suite_runs_in_ci(self):
         workflow = (ROOT / ".github/workflows/workflow-checks.yml").read_text()
@@ -754,8 +934,8 @@ class StaticContractTests(unittest.TestCase):
     def test_static_tested_steps_use_explicit_bash_failure_semantics(self):
         for path, names in (
             (TRIAGE, ("Check live triage eligibility", "Verify triage result")),
-            (IMPLEMENTATION, ("Check implementation eligibility", "Report blocked implementation",
-                              "Verify Factory result")),
+            (IMPLEMENTATION, ("Validate implementation route", "Check implementation eligibility",
+                              "Report blocked implementation", "Verify Factory result")),
         ):
             for name in names:
                 with self.subTest(workflow=path.name, step=name):
