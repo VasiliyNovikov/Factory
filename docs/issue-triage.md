@@ -148,18 +148,9 @@ mutations remain Copilot's responsibility. The verifier checks live postconditio
 not the quality of its decisions or completion of child implementation.
 See [issue implementation](issue-implementation.md) for the next stage.
 
-Regression coverage runs locally with `python3 -B -m unittest discover -s tests -v`
-and in [Workflow checks](../.github/workflows/workflow-checks.yml) on every PR and
-push to `master` (Python standard library, Bash, and `jq`). New PR runs cancel
-superseded checks for the same PR. Each push to `master` has its own concurrency
-group and does not cancel earlier runs, including pending checks. The suite
-executes the workflows' actual eligibility and result-check scripts against mocked `gh`
-responses, covering ready/reply/decomposed outcomes, partial states, pagination,
-conflicts, and API failures. Static contracts cover prompt ordering and
-per-event routing/recovery safeguards.
-The exercised steps declare `shell: bash`; the harness matches Actions'
-`bash --noprofile --norc -eo pipefail` semantics without adding `nounset`.
-These checks do not execute Copilot or deliver real GitHub webhooks. Child
-creation, release events, and end-to-end decomposition still need live CI
-verification; inspect native links, parent/child labels, and individual triage
-runs rather than treating a successful response as proof of the whole flow.
+End-to-end verification requires live CI runs after these workflows are on the
+default branch. Exercise ready and clarification paths, decomposition and child
+triage, parent follow-ups, partial-attempt recovery, and closed or conflicting
+work. Inspect native links, parent/child labels, Factory-authored decision
+comments, and individual triage runs rather than treating a successful agent
+response or a single green job as proof of the whole flow.
