@@ -179,7 +179,10 @@ jobs:
           preserve commits. Recover partial work only with clear ownership and issue linkage.
           Explain conflicts or closed/merged PRs; never reopen, duplicate, or overwrite them.
           Branch new work as ${ISSUE_BRANCH} from origin/${DEFAULT_BRANCH}. Make focused changes,
-          run appropriate checks, and commit with the provided identity. Never force-push, push to
+          following the test-value policy in AGENTS.md: add tests for concrete uncovered behavior
+          or regression risks, not merely changed files or incidental wording. Preserve required
+          checks and report what verification actually establishes.
+          Run appropriate checks and commit with the provided identity. Never force-push, push to
           the default branch, merge PRs, or close issues.
           Create/update one PR labeled ${TRACKING_LABEL} and triaged, with Fixes #${ISSUE_NUMBER}, a summary,
           and actual verification results. For unclear, blocked, stale, or already-satisfied requests,

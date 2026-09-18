@@ -28,6 +28,12 @@ approving an incomplete review.
 
 ## Review outcome
 
+Reviews follow the shared [test-value policy](../AGENTS.md#test-value-and-verification).
+A missing-test finding must identify a concrete uncovered risk, the observable
+behavior to check, and why existing coverage is insufficient. Do not demand tests
+just because files changed or to preserve incidental wording; justified contract
+checks, real-logic mocked tests, and necessary regression/safety coverage remain useful.
+
 - Actionable findings: submit a comment review with file/line references and
   suggested fixes, using inline review comments where possible.
 - No actionable findings: submit an approval.
