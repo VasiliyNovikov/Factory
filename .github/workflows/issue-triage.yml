@@ -204,6 +204,13 @@ jobs:
             exit 1
           }
           if [[ "$decision" == decomposed ]]; then
+            jq -e --arg login "$FACTORY_LOGIN" '
+              any(.[][]; .user.login == $login and
+                ((.body // "") | contains("<!-- factory-decomposition-plan -->")))
+            ' <<< "$comments" >/dev/null || {
+              printf '::error::A decomposed result requires the durable Factory decomposition plan.\n'
+              exit 1
+            }
             children=$(gh api --paginate --slurp \
               "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/sub_issues")
             jq -e '

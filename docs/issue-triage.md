@@ -134,11 +134,11 @@ A read-only verification step requires exactly one Factory comment with this run
 marker and exactly one decision marker. Ready results must match live open-issue
 state, the unique tracking label, `triaged`, and no decomposition/pending state.
 An existing Factory decomposition plan also rejects a ready result.
-Decomposed results require an open protected parent, native children, and no
-pending or inherited child tracking labels; ready children need their own
-tracking identity. Missing comments, inconsistent success claims, and API failures
-fail the step. A reply can describe a partial failure;
-a green reply run does not mean decomposition or handoff succeeded.
+Decomposed results require an open protected parent, a persisted Factory
+decomposition plan, native children, and no pending or inherited child tracking
+labels; ready children need their own tracking identity. Missing comments,
+inconsistent success claims, and API failures fail the step. A reply can describe
+a partial failure; a green reply run does not mean decomposition or handoff succeeded.
 
 Scope quality, the complete intended child set, dependency correctness, and API
 mutations remain Copilot's responsibility. The verifier checks live postconditions,
@@ -147,7 +147,8 @@ See [issue implementation](issue-implementation.md) for the next stage.
 
 Regression coverage runs locally with `python3 -B -m unittest discover -s tests -v`
 and in [Workflow checks](../.github/workflows/workflow-checks.yml) on every PR and
-push to `master` (Python standard library, Bash, and `jq`). It executes the
+push to `master` (Python standard library, Bash, and `jq`). New runs cancel
+in-progress checks for the same PR or branch. The suite executes the
 workflows' actual eligibility and result-check scripts against mocked `gh`
 responses, covering ready/reply/decomposed outcomes, partial states, pagination,
 conflicts, and API failures. Static contracts cover prompt ordering and

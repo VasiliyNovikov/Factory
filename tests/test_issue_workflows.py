@@ -161,9 +161,15 @@ class ShellStepTests(unittest.TestCase):
             return result, (work / "output").read_text()
 
     def verify_result(self, decision, parent=None, children=None, comments=None):
+        if comments is None:
+            comments = [[comment(decision)]]
+            if decision == "decomposed":
+                comments[0].insert(0, comment(
+                    body="<!-- factory-decomposition-plan -->\nExisting stable child keys.",
+                ))
         responses = [response(
             ISSUE_API + "/comments",
-            [[comment(decision)]] if comments is None else comments,
+            comments,
             paginated=True,
         )]
         if parent is not None:
@@ -437,6 +443,40 @@ class ShellStepTests(unittest.TestCase):
                       issue(["decomposed"], number=29)]],
                 ))
 
+    def test_decomposed_requires_a_factory_decomposition_plan(self):
+        cases = {
+            "missing plan": [],
+            "contributor plan": [
+                comment(login="contributor", body="<!-- factory-decomposition-plan -->"),
+            ],
+            "other bot plan": [
+                comment(login="another[bot]", body="<!-- factory-decomposition-plan -->"),
+            ],
+            "null Factory body": [{"user": {"login": LOGIN}, "body": None}],
+        }
+        for name, plan_comments in cases.items():
+            with self.subTest(name=name):
+                result = self.verify_result(
+                    "decomposed", issue(["decomposed"], children=1),
+                    comments=[[comment("decomposed")], plan_comments],
+                )
+                self.assert_rejected(result)
+                self.assertIn(
+                    "A decomposed result requires the durable Factory decomposition plan",
+                    result.stdout,
+                )
+
+    def test_decomposed_accepts_factory_plans_on_any_comment_page(self):
+        plan = comment(body="<!-- factory-decomposition-plan -->\nExisting stable child keys.")
+        for plan_page in range(3):
+            with self.subTest(plan_page=plan_page):
+                pages = [[comment(body="Earlier discussion.")] * 100, [], [comment("decomposed")]]
+                pages[plan_page].append(plan)
+                self.assert_ok(self.verify_result(
+                    "decomposed", issue(["decomposed"], children=1), [[issue(number=27)]],
+                    comments=pages,
+                ))
+
     def test_decomposed_rejects_unsafe_parent_states(self):
         cases = {
             "missing decomposed": issue(),
@@ -487,7 +527,10 @@ class ShellStepTests(unittest.TestCase):
                 response(ISSUE_API, error=True),
             ],
             "native children": [
-                response(ISSUE_API + "/comments", [[comment("decomposed")]], paginated=True),
+                response(ISSUE_API + "/comments", [[
+                    comment(body="<!-- factory-decomposition-plan -->\nExisting stable child keys."),
+                    comment("decomposed"),
+                ]], paginated=True),
                 response(ISSUE_API, issue(["decomposed"])),
                 response(ISSUE_API + "/sub_issues", paginated=True, error=True),
             ],
@@ -654,6 +697,15 @@ class StaticContractTests(unittest.TestCase):
         self.assertIn("run: python3 -B -m unittest discover -s tests -v", workflow)
         self.assertIn("contents: read", workflow)
         self.assertIn("persist-credentials: false", workflow)
+
+    def test_static_regression_checks_cancel_superseded_runs_per_ref(self):
+        workflow = (ROOT / ".github/workflows/workflow-checks.yml").read_text()
+        self.assertIn(
+            "\nconcurrency:\n"
+            "  group: workflow-checks-${{ github.ref }}\n"
+            "  cancel-in-progress: true\n",
+            workflow,
+        )
 
     def test_static_tested_steps_use_explicit_bash_failure_semantics(self):
         for path, names in (
