@@ -24,8 +24,9 @@
   - [PR review](docs/pr-review.md)
   - [Issue triage and label handoff](docs/issue-triage.md)
   - [Issue implementation and follow-ups](docs/issue-implementation.md)
-- No application toolchain, dependency manifest, or build/test/lint commands are
-  configured.
+- No application toolchain or dependency manifest is configured. The workflow's
+  Bash/jq output-contract checks run with `./scripts/test-work-items.sh`; see
+  [issue implementation](docs/issue-implementation.md) for their scope and limits.
 - `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
   Copilot PR-creation test. See the linked examples for setup, permissions,
   invocation, and result verification.

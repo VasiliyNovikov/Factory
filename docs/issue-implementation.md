@@ -115,9 +115,10 @@ events incur a Copilot invocation even when routing decides there is no work.
 Routing checks out the default branch and has a 15-minute timeout. Its App token
 has only Contents, Issues, and Pull requests read access; the built-in token
 provides `copilot-requests: write` for model requests.
-Push routing shares a job-level concurrency group with cancellation, so a later
-push supersedes an older routing pass. Feedback routing uses run-specific groups
-and is not cancelled by pushes; already-running implementers are unaffected.
+Push routing uses a ref-scoped job-level concurrency group with cancellation, so
+a later push supersedes an older routing pass only for the same ref. Feedback
+routing uses run-specific groups and is not cancelled by pushes; already-running
+implementers are unaffected.
 
 Copilot writes one compact JSON array to `GITHUB_OUTPUT`, for example:
 
@@ -136,7 +137,8 @@ that invocation must not maintain other issues' PRs.
 
 A verified skip produces `work_items=[]`. Missing or malformed output fails the
 JSON contract check rather than silently skipping implementation. The check
-requires objects with exactly the four documented keys, string IDs, matching
+requires objects with exactly the four documented keys, whole-string positive
+numeric IDs (no whitespace or newlines), matching
 tracking labels/reply targets, and unique issue labels and reply targets,
 preventing separate issue jobs from targeting the same PR; push items must
 include a nonempty PR number. Extra keys are rejected, not passed through as
@@ -145,6 +147,12 @@ limit); incomplete enumeration, API failures, or more items
 must be reported without emitting a partial matrix. Validation checks the output
 shape, not live eligibility or the completeness of the agent's enumeration.
 Implementation rechecks live state before changing a PR.
+
+The workflow and `./scripts/test-work-items.sh` use the same
+[`validate-work-items.jq`](../scripts/validate-work-items.jq) filter. Routing runs
+these Bash/jq checks before invoking Copilot; run the script locally to check
+valid output, newline aliases, duplicate targets, malformed output, and matrix
+limits. They verify the output contract, not AI routing or live GitHub behavior.
 
 Each matrix job uses the shared tracking label for concurrency; `fail-fast: false`
 keeps a failure for one issue from cancelling other issues. `max-parallel: 4`
@@ -175,8 +183,13 @@ They must not expand the issue scope or create a new PR.
 ## Merge-conflict maintenance
 
 Default-branch pushes fan out to eligible Factory PRs using the same issue
-concurrency groups as comments and CI feedback. The trigger accepts branch pushes,
-but a job condition skips non-default branches, including Factory repair pushes.
+concurrency groups as comments and CI feedback. The push trigger explicitly lists
+`master`; update that literal filter if the repository's default branch is renamed.
+The job condition also checks the live default-branch name and excludes deletions.
+Ordinary Factory branch pushes do not trigger this workflow.
+The trigger filter and ref-scoped routing group prevent unintended runs and
+cross-ref cancellation by unchanged workflow copies; they are not a security
+boundary against an actor able to rewrite workflow files.
 Factory-authored comments and implementation workflow completions are already
 ignored, preventing self-triggered repair loops. Ordinary implementation and
 follow-up runs also check for conflicts, including after their own changes.

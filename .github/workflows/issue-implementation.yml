@@ -2,7 +2,7 @@ name: Issue implementation
 
 on:
   push:
-    branches: ['**']
+    branches: [master]
   issues:
     types: [labeled]
   issue_comment:
@@ -36,7 +36,7 @@ jobs:
           (github.event.workflow_run.conclusion == 'success' &&
            github.event.workflow_run.path == '.github/workflows/pr-review.yml'))))
     concurrency:
-      group: issue-implementation-route-${{ github.event_name == 'push' && 'push' || github.run_id }}
+      group: issue-implementation-route-${{ github.event_name == 'push' && github.ref || github.run_id }}
       cancel-in-progress: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -69,6 +69,9 @@ jobs:
 
       - name: Install AI tools
         run: ./scripts/install-tools.sh
+
+      - name: Check work-item validator
+        run: ./scripts/test-work-items.sh
 
       - name: Route event with Copilot
         id: route
@@ -109,23 +112,8 @@ jobs:
         env:
           WORK_ITEMS: ${{ steps.route.outputs.work_items }}
         run: |
-          items=$(jq -cse --arg event "$GITHUB_EVENT_NAME" '
-            (if length == 1 then .[0] else error("Expected one implementation matrix") end) |
-            if type == "array" and length <= (if $event == "push" then 256 else 1 end) and
-              all(.[];
-                type == "object" and
-                (keys == ["issue_number", "reply_number", "source_pr", "tracking_label"]) and
-                (.issue_number | type == "string" and test("^[1-9][0-9]*$")) and
-                (.source_pr | type == "string" and test("^([1-9][0-9]*)?$")) and
-                ($event != "push" or .source_pr != "") and
-                (.reply_number | type == "string" and test("^[1-9][0-9]*$")) and
-                .tracking_label == ("factory-issue-" + .issue_number) and
-                .reply_number == (if .source_pr == "" then .issue_number else .source_pr end)
-              ) and
-              ([.[].tracking_label] | length == (unique | length)) and
-              ([.[].reply_number] | length == (unique | length))
-            then . else error("Invalid or oversized implementation matrix") end
-          ' <<< "$WORK_ITEMS")
+          items=$(jq -cse --arg event "$GITHUB_EVENT_NAME" \
+            -f scripts/validate-work-items.jq <<< "$WORK_ITEMS")
           printf 'work_items=%s\n' "$items" >> "$GITHUB_OUTPUT"
 
   implement:
