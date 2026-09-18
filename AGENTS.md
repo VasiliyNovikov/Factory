@@ -27,9 +27,10 @@
 - No application toolchain or dependency manifest is configured. The workflow's
   Bash/jq output-contract checks run with `./scripts/test-work-items.sh`; see
   [issue implementation](docs/issue-implementation.md) for their scope and limits.
-- `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
-  Copilot PR-creation test. See the linked examples for setup, permissions,
-  invocation, and result verification.
+- `.github/workflows/ci.yml` runs read-only validator checks at the PR head and a
+  separate, manually triggered (`workflow_dispatch`) Copilot PR-creation test.
+  See the linked examples for setup, permissions, invocation, and result
+  verification.
 - `.github/workflows/pr-review.yml` reviews non-draft, same-repository PRs on
   PR events and verifies that Copilot posted a review. See the PR-review example
   for triggering and bot-approval constraints.

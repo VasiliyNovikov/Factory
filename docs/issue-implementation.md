@@ -150,7 +150,10 @@ Implementation rechecks live state before changing a PR.
 
 The workflow and `./scripts/test-work-items.sh` use the same
 [`validate-work-items.jq`](../scripts/validate-work-items.jq) filter. Routing runs
-these Bash/jq checks before invoking Copilot; run the script locally to check
+these Bash/jq checks before invoking Copilot. [CI](../.github/workflows/ci.yml)
+also runs them at the exact PR head, with read-only Contents access, no persisted
+checkout credentials, and no App token or AI invocation. The separate PR-creation
+job remains manual. Run the script locally to check
 valid output, newline aliases, duplicate targets, malformed output, and matrix
 limits. They verify the output contract, not AI routing or live GitHub behavior.
 

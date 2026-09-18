@@ -4,6 +4,9 @@ This PR-creation example was tested successfully.
 Copilot creates a unique branch, commits a small Markdown file, pushes it, and
 opens a PR titled `test` against `master`.
 
+The CI workflow's `ai` job runs this example only on `workflow_dispatch`.
+PR events run a separate, read-only work-item validator job instead.
+
 The basic example below uses `GITHUB_TOKEN`. The repository's CI workflow uses
 the [GitHub App setup](github-app.md) with
 `factoryidentity` to enable automatic review runs and a separate reviewer identity.
