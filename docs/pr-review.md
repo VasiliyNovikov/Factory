@@ -70,8 +70,10 @@ No new credential or workflow permission is required.
 The native `pull_request.labeled` event retains the PR's head/merge association,
 so the existing implementation routing still recognizes the review's findings.
 Only Factory-authored additions of this label enter review. The reviewer removes
-it with the Actions token only after verifying a submitted review and rechecking
-the live PR, then verifies removal. Failed reviews leave the request pending.
+it with the Actions token only if it was present in the triggering event, after
+verifying a submitted review and rechecking the live PR, then verifies removal.
+A request added during an older review stays pending for its own assessment.
+Failed reviews leave the request pending.
 API or removal read-back errors fail the job
 rather than representing approval or successful acknowledgement.
 

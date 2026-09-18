@@ -201,6 +201,13 @@ class ReviewWorkflowTest(unittest.TestCase):
         result, _, _ = self.execute("Acknowledge review request", remaining_labels=self.pr["labels"])
         self.assertNotEqual(result.returncode, 0)
 
+    def test_acknowledgement_does_not_consume_a_later_request(self):
+        self.event["action"] = "opened"
+        self.event["pull_request"]["labels"] = [{"name": "triaged"}]
+        result, _, calls = self.execute("Acknowledge review request")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(calls, [f"GET {PR}"])
+
 
 if __name__ == "__main__":
     unittest.main()

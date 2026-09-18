@@ -146,8 +146,11 @@ jobs:
             echo '::error::PR changed before the review request could be acknowledged.'
             exit 1
           }
-          if jq -e '[.labels[].name] | index("factory-review-requested") != null' \
-            <<< "$pr" >/dev/null; then
+          event=$(jq -c . "$GITHUB_EVENT_PATH")
+          if jq -en --argjson event "$event" --argjson pr "$pr" '
+            ([$event.pull_request.labels[].name] | index("factory-review-requested") != null) and
+            ([$pr.labels[].name] | index("factory-review-requested") != null)
+          ' >/dev/null; then
             gh api --method DELETE \
               "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels/factory-review-requested" >/dev/null
             gh api --paginate --slurp \
