@@ -5,10 +5,17 @@
 - Keep code understandable and maintainable by humans and AI: use clear
   structure and naming, avoid unnecessary duplication, and reuse existing logic
   where appropriate without needless abstraction.
-- Prefer AI-led task handling with simple prompts and existing tools over
-  unnecessary custom workflow scripts or scripted decision logic. Keep automation
-  simple and flexible; use scripts when critical performance needs or lower
-  overall complexity justify them.
+- Prefer AI-led task handling with concise prompts, existing tools, native GitHub
+  features, and minimal workflow glue over custom scripted decision systems.
+  Add scripts or orchestration only for a concrete requirement or a demonstrated
+  reduction in overall complexity.
+- Keep decisions in the stage that owns them and reuse existing handoff contracts.
+  For example, triage leaves a decomposed parent without `triaged`; the implementer
+  does not need to understand decomposition. Do not spread a local change into
+  downstream stages without a concrete need.
+- During implementation and review, simplify mechanisms, not just names: remove
+  unnecessary checks and orchestration rather than removing one label while
+  retaining the same complexity.
 - Design for capable, current AI models and continued improvement rather than
   incidental limitations of today's models. This preference does not relax
   required permissions, safety boundaries, or result verification.
