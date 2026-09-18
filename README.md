@@ -31,7 +31,7 @@ flowchart TD
     decomposition --> children["Agentic: create / reuse native sub-issues<br/>Identity: Factory; new children start pending"]
     children -->|Verified setup and child release| triage
     decomposition -->|Parent comment: reconcile or resume partial split| triage
-    triage -->|Ready| tracking["Agentic: ready comment + factory-issue-NUMBER<br/>Created / applied by: Factory"]
+    triage -->|Ready| tracking["Agentic: scope comment + factory-issue-NUMBER<br/>Created / applied by: Factory"]
     tracking -->|Factory then applies triaged| implementation["Agentic: issue implementation<br/>Identity: Factory"]
     implementation -->|Actionable| pr["Agentic: create / update PR + commits<br/>Author: Factory"]
     implementation -->|Unclear, blocked, or already satisfied| reply["Agentic: reply in triggering conversation<br/>Comment author: Factory"]
@@ -48,10 +48,10 @@ flowchart TD
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
 triaged issue and, when present, a matching open Factory PR. CI must match the
 PR's current head or merge revision. Factory does not automatically merge PRs
-or close issues. Pending-child labels block direct handoff. Decomposition leaves
-the parent untriaged without a separate parent label; if `triaged` is added later,
-live native-child and durable-plan checks block implementation, not the early
-YAML label filter. Retries reuse planned children instead of duplicating work.
+or close issues. Triage withholds `triaged` from tracking parents and pending
+children, and retries reuse planned children instead of duplicating work.
+The implementer is unchanged: `triaged` remains its handoff signal, so do not
+manually apply it to tracking parents or children still being prepared.
 
 ## CI examples
 

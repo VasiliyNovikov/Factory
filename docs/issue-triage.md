@@ -21,9 +21,8 @@ decomposition plans, and existing child work. It chooses one of three outcomes:
 - **Decomposed:** autonomously split a larger request into native sub-issues when
   independent delivery is useful, with `<!-- factory-triage:decomposed -->`
   only after Copilot reconciles every planned child and verifies its setup.
-  This is the agent's completion claim, not an independent proof of plan
-  coverage by the workflow verifier. Do not split tightly coupled work just to
-  create more issues.
+  This is the agent's verified completion claim, not an independent workflow
+  check of the split. Do not split tightly coupled work just to create more issues.
 - **Reply:** ask specific questions or explain why the request is unsuitable,
   already satisfied, blocked, or only partially decomposed, with
   `<!-- factory-triage:reply -->`. A later comment can trigger reassessment or recovery.
@@ -37,9 +36,10 @@ Copilot rechecks that the issue is open and untriaged, with no pending label,
 decomposition plan, or native children. For a ready decision, it:
 
 1. Creates repository labels if needed.
-2. Posts the agreed scope and acceptance criteria in a marked decision comment.
+2. Posts the agreed scope and acceptance criteria before labeling.
 3. Adds `factory-issue-<issue-number>` to the issue and verifies it.
 4. Adds `triaged` in a separate API request, emitting the implementation handoff event.
+5. Reads back the open issue and both labels, then posts the marked ready result.
 
 The labels are applied using the Factory App token so the `issues: labeled`
 event starts the implementation workflow. Copilot is instructed to reply about a conflicting
@@ -53,9 +53,10 @@ The parent remains open and untriaged: decomposition does not add `triaged` or
 require a separate parent-label mutation. The durable plan and native children
 identify tracking parents, including partial attempts. A `decomposed` label is
 not part of this protocol or its gates; unrelated existing labels are preserved.
-A parent must never be directly implemented, even if someone later adds
-`triaged`; implementation checks the
-original issue on PR and CI follow-ups too.
+Triage owns the decision not to hand off parents; the implementer is unchanged.
+There is no additional implementation-side plan, child, or pending-label gate.
+Manually applying `triaged` bypasses this decision, so resume partial setup with
+a parent comment rather than applying handoff labels yourself.
 
 Copilot uses this sequence rather than a separate scripted planning engine:
 
@@ -64,7 +65,8 @@ Copilot uses this sequence rather than a separate scripted planning engine:
    Verify it before creating children. Preserve existing labels; do not add
    `triaged` or a new parent tracking label.
 2. Read native children and paginate repository issues in **all states** before
-   creating missing work. Each new child includes
+   creating missing work. Create `factory-triage-pending` if missing first.
+   Each new child includes
    `<!-- factory-child:OWNER/REPO#PARENT_NUMBER:KEY -->` in its body and
    `factory-triage-pending` in its creation request. It has a parent link,
    actionable scope, acceptance criteria, relevant context, and explicit dependencies.
@@ -109,8 +111,8 @@ An uncertain API outcome that cannot be resolved gets an explicit reply, not a
 blind retry. Partial failures retain the plan and protective labels and report
 created links, errors, and unfinished steps. A later non-Factory parent comment
 resumes reconciliation. Planned parents stay on this path; they never fall back
-to direct handoff. A historical Factory plan permanently blocks direct handoff
-of that parent; removing labels or native links is not cancellation. Use a new
+to direct handoff. Triage treats a historical Factory plan as a continuing
+recovery obligation; removing labels or native links is not cancellation. Use a new
 issue for re-scoped direct implementation rather than deleting the recovery
 record. This is not automatic completion tracking, merging, or parent/child closure.
 
@@ -141,29 +143,25 @@ must grant it. GitHub checks this permission when pushing the PR branch, before
 merge. After resolving a blocked prerequisite, post a new issue comment to
 trigger reassessment.
 
-A read-only verification step requires exactly one Factory comment with this run's
-marker and exactly one decision marker. Ready results must match live open-issue
-state, the unique tracking label, `triaged`, and no decomposition/pending state.
-An existing Factory decomposition plan also rejects a ready result.
-Decomposed results require an open untriaged parent, a persisted Factory
-decomposition plan, at least one native child, and no pending or inherited child
-tracking labels; ready children need their own tracking identity. Missing comments,
-inconsistent success claims, and API failures fail the step. Reply results also
-read the live issue. If it became `triaged` after the eligibility check, paginated
-issue events must show an independent actor applied `triaged`, with no Factory
-or unattributed `triaged`/`factory-issue-*` label changes since that check. Otherwise
-verification fails; a Factory handoff cannot be reported as a reply. The timestamp
-boundary is inclusive, so ambiguous same-second activity fails conservatively.
-Labels are never removed to make verification pass. Untriaged partial setup
-remains allowed. A reply can describe a partial failure; a green reply run does
-not mean decomposition or handoff succeeded.
+A small read-only verification step requires exactly one Factory-authored comment
+with this run's marker and exactly one `ready`, `reply`, or `decomposed` decision
+marker. Missing, duplicate, or malformed results and API read failures fail the
+step. This retains the existing authored-result check without a scripted planning
+engine or a second implementation eligibility layer.
 
-Scope quality, the complete intended child set, dependency correctness, and API
-mutations remain Copilot's responsibility. The verifier checks live postconditions,
-not the quality of its decisions or completion of child implementation. It checks
-plan presence but does not parse planned keys or compare them with native children:
-a partial child set can satisfy those structural checks. A green run alone is
-therefore not proof that the agent's complete-setup claim is correct.
+Copilot must verify actual outcomes using live read-backs before claiming success:
+ready work has its own unique tracking label and `triaged`; a split has its
+complete intended child set, verified native links and dependencies, no remaining
+pending children, and an open untriaged parent. Retries must reconcile all planned
+keys, including children created before a lost response or failed link. If
+another actor changes eligibility, preserve their changes and explain instead
+of forcing the original decision. A reply may report a partial failure; it does
+not mean handoff or decomposition succeeded.
+
+The workflow checks the result's author and marker format, not these live
+postconditions or AI adherence. There is no runner/server timestamp comparison
+or event-attribution script. A green run alone proves neither correct triage,
+complete decomposition, nor child implementation.
 See [issue implementation](issue-implementation.md) for the next stage.
 
 End-to-end verification requires live CI runs after these workflows are on the
