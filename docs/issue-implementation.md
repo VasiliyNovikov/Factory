@@ -53,8 +53,8 @@ and final verification without relaxing required checks.
 The implementation invocation passes `--profile implement` to `scripts/ai.sh`,
 using the `implement` profile's model, reasoning effort, and context settings
 from [`.github/model-config.json`](../.github/model-config.json). Event routing
-passes `--profile triage`, using the same configured `triage` profile as
-[issue triage](issue-triage.md).
+passes `--profile route`, keeping its lighter model settings separate from
+[issue triage](issue-triage.md)'s `triage` profile.
 
 ## Follow-ups and PR tracking
 

@@ -39,14 +39,18 @@ jobs:
 
 Use `--harness opencode` to run the same prompt through OpenCode. Both harnesses
 read named profiles from [`.github/model-config.json`](../.github/model-config.json).
-`--profile NAME` defaults to `default`; select `triage`, `implement`, `review`, or any
-other configured name explicitly:
+`--profile NAME` defaults to `default`; select `route`, `triage`, `implement`,
+`review`, or any other configured name explicitly:
 
 ```sh
+./scripts/ai.sh --harness copilot --profile route --prompt "Determine whether the event should start issue implementation."
 ./scripts/ai.sh --harness copilot --profile triage --prompt "Assess whether the issue is ready for implementation."
 ./scripts/ai.sh --harness copilot --profile implement --prompt "Implement the requested change."
 ./scripts/ai.sh --harness opencode --profile review --prompt "Review the current diff."
 ```
+
+`route` keeps event routing on `high` reasoning without long context. `triage`
+uses `max` reasoning with long context for issue assessment.
 
 Profiles supply `model`, `reasoningEffort`, and `longContext` without schema
 validation. `longContext` applies only to Copilot. Unknown names fail rather than
