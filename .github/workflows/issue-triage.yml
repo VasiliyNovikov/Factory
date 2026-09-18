@@ -133,6 +133,10 @@ jobs:
           with integer sub_issue_id set to the child's database id, NOT its issue number.
           Verify every intended native relationship using the paginated sub_issues list and
           GET repos/${GITHUB_REPOSITORY}/issues/CHILD_NUMBER/parent, checking the parent id.
+          For a child whose issue and repository access were verified, a /parent HTTP 404 with
+          message 'No parent issue found' means it has no parent yet: link the eligible child
+          and re-check. Other 404 responses, permission errors, and ambiguous failures are
+          not evidence of missing parentage; report them instead of linking blindly.
           Recheck parent and child state before child mutations; preserve independently changed work.
           After ALL intended links, scopes, and dependency references are verified, remove
           factory-triage-pending from each open pending child using the App token.

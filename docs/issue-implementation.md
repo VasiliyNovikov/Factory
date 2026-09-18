@@ -15,8 +15,12 @@ relevant code before acting:
 Decomposition is handled by [triage](issue-triage.md), not by implementing its
 tracking parent. Issues labeled `decomposed` or `factory-triage-pending`, or
 having native children or a Factory decomposition plan, are not eligible for
-direct implementation, even if they also have `triaged`. This is checked against
-the original issue for PR and CI follow-ups too, and rechecked before editing or
+direct implementation, even if they also have `triaged`. Before the implementation
+agent runs, a scripted precondition checks the live original issue and its
+paginated comments on every event path, including PR and CI follow-ups. Failed
+or unverifiable eligibility stops the agent and attempts an App-authored failure
+explanation in the triggering conversation; API failures remain failures.
+Copilot still rechecks issue/PR eligibility and revisions before editing or
 pushing. Prepared children enter normal triage and use their own issue number,
 tracking label, branch, and PR; they never inherit their parent's identity.
 
@@ -127,10 +131,12 @@ tracking_label=factory-issue-12
 
 For issue events, `source_pr` is empty and `reply_number` equals `issue_number`.
 Copilot writes no outputs when skipping and explains its decision or API failure
-in the log. There is no separate parser or output validation; an absent
-`issue_number` skips implementation, including if routing failed to produce it.
-Implementation rechecks live state before changing the PR. Conflicting parent
-handoffs receive an explanation rather than removing decomposition safeguards.
+in the log. An absent `issue_number` skips implementation, including if routing
+failed to produce it. The implementation precondition rejects closed or non-issue
+work, missing/conflicting tracking labels, and decomposition/pending state even
+if routing emitted outputs. PR identity and revision checks remain Copilot's
+responsibility, as do repeat live checks before changing the PR. Conflicting
+parent handoffs receive an explanation rather than removing decomposition safeguards.
 
 The implementation job uses the shared tracking label for concurrency:
 
@@ -181,11 +187,14 @@ Every implementation run must post a new App-authored comment in the triggering
 conversation with its outcome, unique run marker, PR link, and addressed/outstanding
 feedback with thread links, even after deduplication or mutation failures.
 
-`Verify Factory result` checks only for that comment; a missing comment fails the
-job. A green run does not prove correct PR changes or successful thread mutations;
-Copilot verifies those separately, including mutation read-backs. PR creation,
-updates, and labels remain Copilot's responsibility. Setup failures before Copilot
-starts appear only in Actions logs.
+`Verify Factory result` checks only for that comment, including after a failed
+eligibility precondition; a missing comment fails the job. A blocked run stays
+failed even when its explanation was posted and verified. The precondition is a
+point-in-time check, not continuous enforcement. A green run does not prove
+correct PR changes or successful thread mutations; Copilot verifies those
+separately, including mutation read-backs. PR creation, updates, and labels remain
+Copilot's responsibility. Other setup failures before eligibility is checked
+appear only in Actions logs.
 
 **CI status:** Issue-to-PR implementation and addressed-thread resolution have run
 in CI. Clarification replies, duplicate-reply prevention, and denied-resolution

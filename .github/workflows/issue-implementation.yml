@@ -159,6 +159,50 @@ jobs:
             printf 'GIT_COMMITTER_EMAIL=%s+%s@users.noreply.github.com\n' "$id" "$login"
           } >> "$GITHUB_ENV"
 
+      - name: Check implementation eligibility
+        id: eligibility
+        env:
+          GH_TOKEN: ${{ steps.factory-token.outputs.token }}
+        run: |
+          issue=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}")
+          jq -e --arg tracking "$TRACKING_LABEL" --arg expected "factory-issue-${ISSUE_NUMBER}" '
+            [.labels[].name] as $labels |
+            $tracking == $expected and .state == "open" and .pull_request == null and
+            ($labels | index("triaged") != null) and
+            ([$labels[] | select(startswith("factory-issue-"))] == [$tracking]) and
+            ($labels | index("decomposed") | not) and
+            ($labels | index("factory-triage-pending") | not) and
+            ((.sub_issues_summary.total // 0) == 0)
+          ' <<< "$issue" >/dev/null || {
+            printf '::error::Live issue is not eligible for direct implementation.\n'
+            exit 1
+          }
+          comments=$(gh api --paginate --slurp \
+            "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments")
+          jq -e --arg login "$FACTORY_LOGIN" '
+            any(.[][]; .user.login == $login and
+              ((.body // "") | contains("<!-- factory-decomposition-plan -->"))) | not
+          ' <<< "$comments" >/dev/null || {
+            printf '::error::A planned decomposition cannot be implemented directly.\n'
+            exit 1
+          }
+
+      - name: Report blocked implementation
+        if: failure() && steps.eligibility.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ steps.factory-token.outputs.token }}
+        run: |
+          printf -v body 'Implementation blocked for #%s: live eligibility failed or could not be verified. No implementation or review-thread changes were attempted; feedback remains outstanding.\n\nThe issue must be open, have triaged and exactly its own tracking label, and have no decomposed/pending state, native children, or Factory decomposition plan. See the [failed eligibility check](%s/%s/actions/runs/%s/attempts/%s) for the rejected condition or API error.\n\n[Issue](%s/%s/issues/%s)' \
+            "$ISSUE_NUMBER" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" \
+            "$GITHUB_RUN_ATTEMPT" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$ISSUE_NUMBER"
+          if [[ -n "$SOURCE_PR" ]]; then
+            printf -v body '%s | [PR](%s/%s/pull/%s)' \
+              "$body" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$SOURCE_PR"
+          fi
+          printf -v body '%s\n\n<!-- %s -->' "$body" "$RESULT_MARKER"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/issues/${REPLY_NUMBER}/comments" \
+            -f body="$body" --jq '{id, html_url, author: .user.login}'
+
       - name: Reason about issue and implement or reply
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -225,6 +269,7 @@ jobs:
           PR link, and <!-- ${RESULT_MARKER} -->."
 
       - name: Verify Factory result
+        if: ${{ !cancelled() && (success() || steps.eligibility.outcome == 'failure') }}
         env:
           GH_TOKEN: ${{ steps.factory-token.outputs.token }}
         run: |

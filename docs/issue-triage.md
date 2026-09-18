@@ -68,7 +68,10 @@ Copilot uses this sequence rather than a separate scripted planning engine:
    `POST .../issues/PARENT_NUMBER/sub_issues` takes the child's integer database
    `id` as `sub_issue_id`, not its issue number. Verify every intended child in
    the paginated native list and check its `GET .../issues/CHILD_NUMBER/parent`.
-   Never replace an existing different parent.
+   For a verified accessible child, that endpoint's HTTP 404 with message
+   `No parent issue found` means it is not linked yet: link and re-check it.
+   Other 404s, permission errors, and ambiguous failures are not proof of missing
+   parentage. Never replace an existing different parent.
 4. Once **all** intended relationships, scopes, and dependency references are
    verified, remove `factory-triage-pending` from open pending children with the
    App token. Its `issues: unlabeled` event starts ordinary child triage.
@@ -139,11 +142,13 @@ mutations remain Copilot's responsibility. The verifier checks live postconditio
 not the quality of its decisions or completion of child implementation.
 See [issue implementation](issue-implementation.md) for the next stage.
 
-Local regression coverage runs with `python3 -B -m unittest discover -s tests -v`
-(Python standard library, Bash, and `jq`). It executes the workflow's actual
-eligibility and result-check scripts against mocked `gh` responses, covering
-ready/reply/decomposed outcomes, partial states, pagination, conflicts, and API
-failures. Static contracts cover prompt ordering and routing/recovery safeguards.
+Regression coverage runs locally with `python3 -B -m unittest discover -s tests -v`
+and in [Workflow checks](../.github/workflows/workflow-checks.yml) on every PR and
+push to `master` (Python standard library, Bash, and `jq`). It executes the
+workflows' actual eligibility and result-check scripts against mocked `gh`
+responses, covering ready/reply/decomposed outcomes, partial states, pagination,
+conflicts, and API failures. Static contracts cover prompt ordering and
+per-event routing/recovery safeguards.
 These checks do not execute Copilot or deliver real GitHub webhooks. Child
 creation, release events, and end-to-end decomposition still need live CI
 verification; inspect native links, parent/child labels, and individual triage

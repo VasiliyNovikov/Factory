@@ -35,6 +35,7 @@
 - No application toolchain or dependency manifest is configured.
 - Workflow regression checks: `python3 -B -m unittest discover -s tests -v`
   (Python standard library, Bash, and `jq`; no live GitHub mutations).
+  `.github/workflows/workflow-checks.yml` runs them on PRs and pushes to `master`.
 - `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
   Copilot PR-creation test. See the linked examples for setup, permissions,
   invocation, and result verification.

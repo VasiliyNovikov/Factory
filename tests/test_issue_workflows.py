@@ -1,4 +1,4 @@
-"""Execute real triage shell steps with a read-only gh double.
+"""Execute real workflow shell steps with a strictly matched gh double.
 
 The static contract tests inspect event filters and AI instructions only: they
 do not establish that Copilot or GitHub carried out a decomposition correctly.
@@ -112,9 +112,13 @@ class ShellStepTests(unittest.TestCase):
                 raise RuntimeError(f"{command} is required to test the workflow shell steps")
         cls.eligibility = step_run(TRIAGE, "Check live triage eligibility")
         cls.verify = step_run(TRIAGE, "Verify triage result")
+        cls.implementation_eligibility = step_run(IMPLEMENTATION, "Check implementation eligibility")
+        cls.blocked_report = step_run(IMPLEMENTATION, "Report blocked implementation")
+        cls.implementation_verify = step_run(IMPLEMENTATION, "Verify Factory result")
 
-    def run_step(self, script, responses, *, event_name="issues", login="contributor"):
-        # Keep scratch files inside the repository, never in the system temp dir.
+    def run_step(self, script, responses, *, event_name="issues", login="contributor",
+                 source_pr="", tracking=TRACKING):
+        # The gh shim must be executable even on systems with a noexec temp dir.
         with tempfile.TemporaryDirectory(prefix=".issue-workflows-", dir=ROOT / "tests") as directory:
             work = Path(directory)
             (work / "gh").write_text(f"#!{sys.executable}\n" + GH_DOUBLE)
@@ -130,8 +134,13 @@ class ShellStepTests(unittest.TestCase):
                 "PATH": str(work) + os.pathsep + os.environ["PATH"],
                 "MOCK_GH_ROOT": str(work),
                 "GITHUB_REPOSITORY": "example/repository",
+                "GITHUB_SERVER_URL": "https://github.com",
+                "GITHUB_RUN_ID": "123",
+                "GITHUB_RUN_ATTEMPT": "2",
                 "ISSUE_NUMBER": "26",
-                "TRACKING_LABEL": TRACKING,
+                "SOURCE_PR": source_pr,
+                "REPLY_NUMBER": source_pr or "26",
+                "TRACKING_LABEL": tracking,
                 "RESULT_MARKER": MARKER,
                 "FACTORY_LOGIN": LOGIN,
                 "GH_TOKEN": "not-a-real-token",
@@ -208,6 +217,110 @@ class ShellStepTests(unittest.TestCase):
         result, output = self.run_step(self.eligibility, [response(ISSUE_API, error=True)])
         self.assert_rejected(result)
         self.assertEqual(output, "")
+
+    def test_implementation_precondition_checks_original_issue_on_every_event_path(self):
+        for event in ("issues", "issue_comment", "pull_request_review", "workflow_run"):
+            with self.subTest(event=event):
+                result, _ = self.run_step(self.implementation_eligibility, [
+                    response(ISSUE_API, issue([TRACKING, "triaged", "bug"])),
+                    response(ISSUE_API + "/comments", [[], []], paginated=True),
+                ], event_name=event, source_pr="" if event == "issues" else "27")
+                self.assert_ok(result)
+
+    def test_implementation_precondition_rejects_unsafe_live_state_on_every_event_path(self):
+        cases = {
+            "closed": issue([TRACKING, "triaged"], state="closed"),
+            "pull request": issue([TRACKING, "triaged"], pr=True),
+            "missing triaged": issue([TRACKING]),
+            "missing tracking": issue(["triaged"]),
+            "wrong tracking": issue(["triaged", "factory-issue-27"]),
+            "conflicting tracking": issue([TRACKING, "triaged", "factory-issue-27"]),
+            "duplicate tracking": issue([TRACKING, TRACKING, "triaged"]),
+            "decomposed": issue([TRACKING, "triaged", "decomposed"]),
+            "pending": issue([TRACKING, "triaged", "factory-triage-pending"]),
+            "native children": issue([TRACKING, "triaged"], children=1),
+        }
+        for event in ("issues", "issue_comment", "pull_request_review", "workflow_run"):
+            for name, parent in cases.items():
+                with self.subTest(event=event, state=name):
+                    result, _ = self.run_step(self.implementation_eligibility, [
+                        response(ISSUE_API, parent),
+                    ], event_name=event, source_pr="" if event == "issues" else "27")
+                    self.assert_rejected(result)
+                    self.assertIn("Live issue is not eligible", result.stdout)
+
+    def test_implementation_precondition_rejects_mismatched_routing_identity(self):
+        result, _ = self.run_step(self.implementation_eligibility, [
+            response(ISSUE_API, issue(["factory-issue-27", "triaged"])),
+        ], tracking="factory-issue-27")
+        self.assert_rejected(result)
+
+    def test_implementation_precondition_checks_factory_plans_on_all_comment_pages(self):
+        for author in (LOGIN, "contributor", "another[bot]"):
+            with self.subTest(author=author):
+                result, _ = self.run_step(self.implementation_eligibility, [
+                    response(ISSUE_API, issue([TRACKING, "triaged"])),
+                    response(ISSUE_API + "/comments", [
+                        [comment(body="Earlier discussion."), {"user": {"login": LOGIN}, "body": None}],
+                        [comment(login=author, body="<!-- factory-decomposition-plan -->")],
+                    ], paginated=True),
+                ])
+                if author == LOGIN:
+                    self.assert_rejected(result)
+                    self.assertIn("A planned decomposition cannot be implemented directly", result.stdout)
+                else:
+                    self.assert_ok(result)
+
+    def test_implementation_precondition_api_failures_stop_implementation(self):
+        for responses in (
+            [response(ISSUE_API, error=True)],
+            [response(ISSUE_API, issue([TRACKING, "triaged"])),
+             response(ISSUE_API + "/comments", paginated=True, error=True)],
+        ):
+            with self.subTest(endpoint=responses[-1]["args"][-1]):
+                result, _ = self.run_step(self.implementation_eligibility, responses)
+                self.assert_rejected(result)
+                self.assertIn("mock GitHub API unavailable", result.stderr)
+
+    def test_blocked_implementation_reports_in_triggering_conversation_and_verifies_author(self):
+        for source_pr in ("", "27"):
+            with self.subTest(source_pr=source_pr):
+                body = (
+                    "Implementation blocked for #26: live eligibility failed or could not be verified. "
+                    "No implementation or review-thread changes were attempted; feedback remains outstanding.\n\n"
+                    "The issue must be open, have triaged and exactly its own tracking label, and have no "
+                    "decomposed/pending state, native children, or Factory decomposition plan. "
+                    "See the [failed eligibility check]"
+                    "(https://github.com/example/repository/actions/runs/123/attempts/2) "
+                    "for the rejected condition or API error.\n\n"
+                    "[Issue](https://github.com/example/repository/issues/26)"
+                )
+                if source_pr:
+                    body += " | [PR](https://github.com/example/repository/pull/27)"
+                body += f"\n\n<!-- {MARKER} -->"
+                endpoint = f"repos/example/repository/issues/{source_pr or '26'}/comments"
+                posted = comment(body=body)
+                post = {
+                    "args": ["api", "--method", "POST", endpoint, "-f", f"body={body}",
+                             "--jq", "{id, html_url, author: .user.login}"],
+                    "value": posted,
+                    "error": False,
+                }
+                result, _ = self.run_step(self.blocked_report, [post], source_pr=source_pr)
+                self.assert_ok(result)
+                for author in (LOGIN, "another[bot]"):
+                    verified, _ = self.run_step(self.implementation_verify, [
+                        response(endpoint, [[comment(login=author, body=body)]], paginated=True),
+                    ], source_pr=source_pr)
+                    if author == LOGIN:
+                        self.assert_ok(verified)
+                    else:
+                        self.assert_rejected(verified)
+                failed, _ = self.run_step(
+                    self.blocked_report, [{**post, "error": True}], source_pr=source_pr,
+                )
+                self.assert_rejected(failed)
+                self.assertIn("mock GitHub API unavailable", failed.stderr)
 
     def test_ready_accepts_own_tracking_and_unrelated_labels(self):
         self.assert_ok(self.verify_result("ready", issue([TRACKING, "triaged", "bug"])))
@@ -386,6 +499,12 @@ class StaticContractTests(unittest.TestCase):
     def setUpClass(cls):
         cls.triage = TRIAGE.read_text()
         cls.implementation = IMPLEMENTATION.read_text()
+        cls.triage_condition = cls.triage.split("  triage:\n    if: >-\n", 1)[1].split(
+            "\n    runs-on:", 1,
+        )[0]
+        cls.route_condition = cls.implementation.split("  route:\n    if: >-\n", 1)[1].split(
+            "\n    runs-on:", 1,
+        )[0]
         cls.prompt = " ".join(step_run(TRIAGE, "Triage issue with Copilot", ">-").split())
         cls.route = " ".join(step_run(IMPLEMENTATION, "Route event with Copilot", ">-").split())
         cls.implement = " ".join(step_run(
@@ -407,13 +526,13 @@ class StaticContractTests(unittest.TestCase):
 
     def test_static_child_release_event_and_queue_filters(self):
         self.assertRegex(self.triage, r"issues:\s+types: \[opened, unlabeled\]")
-        self.assertIn("github.event.label.name == 'factory-triage-pending'", self.triage)
-        self.assertIn("github.event.action != 'unlabeled'", self.triage)
-        self.assertIn("github.event.issue.state == 'open'", self.triage)
-        self.assertIn("!github.event.issue.pull_request", self.triage)
+        self.assertIn("github.event.label.name == 'factory-triage-pending'", self.triage_condition)
+        self.assertIn("github.event.action != 'unlabeled'", self.triage_condition)
+        self.assertIn("github.event.issue.state == 'open'", self.triage_condition)
+        self.assertIn("!github.event.issue.pull_request", self.triage_condition)
         for label in ("triaged", "factory-triage-pending"):
-            self.assertIn(f"!contains(github.event.issue.labels.*.name, '{label}')", self.triage)
-        self.assertNotIn("!contains(github.event.issue.labels.*.name, 'decomposed')", self.triage)
+            self.assertIn(f"!contains(github.event.issue.labels.*.name, '{label}')", self.triage_condition)
+        self.assertNotIn("!contains(github.event.issue.labels.*.name, 'decomposed')", self.triage_condition)
         self.assertIn("cancel-in-progress: false", self.triage)
 
     def test_static_durable_plan_protects_parent_before_creation_and_supports_retries(self):
@@ -440,6 +559,10 @@ class StaticContractTests(unittest.TestCase):
             "POST repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/sub_issues",
             "integer sub_issue_id set to the child's database id, NOT its issue number",
             "GET repos/${GITHUB_REPOSITORY}/issues/CHILD_NUMBER/parent, checking the parent id",
+            "For a child whose issue and repository access were verified, a /parent HTTP 404",
+            "message 'No parent issue found' means it has no parent yet",
+            "link the eligible child and re-check",
+            "Other 404 responses, permission errors, and ambiguous failures are not evidence of missing parentage",
         ):
             with self.subTest(contract=text):
                 self.assertIn(text, self.prompt)
@@ -494,11 +617,33 @@ class StaticContractTests(unittest.TestCase):
         self.assertIn("Neither the issue nor PR may be decomposed or factory-triage-pending", self.implement)
         self.assertIn("instead of implementing it or removing its safeguards", self.implement)
         self.assertIn("Ignore ${FACTORY_LOGIN}'s own comments/reviews", self.route)
-        for label in ("decomposed", "factory-triage-pending"):
-            self.assertIn(
-                f"!contains(github.event.issue.labels.*.name, '{label}')",
-                self.implementation,
-            )
+
+    def test_static_each_issue_event_clause_rejects_decomposed_and_pending_work(self):
+        for event in ("issues", "issue_comment"):
+            clause = self.route_condition.split(
+                f"(github.event_name != '{event}' ||", 1,
+            )[1].split("(github.event_name != ", 1)[0]
+            for label in ("decomposed", "factory-triage-pending"):
+                with self.subTest(event=event, label=label):
+                    self.assertIn(f"!contains(github.event.issue.labels.*.name, '{label}')", clause)
+
+    def test_static_failed_precondition_blocks_agent_but_reports_and_verifies(self):
+        self.assertLess(
+            self.implementation.index("- name: Check implementation eligibility"),
+            self.implementation.index("- name: Reason about issue and implement or reply"),
+        )
+        self.assertIn("if: failure() && steps.eligibility.outcome == 'failure'", self.implementation)
+        self.assertIn(
+            "if: ${{ !cancelled() && (success() || steps.eligibility.outcome == 'failure') }}",
+            self.implementation,
+        )
+
+    def test_static_regression_suite_runs_in_ci(self):
+        workflow = (ROOT / ".github/workflows/workflow-checks.yml").read_text()
+        self.assertRegex(workflow, r"on:\s+pull_request:\s+push:\s+branches: \[master\]")
+        self.assertIn("run: python3 -B -m unittest discover -s tests -v", workflow)
+        self.assertIn("contents: read", workflow)
+        self.assertIn("persist-credentials: false", workflow)
 
 
 if __name__ == "__main__":
