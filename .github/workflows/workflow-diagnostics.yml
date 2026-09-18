@@ -19,16 +19,19 @@ jobs:
       contents: read
       copilot-requests: write
     outputs:
-      artifact_name: workflow-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+      artifact_name: ${{ steps.init.outputs.artifact_name }}
       report_attempt: ${{ github.run_attempt }}
     env:
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
       - name: Initialize diagnostics report
+        id: init
         shell: bash
         env:
           DIAGNOSTICS_DIR: ${{ runner.temp }}/workflow-diagnostics
         run: |
+          printf 'artifact_name=workflow-diagnostics-%s-%s\n' \
+            "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
           mkdir -p "$DIAGNOSTICS_DIR"
           jq -n --argjson run "$GITHUB_RUN_ID" --argjson attempt "$GITHUB_RUN_ATTEMPT" '{
             run_id: $run, run_attempt: $attempt, outcome: "incomplete",
@@ -152,7 +155,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: workflow-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ steps.init.outputs.artifact_name }}
           path: ${{ runner.temp }}/workflow-diagnostics/report.json
           if-no-files-found: error
           retention-days: 14

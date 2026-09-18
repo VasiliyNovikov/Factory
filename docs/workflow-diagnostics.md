@@ -119,7 +119,9 @@ write access. The isolated check does not prevent analysis-time issue changes.
 
 The report, including the incomplete placeholder on early failure, is retained
 for 14 days as `workflow-diagnostics-RUN_ID-ATTEMPT` when initialization and
-upload can run. A missing report makes upload fail rather than just warn.
+upload can run. Initialization emits the artifact name once; the upload and
+producing job's output both use that value. A missing report makes upload fail
+rather than just warn.
 Verification also runs after a failed diagnosis unless
 the workflow was cancelled or diagnosis was skipped. **Re-run failed jobs**
 reuses the producing job's saved artifact name and attempt when only verification
