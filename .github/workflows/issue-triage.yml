@@ -76,6 +76,7 @@ jobs:
         run: >-
           ./scripts/ai.sh
           --harness copilot
+          --profile triage
           --prompt "Triage issue ${ISSUE_NUMBER} in repository ${GITHUB_REPOSITORY}.
           Read repository guidance, relevant code, and the full discussion, including answers to
           earlier questions. Assess whether the request is clear, relevant, feasible, and actionable.

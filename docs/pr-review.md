@@ -17,8 +17,22 @@ permissions:
 It checks out the base revision for the installation script, harness, and model
 configuration. Copilot reads the proposed changes through `gh pr view`,
 `gh pr diff`, and read-only API calls, rather than executing the PR's code.
+The review invocation passes `--profile review` to `scripts/ai.sh`, using the
+`review` profile's model, reasoning effort, and context settings from
+[`.github/model-config.json`](../.github/model-config.json).
+
+The review job has a 30-minute total timeout, including setup time already elapsed.
+Its prompt tells Copilot to budget the remaining time, reserving time for required
+GitHub reporting and final verification without relaxing required checks or
+approving an incomplete review.
 
 ## Review outcome
+
+Reviews follow the shared [test-value policy](../AGENTS.md#test-value-and-verification).
+A missing-test finding must identify a concrete uncovered risk, the observable
+behavior to check, and why existing coverage is insufficient. Do not demand tests
+just because files changed or to preserve incidental wording; justified contract
+checks, real-logic mocked tests, and necessary regression/safety coverage remain useful.
 
 - Actionable findings: submit a comment review with file/line references and
   suggested fixes, using inline review comments where possible.

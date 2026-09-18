@@ -8,6 +8,42 @@ Starting with small things:
 - [ ] Review PRs with GitHub Copilot CLI in CI and post comments or approval
 - [ ] Turn issues and user follow-up comments into PRs or Factory replies
 
+## Factory workflow
+
+Triage applies the unique `factory-issue-<number>` tracking label before `triaged`
+starts implementation. The resulting Factory PR carries both labels.
+
+**Actors:** Agentic blocks use Copilot in CI; human / bot input can come from a
+human or another bot under its own account. Automation denotes CI runs and checks.
+
+**Identities:** Factory = `factory-identity[bot]`; Actions = `github-actions[bot]`.
+Running in Actions does not make Factory-created content Actions-authored.
+
+```mermaid
+flowchart TD
+    issue["Human / bot: new untriaged issue<br/>Author: submitting account"] --> triage{"Agentic: issue triage<br/>Identity: Factory"}
+    triage -->|Not ready| clarification["Agentic: clarification or explanation<br/>Comment author: Factory"]
+    clarification --> answer["Human / bot: answer or comment<br/>Author: submitting account"]
+    answer --> triage
+    triage -->|Ready| tracking["Agentic: ready comment + factory-issue-NUMBER<br/>Created / applied by: Factory"]
+    tracking -->|Factory then applies triaged| implementation["Agentic: issue implementation<br/>Identity: Factory"]
+    implementation -->|Actionable| pr["Agentic: create / update PR + commits<br/>Author: Factory"]
+    implementation -->|Unclear, blocked, or already satisfied| reply["Agentic: reply in triggering conversation<br/>Comment author: Factory"]
+    reply -->|New feedback| feedback["Human / bot: issue / PR comments or submitted reviews<br/>Author: submitting account"]
+    feedback -->|Actionable| implementation
+    pr --> review{"Agentic: PR review<br/>Review author: Actions"}
+    review -->|Current-revision findings| implementation
+    review -->|Clean and approval permitted| approval["Agentic: approval<br/>Review author: Actions"]
+    pr --> ci["Automation: PR-linked CI<br/>Checks produced by: GitHub Actions"]
+    pr -->|Discussion or review| feedback
+    ci -->|Current-revision failure or timeout| implementation
+```
+
+PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
+triaged issue and, when present, a matching open Factory PR. CI must match the
+PR's current head or merge revision. Factory does not automatically merge PRs
+or close issues.
+
 ## CI examples
 
 The basic examples use this repository's scripts and require no PAT or custom secret.

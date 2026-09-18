@@ -4,6 +4,11 @@
     "reasoningEffort": "high",
     "longContext": true
   },
+  "triage": {
+    "model": "gpt-6-astra",
+    "reasoningEffort": "high",
+    "longContext": false
+  },
   "implement": {
     "model": "gpt-6-astra",
     "reasoningEffort": "max",

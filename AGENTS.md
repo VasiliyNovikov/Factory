@@ -5,6 +5,13 @@
 - Keep code understandable and maintainable by humans and AI: use clear
   structure and naming, avoid unnecessary duplication, and reuse existing logic
   where appropriate without needless abstraction.
+- Prefer AI-led task handling with simple prompts and existing tools over
+  unnecessary custom workflow scripts or scripted decision logic. Keep automation
+  simple and flexible; use scripts when critical performance needs or lower
+  overall complexity justify them.
+- Design for capable, current AI models and continued improvement rather than
+  incidental limitations of today's models. This preference does not relax
+  required permissions, safety boundaries, or result verification.
 - This is an initial scaffold for an agentic software factory experiment.
   `README.md` tracks completed CI access milestones. No application code is
   implemented yet.
@@ -36,3 +43,26 @@
   for normal triage. Copilot selects the window and records a report; a small
   read-only job checks report status and issue receipts. Its first invocation
   establishes a boundary without analysis.
+
+## Test value and verification
+
+- Before adding or requesting a test, identify the requirement or credible
+  regression it protects, the observable outcome, and why existing coverage is
+  insufficient. Prefer the smallest useful check with existing tools; do not add
+  tests, harnesses, or dependencies merely because files changed or to meet a
+  test-count expectation.
+- Test behavior or a required contract, not a copy of the implementation,
+  incidental source/prompt/documentation wording, or the mock setup itself.
+  Behavior tests should fail for the targeted regression and survive harmless
+  refactoring or equivalent prose.
+- Static/contract checks are useful when the checked representation is itself a
+  requirement, such as a schema, protocol token, or workflow permission.
+  Focused mocked tests should exercise real production logic and check relevant
+  outputs, side effects, or rejected operations, rather than only replay fixtures.
+- Preserve necessary regression and safety coverage and all required checks.
+  Guidance-only changes may use direct inspection instead of a new suite of
+  wording assertions; this is not permission to skip meaningful verification.
+- In review, missing-test findings must name a concrete uncovered risk, the
+  observable behavior to check, and why existing coverage is insufficient.
+- Report what checks actually establish and their limits. Source-text assertions
+  and mocked tests do not prove AI adherence or live end-to-end GitHub behavior.
