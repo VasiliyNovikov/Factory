@@ -9,13 +9,14 @@
   features, and minimal workflow glue over custom scripted decision systems.
   Add scripts or orchestration only for a concrete requirement or a demonstrated
   reduction in overall complexity.
-- Keep decisions in the stage that owns them and reuse existing handoff contracts.
-  For example, triage leaves a decomposed parent without `triaged`; the implementer
-  does not need to understand decomposition. Do not spread a local change into
-  downstream stages without a concrete need.
-- During implementation and review, simplify mechanisms, not just names: remove
-  unnecessary checks and orchestration rather than removing one label while
-  retaining the same complexity.
+- Apply separation of concerns and information hiding: keep decisions in the
+  component or stage that owns them and reuse existing contracts. Do not expose
+  internal details or spread local changes across boundaries without a concrete
+  need.
+- Apply KISS (keep it simple) and YAGNI (you aren't gonna need it): avoid
+  speculative machinery. During implementation and review, remove unnecessary
+  mechanisms rather than merely renaming concepts, while preserving required
+  safety checks and verification.
 - Design for capable, current AI models and continued improvement rather than
   incidental limitations of today's models. This preference does not relax
   required permissions, safety boundaries, or result verification.
