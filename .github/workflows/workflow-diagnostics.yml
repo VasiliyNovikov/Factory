@@ -11,7 +11,9 @@ concurrency:
 
 jobs:
   diagnose:
-    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    if: >-
+      github.event_name == 'schedule' ||
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -22,7 +24,7 @@ jobs:
       artifact_name: ${{ steps.init.outputs.artifact_name }}
       report_attempt: ${{ github.run_attempt }}
     env:
-      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch || github.ref_name }}
     steps:
       - name: Initialize diagnostics report
         id: init

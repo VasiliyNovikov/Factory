@@ -4,7 +4,10 @@
 at **00:00 UTC** (`0 0 * * *`). After it lands on the default branch, it can also
 be started from **Actions -> Workflow diagnostics -> Run workflow**. Select the
 default branch; dispatches on other branches are skipped. GitHub can delay
-scheduled runs.
+scheduled runs. GitHub runs schedules only on the default branch, so scheduled
+invocations do not depend on repository metadata in the event payload to pass
+the job gate. If that metadata is absent, the analysis uses `github.ref_name`
+as the default-branch hint.
 
 Copilot owns history collection, workflow analysis, duplicate detection, and
 issue creation. The workflow prompt supplies the requirements and API hints
