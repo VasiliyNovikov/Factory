@@ -4,11 +4,13 @@
 [triage](issue-triage.md) adds `triaged` to an issue, or someone posts feedback on
 an open triaged issue or its Factory PR. Submitted comment or change-request
 reviews (including their inline findings), PR-review findings, and failed CI runs linked to that PR trigger
-follow-ups. It reads the full issue and PR discussions, repository guidance, and
-relevant code before acting:
+follow-ups. Default-branch pushes also check eligible Factory PRs for merge conflicts.
+It reads the full issue and PR discussions, repository guidance, and relevant code before acting:
 
 - Clear, actionable request: implement it, run appropriate checks, and open a PR.
 - Follow-up to an existing Factory PR: update that PR's branch and description.
+- Default-branch push: repair confirmed merge conflicts in existing Factory PRs,
+  without implementing unrelated requests or updating merely behind branches.
 - Unclear, unsuitable, already satisfied, or blocked request: explain or ask
   specific questions in the conversation where the request was posted.
 
@@ -102,37 +104,45 @@ A separate Copilot routing job resolves PR feedback to its original issue using
 read-only GitHub access. It is instructed to check the live PR's App author,
 repository, base, branch, and unique tracking label, and require the original
 issue to remain open with matching labels. Untriaged issues and unrelated,
-closed, or mismatched PRs should produce no routing outputs.
+closed, or mismatched PRs are excluded from the routing result.
 
 YAML conditions skip `factory-identity[bot]` comments/reviews, comments or reviews
 on closed or untriaged items, unrelated issue labels, approvals, successful non-review
-workflows, and triage/implementation completions before starting routing. Keep
-the early author filter aligned with the installed Factory App's login. Other
+workflows, triage/implementation completions, and non-default-branch or deletion
+pushes before starting routing. Keep the early author filter aligned with the
+installed Factory App's login. Other
 events incur a Copilot invocation even when routing decides there is no work.
 Routing checks out the default branch and has a 15-minute timeout. Its App token
 has only Contents, Issues, and Pull requests read access; the built-in token
 provides `copilot-requests: write` for model requests.
 
-Copilot writes job outputs directly to `GITHUB_OUTPUT`, for example:
+Copilot writes one compact JSON array to `GITHUB_OUTPUT`, for example:
 
 ```text
-issue_number=12
-reply_number=34
-source_pr=34
-tracking_label=factory-issue-12
+work_items=[{"issue_number":"12","reply_number":"34","source_pr":"34","tracking_label":"factory-issue-12"}]
 ```
 
 For issue events, `source_pr` is empty and `reply_number` equals `issue_number`.
-Copilot writes no outputs when skipping and explains its decision or API failure
-in the log. There is no separate parser or output validation; an absent
-`issue_number` skips implementation, including if routing failed to produce it.
-Implementation rechecks live state before changing the PR.
+Ordinary events produce at most one item. A default-branch push enumerates all
+pages of open PRs and produces one item per eligible Factory PR, with the PR as
+`source_pr` and `reply_number`, even if mergeability is clean or unknown.
+Implementation, not the router, checks the latest head/base for conflicts.
 
-The implementation job uses the shared tracking label for concurrency:
+A verified skip produces `work_items=[]`. Missing or malformed output fails the
+JSON contract check rather than silently skipping implementation. The check
+requires string IDs, matching tracking labels/reply targets, and unique issue
+labels; push items must include a nonempty PR number. The matrix supports up to 256
+items (GitHub's job limit); incomplete enumeration, API failures, or more items
+must be reported without emitting a partial matrix. Validation checks the output
+shape, not live eligibility or the completeness of the agent's enumeration.
+Implementation rechecks live state before changing a PR.
+
+Each matrix job uses the shared tracking label for concurrency; `fail-fast: false`
+keeps a failure for one issue from cancelling other issues:
 
 ```yaml
 concurrency:
-  group: issue-implementation-${{ needs.route.outputs.tracking_label }}
+  group: issue-implementation-${{ matrix.tracking_label }}
   cancel-in-progress: false
 ```
 
@@ -142,7 +152,49 @@ implementation jobs are serialized without cancelling the active job; routing
 jobs can run in parallel. GitHub concurrency retains at most one pending job,
 so bursts of comments can replace pending jobs. Every implementation reads the
 full issue and PR discussions to include that feedback; the surviving run posts
-its result in its triggering conversation.
+its result in its triggering conversation (the PR for a push-triggered check).
+
+## Merge-conflict maintenance
+
+Default-branch pushes fan out to eligible Factory PRs using the same issue
+concurrency groups as comments and CI feedback. The trigger accepts branch pushes,
+but a job condition skips non-default branches, including Factory repair pushes.
+Factory-authored comments and implementation workflow completions are already
+ignored, preventing self-triggered repair loops. Ordinary implementation and
+follow-up runs also check for conflicts, including after their own changes.
+
+Copilot fetches the current PR head and default branch and records their OIDs.
+It probes those exact revisions without changing the working tree, for example
+with `git merge-tree --write-tree <head> <base>`: exit 0 is clean, exit 1 with
+conflict details confirms conflicts, and anything else (including exit 1 without
+conflict details) is a failure. A merely
+behind branch, failed checks, or a blocked merge state is not a conflict.
+GitHub's `UNKNOWN`/null mergeability is pending; retry briefly or use the local
+probe rather than treating it as clean or conflicting. Clean/behind branches
+get no base merge or conflict-repair commit.
+
+For confirmed conflicts, the agent merges the checked default-branch revision
+into the existing PR branch without rebasing or rewriting history. It resolves
+each conflict from both sides' intent, repository guidance, and the issue/PR
+context, rather than blindly choosing ours/theirs. Ambiguous intent, a required
+product decision, or an unverifiable resolution means aborting the local merge
+and explaining the blocker on the PR, not pushing a speculative/partial repair.
+Prior results are read to avoid repeating the same blocked attempt for unchanged
+revisions and feedback.
+
+Before each mutation, eligibility and both live head/base OIDs are rechecked.
+Changed revisions require reassessment and fresh checks, not overwriting another
+commit. The combined result receives appropriate checks before a normal push.
+After pushing, Copilot verifies the remote head, ancestry of both the previous
+PR head and integrated base, and a clean probe against the current default branch.
+It must also obtain GitHub's mergeable result for the same revisions before
+claiming resolution; pending, stale, denied, and failed verification are reported
+explicitly. No force-push, default-branch push, PR merge, issue closure, changed
+permissions, or relaxed required checks is authorized.
+
+Each result comment includes the checked head/base, conflict classification,
+changes or blockers, and verification limits. An issue-triggered run that cannot
+resolve a conflict also explains the blocker on the existing PR.
 
 ## Review-thread feedback
 
@@ -178,11 +230,14 @@ conversation with its outcome, unique run marker, PR link, and addressed/outstan
 feedback with thread links, even after deduplication or mutation failures.
 
 `Verify Factory result` checks only for that comment; a missing comment fails the
-job. A green run does not prove correct PR changes or successful thread mutations;
-Copilot verifies those separately, including mutation read-backs. PR creation,
+job. A green run does not prove correct PR changes, successful conflict repair,
+or successful thread mutations; Copilot verifies those separately, including
+mutation read-backs. PR creation,
 updates, and labels remain Copilot's responsibility. Setup failures before Copilot
 starts appear only in Actions logs.
 
 **CI status:** Issue-to-PR implementation and addressed-thread resolution have run
 in CI. Clarification replies, duplicate-reply prevention, and denied-resolution
-handling have not yet been exercised live.
+handling have not yet been exercised live. Default-branch fan-out and conflict
+repair also require live event-to-PR verification after deployment; local Git
+probes and workflow checks do not establish AI resolution quality or live routing.

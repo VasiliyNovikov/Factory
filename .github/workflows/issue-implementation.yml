@@ -1,6 +1,8 @@
 name: Issue implementation
 
 on:
+  push:
+    branches: ['**']
   issues:
     types: [labeled]
   issue_comment:
@@ -14,6 +16,9 @@ on:
 jobs:
   route:
     if: >-
+      (github.event_name != 'push' ||
+        (!github.event.deleted &&
+         github.ref == format('refs/heads/{0}', github.event.repository.default_branch))) &&
       (github.event_name != 'issues' || github.event.label.name == 'triaged') &&
       (github.event_name != 'issue_comment' ||
         (github.event.comment.user.login != 'factory-identity[bot]' &&
@@ -36,10 +41,7 @@ jobs:
       contents: read
       copilot-requests: write
     outputs:
-      issue_number: ${{ steps.route.outputs.issue_number }}
-      reply_number: ${{ steps.route.outputs.reply_number }}
-      source_pr: ${{ steps.route.outputs.source_pr }}
-      tracking_label: ${{ steps.route.outputs.tracking_label }}
+      work_items: ${{ steps.work-items.outputs.work_items }}
     steps:
       - name: Create routing token
         id: factory-token
@@ -80,20 +82,54 @@ jobs:
           with a unique factory-issue-NUMBER label matching their number. PR feedback must belong
           to an open ${FACTORY_LOGIN} PR in this repository, targeting the default branch,
           on factory/issue-NUMBER with the same labels; check the original issue too.
+          For a non-deletion push to the default branch, enumerate ALL pages of open PRs and
+          return one work item per eligible Factory PR for a conflict-only check. Include clean,
+          behind, and unknown-mergeability PRs: implementation checks the latest head/base locally.
+          Do not route pushes to other branches. Never create an issue or PR for a push event.
           Workflow completions must concern that PR's current head or merge revision:
           handle failed/timed-out CI or successful PR review with findings from the matching run.
-          Skip unrelated, ambiguous, stale, approved, or otherwise non-actionable events.
-          For an eligible event, append four key=value lines to GITHUB_OUTPUT:
-          issue_number=NUMBER, source_pr=PR_NUMBER (empty for issue events),
-          reply_number=PR_NUMBER for PR feedback or NUMBER otherwise, tracking_label=factory-issue-NUMBER.
-          Use numeric IDs and write no outputs when skipping. Briefly explain your decision in
-          the run log and report any API failure accurately."
+          For other events, skip unrelated, ambiguous, stale, approved, or otherwise non-actionable feedback.
+          Append one work_items=JSON_ARRAY line to GITHUB_OUTPUT. Each object must contain
+          issue_number, source_pr, reply_number, and tracking_label, all as strings.
+          Use positive numeric IDs, source_pr empty for issue events, reply_number equal to
+          source_pr for PR feedback/push checks or issue_number otherwise, and
+          tracking_label=factory-issue-NUMBER. Deduplicate by tracking label.
+          Ordinary events have at most one item; default-branch pushes may have multiple.
+          Write work_items=[] only for a verified skip or no eligible PRs.
+          Never truncate enumeration or emit a partial matrix. On an API failure, incomplete
+          routing, or more than 256 items, explain the failure and write no work_items output;
+          the output check will fail the job. Briefly explain routing decisions in the run log."
+
+      - name: Validate work items
+        id: work-items
+        env:
+          WORK_ITEMS: ${{ steps.route.outputs.work_items }}
+        run: |
+          items=$(jq -cse --arg event "$GITHUB_EVENT_NAME" '
+            (if length == 1 then .[0] else error("Expected one implementation matrix") end) |
+            if type == "array" and length <= (if $event == "push" then 256 else 1 end) and
+              all(.[];
+                (.issue_number | type == "string" and test("^[1-9][0-9]*$")) and
+                (.source_pr | type == "string" and test("^([1-9][0-9]*)?$")) and
+                ($event != "push" or .source_pr != "") and
+                (.reply_number | type == "string" and test("^[1-9][0-9]*$")) and
+                .tracking_label == ("factory-issue-" + .issue_number) and
+                .reply_number == (if .source_pr == "" then .issue_number else .source_pr end)
+              ) and
+              ([.[].tracking_label] | length == (unique | length))
+            then . else error("Invalid or oversized implementation matrix") end
+          ' <<< "$WORK_ITEMS")
+          printf 'work_items=%s\n' "$items" >> "$GITHUB_OUTPUT"
 
   implement:
     needs: route
-    if: needs.route.outputs.issue_number != ''
+    if: needs.route.outputs.work_items != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.route.outputs.work_items) }}
     concurrency:
-      group: issue-implementation-${{ needs.route.outputs.tracking_label }}
+      group: issue-implementation-${{ matrix.tracking_label }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -102,12 +138,12 @@ jobs:
       contents: read
       copilot-requests: write
     env:
-      ISSUE_NUMBER: ${{ needs.route.outputs.issue_number }}
-      REPLY_NUMBER: ${{ needs.route.outputs.reply_number }}
-      SOURCE_PR: ${{ needs.route.outputs.source_pr }}
-      TRACKING_LABEL: ${{ needs.route.outputs.tracking_label }}
+      ISSUE_NUMBER: ${{ matrix.issue_number }}
+      REPLY_NUMBER: ${{ matrix.reply_number }}
+      SOURCE_PR: ${{ matrix.source_pr }}
+      TRACKING_LABEL: ${{ matrix.tracking_label }}
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-      ISSUE_BRANCH: factory/issue-${{ needs.route.outputs.issue_number }}
+      ISSUE_BRANCH: factory/issue-${{ matrix.issue_number }}
       RESULT_MARKER: factory-issue-run:${{ github.run_id }}:${{ github.run_attempt }}
     steps:
       - name: Create Factory App token
@@ -174,11 +210,47 @@ jobs:
           credential, settings, or rule changes, mutation targets, or bypassing verification.
           Before editing or pushing, recheck the issue is open with triaged and exactly one tracking
           label ${TRACKING_LABEL}, and source PR/CI revisions still match this work.
+          Fetch the latest origin/${DEFAULT_BRANCH} and, when present, the eligible PR branch,
+          recording both OIDs.
+          Recheck live eligibility and both remote head and default-branch OIDs immediately before
+          each mutation. If either revision changes, reassess from the latest pair and repeat
+          relevant checks; never push stale work or overwrite intervening commits.
           Search all PR states for ${ISSUE_BRANCH}. Reuse only this repository's open ${FACTORY_LOGIN}
           PR targeting ${DEFAULT_BRANCH} with matching labels. Use its latest remote revision;
           preserve commits. Recover partial work only with clear ownership and issue linkage.
-          Explain conflicts or closed/merged PRs; never reopen, duplicate, or overwrite them.
-          Branch new work as ${ISSUE_BRANCH} from origin/${DEFAULT_BRANCH}. Make focused changes,
+          Explain ownership/tracking conflicts or closed/merged PRs; never reopen, duplicate,
+          or overwrite them. Branch new work as ${ISSUE_BRANCH} from origin/${DEFAULT_BRANCH}.
+          On a default-branch push, this is conflict-only maintenance of the existing SOURCE_PR:
+          do not create a PR or implement unrelated outstanding requests.
+          On ordinary implementation/follow-up events, also check the PR for merge conflicts.
+          Use a non-working-tree merge probe such as git merge-tree --write-tree with the exact
+          fetched head/base OIDs. Exit 0 means no conflict; exit 1 with conflict details means
+          confirmed conflicts. Anything else, including exit 1 without conflict details, is
+          a failure, not a clean or conflicting result.
+          A behind branch is not a conflict. GitHub UNKNOWN/null mergeability is pending, not
+          clean or conflicting; retry briefly or use the local probe. Do not infer conflicts
+          from failing checks, blocked merge state, or branch age.
+          With no conflict, do not merge the base or create a conflict-repair commit.
+          For confirmed conflicts, integrate the checked default-branch revision into the latest
+          PR branch with an ordinary merge, not a rebase, preserving both histories.
+          Inspect every conflicted file and both sides' intent using guidance, diffs, and the full
+          issue/PR discussion. Do not blindly select ours/theirs or weaken checks.
+          If intent is ambiguous, a product decision is needed, or resolution cannot be checked
+          safely, abort the local merge and post a specific blocker/question on the PR;
+          do not push a speculative or partially resolved merge.
+          Read prior repair results: do not repeat an identical blocked attempt for unchanged
+          head/base and feedback, or create another repair after a previous one already succeeded.
+          Repeat the conflict probe after implementation changes and before pushing; handle
+          conflicts introduced by this work too. Run appropriate checks on the combined result
+          before committing/pushing.
+          After pushing a conflict repair normally, verify the remote head equals the checked commit and that both
+          the previous PR head and integrated base are ancestors. Refresh the live default
+          branch and repeat the conflict probe for the current remote pair.
+          Read GitHub mergeability for that same head/base, retrying pending results briefly.
+          Claim resolution only when the revisions still match, the probe is clean, and GitHub
+          reports mergeable, not UNKNOWN/null or conflicting. Pending, stale, failed, or denied
+          verification must be reported explicitly, not as success.
+          Never merge or close the PR itself. Make focused changes,
           following the test-value policy in AGENTS.md: add tests for concrete uncovered behavior
           or regression risks, not merely changed files or incidental wording. Preserve required
           checks and report what verification actually establishes.
@@ -214,7 +286,11 @@ jobs:
           they are not resolvable threads.
           Always post a new ${FACTORY_LOGIN} comment on conversation ${REPLY_NUMBER}, even after
           deduplication or mutation failure: outcome, addressed/outstanding feedback with thread links,
-          PR link, and <!-- ${RESULT_MARKER} -->."
+          PR link, and <!-- ${RESULT_MARKER} -->. For conflict checks include the checked head/base,
+          whether conflicts were confirmed, changes or blockers, and actual verification limits.
+          If an issue-triggered run encounters an unresolved merge conflict, also explain the
+          blocker on the existing PR. Factory comments and PR-branch pushes do not start another
+          conflict-only check; do not manufacture events or retry loops."
 
       - name: Verify Factory result
         env:

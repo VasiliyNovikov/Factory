@@ -35,8 +35,9 @@
 - `.github/workflows/issue-triage.yml` assesses untriaged issues and clarification
   comments, then applies a unique tracking label followed by `triaged` when ready.
 - `.github/workflows/issue-implementation.yml` implements triaged issues and feedback on
-  their Factory PRs using the Factory App. See its example for permissions,
-  shared-label concurrency, PR tracking, and result checks.
+  their Factory PRs using the Factory App, and checks for merge conflicts after
+  default-branch updates. See its example for permissions, shared-label concurrency,
+  PR tracking, conflict repair, and result checks.
 
 ## Test value and verification
 

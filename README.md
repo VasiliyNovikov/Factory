@@ -37,12 +37,19 @@ flowchart TD
     pr --> ci["Automation: PR-linked CI<br/>Checks produced by: GitHub Actions"]
     pr -->|Discussion or review| feedback
     ci -->|Current-revision failure or timeout| implementation
+    base["Human / bot: default-branch update"] --> conflicts["Agentic: check eligible Factory PRs for conflicts<br/>Identity: Factory; concurrency per issue"]
+    conflicts -->|Confirmed and safely resolvable| repair["Agentic: merge default branch into PR branch<br/>Preserve both histories; check and verify"]
+    repair --> pr
+    conflicts -->|Ambiguous or blocked| reply
 ```
 
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
 triaged issue and, when present, a matching open Factory PR. CI must match the
-PR's current head or merge revision. Factory does not automatically merge PRs
-or close issues.
+PR's current head or merge revision. Default-branch updates check all eligible
+Factory PRs for merge conflicts; ordinary follow-ups check too. Confirmed conflicts
+are resolved with a verified merge into the PR branch, not a history rewrite.
+Clean/behind branches stay unchanged; ambiguous resolutions get a blocker on the
+PR. Factory does not automatically merge PRs or close issues.
 
 ## CI examples
 
