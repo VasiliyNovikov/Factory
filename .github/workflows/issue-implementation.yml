@@ -28,6 +28,8 @@ jobs:
         (github.event.review.user.login != 'factory-identity[bot]' &&
          github.event.pull_request.state == 'open' &&
          contains(github.event.pull_request.labels.*.name, 'triaged') &&
+         !contains(github.event.pull_request.labels.*.name, 'decomposed') &&
+         !contains(github.event.pull_request.labels.*.name, 'factory-triage-pending') &&
          contains(fromJSON('["commented", "changes_requested"]'), github.event.review.state))) &&
       (github.event_name != 'workflow_run' ||
         (github.event.workflow_run.head_repository.full_name == github.repository &&

@@ -865,14 +865,21 @@ class StaticContractTests(unittest.TestCase):
         self.assertIn("instead of implementing it or removing its safeguards", self.implement)
         self.assertIn("Ignore ${FACTORY_LOGIN}'s own comments/reviews", self.route)
 
-    def test_static_each_issue_event_clause_rejects_decomposed_and_pending_work(self):
-        for event in ("issues", "issue_comment"):
+    def test_static_each_labeled_event_clause_rejects_decomposed_and_pending_work(self):
+        for event, payload in (
+            ("issues", "issue"),
+            ("issue_comment", "issue"),
+            ("pull_request_review", "pull_request"),
+        ):
             clause = self.route_condition.split(
                 f"(github.event_name != '{event}' ||", 1,
             )[1].split("(github.event_name != ", 1)[0]
             for label in ("decomposed", "factory-triage-pending"):
                 with self.subTest(event=event, label=label):
-                    self.assertIn(f"!contains(github.event.issue.labels.*.name, '{label}')", clause)
+                    self.assertIn(
+                        f"!contains(github.event.{payload}.labels.*.name, '{label}')",
+                        clause,
+                    )
 
     def test_static_workflow_runs_require_same_repository_before_routing(self):
         clause = " ".join(self.route_condition.split(

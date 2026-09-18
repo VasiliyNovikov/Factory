@@ -114,12 +114,13 @@ repository, base, branch, and unique tracking label, and require the original
 issue to remain open with matching labels. Untriaged issues and unrelated,
 closed, or mismatched PRs should produce no routing outputs.
 
-YAML conditions skip direct issue handoffs/comments carrying decomposition or
-pending labels, `factory-identity[bot]` comments/reviews, comments or reviews
-on closed or untriaged items, unrelated issue labels, approvals, successful
-non-review workflows, fork-originated runs, and triage/implementation completions
-before starting routing. Keep the early author filter aligned with the installed
-Factory App's login. Other
+Before starting routing, YAML conditions skip direct issue handoffs, issue/PR
+comments, and submitted PR reviews carrying `decomposed` or
+`factory-triage-pending`. They also skip `factory-identity[bot]` comments/reviews,
+comments or reviews on closed or untriaged items, unrelated issue labels,
+approvals, successful non-review workflows, fork-originated runs, and
+triage/implementation completions. Keep the early author filter aligned with
+the installed Factory App's login. Other
 events incur a Copilot invocation even when routing decides there is no work.
 Routing checks out the default branch and has a 15-minute timeout. Its App token
 has only Contents, Issues, and Pull requests read access; the built-in token
