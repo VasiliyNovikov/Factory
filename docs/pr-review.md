@@ -1,9 +1,12 @@
 # PR review
 
-[PR review](../.github/workflows/pr-review.yml) is a separate workflow that runs
-when a PR is opened, updated with new commits, reopened, or marked ready for
-review. Draft PRs and fork PRs are skipped; the example uses the repository's
-write-capable Actions token. New runs cancel older reviews of the same PR.
+[PR review](../.github/workflows/pr-review.yml) is dispatched on the default branch
+by the [Factory router](factory-router.md) for PR opened, synchronize, reopened,
+and ready-for-review events, or conversation comments requesting review/reassessment.
+The router uses `pull_request_target` for PR changes and selects
+open, non-draft, same-repository PRs. New worker jobs cancel older reviews of the
+same PR and head SHA. Different heads cannot cancel each other; stale-head workers
+skip before posting. The reviewer keeps the repository's write-capable Actions token.
 
 The workflow uses the shared [AI tool setup](ai-tools.md) with these permissions:
 
@@ -14,7 +17,7 @@ permissions:
   copilot-requests: write
 ```
 
-It checks out the base revision for the installation script, harness, and model
+It checks out `github.workflow_sha` for the installation script, harness, and model
 configuration. Copilot reads the proposed changes through `gh pr view`,
 `gh pr diff`, and read-only API calls, rather than executing the PR's code.
 The review invocation passes `--profile review` to `scripts/ai.sh`, using the
@@ -41,27 +44,35 @@ checks, real-logic mocked tests, and necessary regression/safety coverage remain
   because the same bot identity cannot approve its own PR.
 - Incomplete review or API failure: report the error without approving.
 
-The review is attached to the event's head commit. Copilot is instructed to check
+The review is attached to the dispatched expected head commit. Copilot is instructed to check
 that the PR is still open, ready, and at that commit before posting. A final API
-check requires a submitted bot review matching that commit and a unique run
-marker, so a successful Copilot exit alone does not make the job pass.
+check requires a submitted bot review matching that commit, its full SHA visibly
+included in the review body, and a unique run
+marker, so a successful Copilot exit alone does not make the job pass. A stale or
+already-reviewed assignment skips before posting, with AI-recorded evidence in the
+job summary and `skipped=true`; the posted-review check then skips too. The worker
+does not repeat the router's eligibility analysis.
+
+Successful completion wakes the router, which can dispatch implementation for
+findings still applicable to the current code, even if the PR advanced after posting.
+It correlates the review's run marker and `commit_id`;
+the dispatched workflow's own `head_sha` is the default-branch revision.
 
 ## Run and verify
 
 Enable **Settings → Actions → General → Workflow permissions → Allow GitHub
 Actions to create and approve pull requests** for approvals.
 
-After the workflow is on `master`, open a non-draft PR from a branch in this
-repository. PRs created or updated using `GITHUB_TOKEN` require a user with write
-access to select **Approve workflows to run**
-on the PR before their `pull_request` workflows start. See
+After the router and workers are on the default branch, open a non-draft PR from
+a branch in this repository using a user or App token. PR changes made using
+`GITHUB_TOKEN` do not start the router's `pull_request_target` path. See
 [GitHub's workflow triggering guide](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow).
 
 Check **Actions → PR review** and the PR's review timeline. The job's verification
 step confirms that a review was posted; it does not independently validate the
-quality of Copilot's findings. The comment-review path was tested successfully:
+quality of Copilot's findings. Before the router migration, the comment-review path was tested successfully:
 Copilot identified both deliberate regressions and posted inline findings, and
-the verification step passed. The approval path has not yet been tested.
+the verification step passed. Central dispatch and the approval path have not yet been tested live.
 
 To enable automatic runs and let `github-actions[bot]` approve clean PRs, follow
 the [Factory GitHub App setup](github-app.md).

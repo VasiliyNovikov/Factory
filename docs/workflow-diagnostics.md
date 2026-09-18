@@ -2,9 +2,9 @@
 
 [Workflow diagnostics](../.github/workflows/workflow-diagnostics.yml) runs daily
 at **00:00 UTC** (`0 0 * * *`) or manually from **Actions → Workflow diagnostics
-→ Run workflow** once it lands on the default branch. Manual runs use the branch
-you select, including its workflow and scripts. Scheduled runs use the default
-branch and can be delayed by GitHub.
+→ Run workflow** on the default branch. Manual dispatches on other refs skip;
+scheduled runs use the default branch and can be delayed by GitHub. Checkout uses
+`github.workflow_sha` so scripts match the executing workflow revision.
 
 Copilot owns history selection, investigation, duplicate checks, issue creation,
 and result verification. It reuses `scripts/install-tools.sh`,
@@ -14,8 +14,8 @@ and result verification. It reuses `scripts/install-tools.sh`,
 
 The first invocation establishes a boundary with **no analysis or findings
 issues**. Later invocations cover the interval from the preceding scheduled or
-manual invocation, regardless of its conclusion or branch, up to the current
-invocation. Scheduled and manual runs across branches share the same history.
+manual invocation on the default branch, regardless of its conclusion, up to the
+current invocation. Non-default dispatches do not establish window boundaries.
 The preceding diagnostics run is included; the current one is inspected next
 time. Retries use the original invocation times. Older runs updated in the
 interval are included with a 90-day creation lookback before the window start.
@@ -49,7 +49,7 @@ links, impact, proposed scope, acceptance criteria, and
 Issues are created **without labels**, so App-authored `issues.opened` events
 enter normal [triage](issue-triage.md). Copilot verifies creation responses and
 issue URLs and leaves later labels and triage updates alone. Diagnostics
-completions are excluded from the implementation event router.
+completions are ignored by the [Factory event router](factory-router.md)'s AI.
 
 Within the 30-minute job budget, Copilot writes the window, per-workflow results,
 excluded runs, existing/new issue links, and evidence gaps or failures to the job

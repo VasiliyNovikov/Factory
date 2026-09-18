@@ -1,29 +1,36 @@
 name: Issue triage
+run-name: 'Issue triage: ${{ inputs.issue_number }} (router ${{ inputs.router_run_id }})'
 
 on:
-  issues:
-    types: [opened]
-  issue_comment:
-    types: [created]
-
-concurrency:
-  group: issue-triage-${{ github.event.issue.number }}
-  cancel-in-progress: false
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue to triage
+        required: true
+        type: string
+      source:
+        description: JSON object of triggering event identifiers
+        required: true
+        type: string
+      router_run_id:
+        description: Factory router run ID
+        required: true
+        type: string
 
 jobs:
   triage:
-    if: >-
-      !github.event.issue.pull_request &&
-      github.event.issue.state == 'open' &&
-      !contains(github.event.issue.labels.*.name, 'triaged')
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    concurrency:
+      group: issue-triage-${{ inputs.issue_number }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
       copilot-requests: write
     env:
-      ISSUE_NUMBER: ${{ github.event.issue.number }}
-      TRACKING_LABEL: factory-issue-${{ github.event.issue.number }}
+      ISSUE_NUMBER: ${{ inputs.issue_number }}
+      TRACKING_LABEL: factory-issue-${{ inputs.issue_number }}
       RESULT_MARKER: factory-triage-run:${{ github.run_id }}:${{ github.run_attempt }}
     steps:
       - name: Create Factory triage token
@@ -35,40 +42,22 @@ jobs:
           permission-contents: read
           permission-issues: write
 
-      - name: Check out default branch
+      - name: Check out workflow revision
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: ${{ github.workflow_sha }}
           persist-credentials: false
 
-      - name: Check live triage eligibility
-        id: eligible
-        env:
-          GH_TOKEN: ${{ steps.factory-token.outputs.token }}
-          FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
-        run: |
-          if [[ "$GITHUB_EVENT_NAME" == issue_comment ]] &&
-            [[ $(jq -r '.comment.user.login' "$GITHUB_EVENT_PATH") == "$FACTORY_LOGIN" ]]; then
-            exit 0
-          fi
-          issue=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}")
-          if jq -e '.state == "open" and (.pull_request == null) and
-            ([.labels[].name] | index("triaged") | not)' <<< "$issue" >/dev/null; then
-            printf 'ready=true\n' >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Set up Node.js
-        if: steps.eligible.outputs.ready == 'true'
         uses: actions/setup-node@v7
         with:
           node-version: '24'
 
       - name: Install AI tools
-        if: steps.eligible.outputs.ready == 'true'
         run: ./scripts/install-tools.sh
 
       - name: Triage issue with Copilot
-        if: steps.eligible.outputs.ready == 'true'
+        id: worker
         env:
           GITHUB_TOKEN: ${{ github.token }}
           COPILOT_GITHUB_TOKEN: ${{ github.token }}
@@ -78,6 +67,14 @@ jobs:
           --harness copilot
           --profile triage
           --prompt "Triage issue ${ISSUE_NUMBER} in repository ${GITHUB_REPOSITORY}.
+          The router selected this task; GITHUB_EVENT_PATH contains dispatch inputs, including source
+          identifiers, not the original webhook. Do not repeat routing analysis. Check live state
+          before acting and before each mutation. If this is no longer an open untriaged issue
+          (not a PR), or the same discussion has already been handled, write skipped=true to
+          GITHUB_OUTPUT and explain with evidence in GITHUB_STEP_SUMMARY; make no GitHub changes.
+          API errors are failures, not skips. Once mutations begin, report and verify partial
+          outcomes instead of setting skipped. An earlier ready comment with incomplete label
+          handoff is not already handled; recover that handoff after checking current state.
           Read repository guidance, relevant code, and the full discussion, including answers to
           earlier questions. Assess whether the request is clear, relevant, feasible, and actionable.
           Use gh with the existing GH_TOKEN (Factory App token) for repository and issue reads,
@@ -91,11 +88,11 @@ jobs:
           Before handoff, ensure the issue is still open and untriaged with no conflicting factory-issue- label.
           Create missing labels, reuse existing ones, then add ${TRACKING_LABEL} FIRST and verify it
           before adding triaged in a separate request. Preserve unrelated labels and post scope before labeling.
-          Closed, already-triaged, conflicting, or satisfied requests get a reply instead.
+          Conflicting tracking labels or satisfied requests get a reply instead of label changes.
           Report API failures accurately; after a marked decision, use unmarked comments for failure details."
 
       - name: Verify triage result
-        if: steps.eligible.outputs.ready == 'true'
+        if: steps.worker.outputs.skipped != 'true'
         env:
           GH_TOKEN: ${{ steps.factory-token.outputs.token }}
           FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
