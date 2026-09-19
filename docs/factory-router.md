@@ -1,6 +1,6 @@
 # Factory event router
 
-[Router AI](../.github/workflows/factory-router.yml) decides which worker an event
+[Router AI](../.github/workflows/factory-router.yml) decides which workers an event
 needs, or skips it.
 
 - Keep the router simple and AI-driven.
@@ -36,6 +36,27 @@ needs, or skips it.
 - A comment provides clarification or follow-up on an open untriaged issue.
 - PR conversations are not issue triage.
 
+## Default-branch conflict checks
+
+- A non-deletion default-branch push checks all eligible Factory PRs, not just PRs
+  referenced by the pushed commits. Enumerate all pages and use the implementation
+  eligibility rules above.
+- Dispatch a separate implementation worker for each eligible issue/PR, including
+  clean, behind, and unknown-mergeability PRs. Each worker owns its current-revision
+  conflict check and any repair; it never maintains other PRs.
+- Use live context rather than the push's possibly superseded revision. Supply the
+  existing PR as `source_pr` with its current `head_sha`; never create issues or PRs.
+- The push trigger lists `master`; update that filter if the default branch is
+  renamed. Ordinary Factory-branch pushes do not match. This filter is not an
+  isolation boundary against actors able to rewrite workflows.
+
+GitHub documents no [mergeability-change event](https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request).
+[`synchronize`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request)
+follows PR head updates, not base-only advances. The
+[UI/API mergeability calculation](https://docs.github.com/en/rest/guides/using-the-rest-api-to-interact-with-your-git-database#checking-mergeability-of-pull-requests)
+is not a separate trigger; custom dispatch would still need a detector.
+Default-branch discovery therefore belongs here, not in each implementer.
+
 ## Skip
 
 - Factory's own comments/reviews.
@@ -66,7 +87,9 @@ needs, or skips it.
 
 ## Dispatch and reporting
 
-- Dispatch at most one of the three workers per event, on the current default branch.
+- Dispatch on the current default branch. Default-branch pushes may dispatch one
+  implementation worker per eligible issue/PR; all other events dispatch at most
+  one of the three workers.
 - Worker YAML defines its inputs; keep router changes compatible with that schema.
 - Supply target IDs and the expected PR head.
 - For implementation, `source_pr` and
@@ -78,8 +101,12 @@ needs, or skips it.
 - `source` is a JSON-encoded object of
   source identifiers: `event`, `action`, and applicable `issue_number`, `pr_number`,
   `comment_id`, `review_id`, `run_id`, `run_attempt`.
+- For push checks, include `event: "push"`, `ref`, and `after` in `source` for
+  provenance, not as a substitute for workers' live revision checks.
 - Workers receive these inputs, not the original webhook.
 - Verify dispatch acceptance; acceptance is not completed work.
+- If fan-out is incomplete, report accepted, uncertain, and undispatched targets
+  separately. Partial dispatch or an API failure is not a successful batch or a skip.
 - Avoid duplicate retries.
 - Record the decision, reason, source, and worker link when available in the job summary.
 - Report failures and uncertain outcomes accurately.
@@ -94,6 +121,8 @@ needs, or skips it.
 - Review jobs may cancel reviews of the same PR and head SHA; different heads
   cannot cancel each other.
 - Triage and implementation preserve active jobs.
+- Push maintenance and ordinary feedback share the existing per-issue worker
+  concurrency; no matrix or separate implementation scheduler is needed.
 - Pending jobs can be replaced, so workers consider the latest discussion and
   outstanding feedback.
 - AI-owned skips are explained in the job summary.
@@ -115,4 +144,6 @@ needs, or skips it.
 - Setup checkouts use `github.workflow_sha` to match the executing workflow.
 - Manual jobs skip non-default refs in workflow versions containing the guard.
 - The central routing path has not yet been verified live on GitHub.
+- Default-branch fan-out needs post-merge verification; a PR cannot exercise its
+  changed default-branch push trigger before deployment.
 - Static checks do not establish AI adherence or end-to-end event delivery.

@@ -51,9 +51,10 @@
 - `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
   Copilot PR-creation test. See the linked examples for setup, permissions,
   invocation, and result verification.
-- `.github/workflows/factory-router.yml` analyzes issue, comment, PR-target, submitted-review, and
-  workflow-completion events with Copilot and dispatches a worker on the default
-  branch. Router jobs run independently; worker AI owns freshness checks and
+- `.github/workflows/factory-router.yml` analyzes issue, comment, PR-target, submitted-review,
+  workflow-completion, and default-branch push events with Copilot. Pushes dispatch
+  one conflict-maintenance worker per eligible Factory PR; other events dispatch at
+  most one worker. Router jobs run independently; worker AI owns freshness checks and
   result verification. `docs/factory-router.md` defines dispatch inputs.
 - Submitted reviews directly run the router from the PR merge revision. Router
   and setup changes can execute before merge with the router's token permissions;
@@ -67,7 +68,8 @@
 - `.github/workflows/issue-triage.yml` assesses assigned untriaged issues and clarification
   comments, then applies a unique tracking label followed by `triaged` when ready.
 - `.github/workflows/issue-implementation.yml` implements triaged issues and feedback on
-  their Factory PRs using the Factory App. Its short invocation follows
+  their Factory PRs using the Factory App, including merge-conflict maintenance.
+  Each invocation handles only its assigned issue/PR. Its short invocation follows
   `docs/issue-implementation.md`; Copilot owns freshness and result verification.
   Unlike triage and review, implementation intentionally has no deterministic receipt check.
   See that guidance for permissions, per-issue concurrency, and PR tracking.

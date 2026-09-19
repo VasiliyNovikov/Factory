@@ -48,6 +48,9 @@ flowchart TD
     pr --> ci["Automation: PR-linked CI<br/>Checks produced by: GitHub Actions"]
     pr -->|Discussion or review| feedback
     ci -->|Failure or timeout| router
+    base["Human / bot: default-branch update"] --> router
+    implementation -->|Confirmed merge conflicts| repair["Agentic: merge default branch into own PR branch<br/>Preserve history; check and verify"]
+    repair --> pr
 
     diagnosticsTrigger["Automation: daily 00:00 UTC or manual<br/>Default branch only"] --> diagnostics{"Agentic: workflow diagnostics<br/>Identity: Factory"}
     diagnostics -->|First invocation| boundary["Agentic: establish boundary only<br/>No analysis or findings"]
@@ -62,8 +65,13 @@ flowchart TD
 
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
 triaged issue and, when present, a matching open Factory PR. CI must match the
-PR's current head or merge revision. Factory does not automatically merge PRs
-or close issues.
+PR's current head or merge revision. Default-branch updates check all eligible
+Factory PRs for merge conflicts through separate, single-PR implementer jobs;
+ordinary follow-ups check too. Confirmed conflicts are resolved with a verified
+merge into the PR branch, not a history rewrite. Clean/behind branches get no
+conflict-repair commit; clean maintenance checks without outstanding feedback
+skip without PR comments. Ambiguous resolutions get a blocker on the PR.
+Factory does not automatically merge PRs or close issues.
 
 ## CI examples
 

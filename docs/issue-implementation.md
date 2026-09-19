@@ -12,7 +12,8 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 
 - `GITHUB_EVENT_PATH` contains dispatch inputs, not the original webhook.
   Input definitions belong to the worker YAML and [router contract](factory-router.md#dispatch-and-reporting).
-- Handle the selected task without repeating routing analysis.
+- Handle only the selected issue and its PR without repeating routing analysis;
+  repository-wide discovery belongs to the router.
 - Decisions must account for:
   - The full current discussion.
   - Outstanding feedback, including beyond the triggering event because pending jobs can be superseded.
@@ -59,6 +60,40 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
   - Actual verification results.
 - Answer ordinary issue/PR comments and review summaries in their main conversation;
   they are not resolvable threads.
+- Answer absorbed feedback in the conversation where it was raised as well as the
+  triggering conversation, and verify each reply. A clean conflict check must not
+  discard feedback from a superseded pending job.
+
+## Merge-conflict maintenance
+
+- Check existing PRs for conflicts on every assignment, including after implementation
+  changes. A push-sourced assignment maintains only `source_pr`; it cannot create a
+  new PR or expand the issue's scope.
+- Establish conflict status for the exact latest remote PR head and default-branch
+  revisions. A behind branch, failing checks, or a blocked merge state is not a conflict.
+- GitHub's unknown/null mergeability is pending, not clean or conflicting. Use an
+  exact-revision local merge probe when API state is pending or stale:
+  - `git merge-tree --write-tree <head> <base>` exits 0 for a clean merge.
+  - Exit 1 with conflict details confirms conflicts; other results are failures.
+- Clean/behind branches get no base merge or conflict-repair commit.
+- Resolve confirmed conflicts with a merge of the checked default branch into the
+  existing PR branch, preserving both histories and intended changes. Do not
+  blindly select one side or weaken required checks.
+- Ambiguous intent, a required product decision, or an unverifiable resolution
+  requires a specific blocker on the PR. Abort an incomplete local merge rather
+  than pushing a speculative or partial repair.
+- Recheck eligibility and both remote revisions before mutation. Head or base drift
+  requires reassessment and renewed checks, not overwriting intervening work.
+- Verify the combined result before a normal push. Claim resolution only after
+  confirming:
+  - The remote head equals the checked commit.
+  - Both the previous PR head and integrated base remain ancestors.
+  - A clean merge probe and GitHub `MERGEABLE` for the same current remote
+    head/default-branch pair.
+- Include checked revisions, conflict classification, changes or blockers, and
+  verification limits in the result. Pending, stale, denied, or failed verification
+  is not success; an issue-triggered run must also report an unresolved conflict on
+  the existing PR.
 
 ## Review-thread feedback
 
@@ -82,6 +117,8 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 
 - Skip stale or already-handled assignments before mutations, with evidence in
   `GITHUB_STEP_SUMMARY` and no GitHub changes.
+- A push-only check with a verified clean head/base pair, no changes, no unhandled
+  feedback, and no errors or blockers is also a skip. Do not post no-op PR comments.
 - Once mutations begin, verify and report partial outcomes rather than claiming a skip.
 - Unless skipped before mutation, post a new Factory comment to the triggering
   conversation (`source_pr` when supplied, otherwise `issue_number`), even after
@@ -132,4 +169,5 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 - Issue-to-PR implementation and addressed-thread resolution ran in CI before the
   router migration. Central dispatch, clarification, duplicate-reply prevention,
   denied-resolution paths, and this refactor have not yet been exercised live.
+- Default-branch conflict-check fan-out still needs post-merge live verification.
 - Static checks do not establish AI adherence or end-to-end GitHub behavior.
