@@ -6,6 +6,11 @@
   },
   "triage": {
     "model": "gpt-6-astra",
+    "reasoningEffort": "max",
+    "longContext": true
+  },
+  "route": {
+    "model": "gpt-6-astra",
     "reasoningEffort": "high",
     "longContext": false
   },
