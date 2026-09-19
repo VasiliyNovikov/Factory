@@ -19,6 +19,8 @@ router, so router/setup changes can execute before merge; see the
 
 Triage applies the unique `factory-issue-<number>` tracking label before `triaged`
 enters routing for implementation. The resulting Factory PR carries both labels.
+Larger requests can instead remain open and untriaged with native sub-issues;
+each child enters normal triage and receives its own tracking identity when ready.
 
 **Actors:** Agentic blocks use Copilot in CI; human / bot input can come from a
 human or another bot under its own account. Automation denotes CI runs and checks.
@@ -36,6 +38,10 @@ flowchart TD
     triage -->|Not ready| clarification["Agentic: clarification or explanation<br/>Comment author: Factory"]
     clarification --> answer["Human / bot: answer or comment<br/>Author: submitting account"]
     answer --> router
+    triage -->|Independent delivery is useful| decomposition["Agentic: plan split; parent stays untriaged<br/>Identity: Factory; no parent implementation"]
+    decomposition --> children["Agentic: create / reuse native sub-issues<br/>Author: Factory for new children"]
+    children -->|New child opened| router
+    decomposition -->|Human / bot parent follow-up| router
     triage -->|Ready| tracking["Agentic: ready comment + factory-issue-NUMBER<br/>Created / applied by: Factory"]
     tracking -->|Factory then applies triaged| router
     implementation -->|Actionable| pr["Agentic: create / update PR + commits<br/>Author: Factory"]
@@ -63,7 +69,9 @@ flowchart TD
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
 triaged issue and, when present, a matching open Factory PR. CI must match the
 PR's current head or merge revision. Factory does not automatically merge PRs
-or close issues.
+or close issues. Triage withholds `triaged` from tracking parents and reuses
+existing child work on retries. Resume partial splits with a parent comment,
+not by manually applying handoff labels; see [issue triage](docs/issue-triage.md).
 
 ## CI examples
 

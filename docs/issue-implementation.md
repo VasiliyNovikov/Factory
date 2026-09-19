@@ -8,6 +8,11 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
   unclear, blocked, or already satisfied.
 - Follow repository guidance, including the [test-value policy](../AGENTS.md#test-value-and-verification).
 
+Decomposition belongs to [triage](issue-triage.md): tracking parents stay
+untriaged, and each child receives its own tracking label, branch, and PR only
+through normal triage and implementation. Resume a partial split with a parent
+comment, not by manually applying `triaged` to bypass triage's handoff decision.
+
 ## Assignment and context
 
 - `GITHUB_EVENT_PATH` contains dispatch inputs, not the original webhook.
