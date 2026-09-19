@@ -69,6 +69,7 @@
 - `.github/workflows/issue-implementation.yml` implements triaged issues and feedback on
   their Factory PRs using the Factory App. Its short invocation follows
   `docs/issue-implementation.md`; Copilot owns freshness and result verification.
+  Unlike triage and review, implementation intentionally has no deterministic receipt check.
   See that guidance for permissions, per-issue concurrency, and PR tracking.
 - `.github/workflows/workflow-diagnostics.yml` analyzes repository workflow runs
   daily or manually with parallel Copilot subagents and creates findings issues

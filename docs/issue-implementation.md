@@ -87,6 +87,7 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
   conversation (`source_pr` when supplied, otherwise `issue_number`), even after
   mutation failure. Include:
   - The outcome.
+  - A link to the producing workflow run attempt, so retries remain distinguishable.
   - The PR link when available.
   - Addressed/outstanding feedback with thread links.
 - Claimed outcomes require confirmed remote state:
@@ -123,8 +124,10 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 
 - The worker is dispatch-only on the default branch; manual non-default refs skip.
 - Issue work and its PR feedback share per-issue concurrency without cancelling active jobs.
-- Verification is AI-owned. A successful CLI exit alone does not prove correct code
-  or GitHub outcomes; the summary and linked evidence describe what was verified.
+- Implementation deliberately uses AI-owned verification without a deterministic
+  receipt check, following the router pattern; triage and review retain their receipt checks.
+- A successful CLI exit alone does not prove correct code or required GitHub outcomes,
+  including the result comment; the summary and linked evidence describe what was verified.
   Setup/CLI failures may leave no AI summary.
 - Issue-to-PR implementation and addressed-thread resolution ran in CI before the
   router migration. Central dispatch, clarification, duplicate-reply prevention,
