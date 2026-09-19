@@ -78,6 +78,27 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 - Replies must not duplicate equivalent Factory responses to unchanged feedback/code,
   including on retries and reruns.
 
+## Reviewer handoff
+
+- After addressing feedback, check whether a current-head review covers the
+  corrected context or a review request is pending. Verified already-addressed
+  findings may still need this handoff rather than another code change.
+- Commits and actual description corrections already enter review through the
+  router. Do not add a second request for the same change, rewrite an unchanged
+  description to trigger review, or manufacture an empty commit.
+- If neither changed and all actionable feedback is demonstrably addressed, use
+  an explicit [no-commit review request](factory-router.md#no-commit-review-requests)
+  in the main PR result comment.
+  - Recheck issue/PR eligibility and the remote head immediately before posting.
+  - Verify the Factory-authored comment, target PR, and head marker by read-back.
+  - If the triggering conversation is the issue, also report there as required below.
+- Reuse pending requests. Do not request another assessment of unchanged feedback
+  and context already re-reviewed; explain unclear, partial, blocked, or disputed
+  findings instead of creating a review loop.
+- Only the independent reviewer decides approval. Report its actual state,
+  commit, and run marker when available; a request, resolved thread, or green
+  implementation run is not approval.
+
 ## Skip and report
 
 - Skip stale or already-handled assignments before mutations, with evidence in

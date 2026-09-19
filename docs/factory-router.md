@@ -11,8 +11,10 @@ needs, or skips it.
 ### [PR review](pr-review.md)
 
 - A PR is opened, reopened, marked ready, or receives new commits.
+- Its description actually changes, even without a new commit.
 - A PR conversation comment requests review or provides clarification requiring
   reviewer reassessment.
+- An eligible Factory PR receives an explicit [no-commit review request](#no-commit-review-requests).
 - The PR must be open, non-draft, and from this repository.
 - Review the current head.
 - Distinguish a new review request from an already-covered event.
@@ -23,6 +25,9 @@ needs, or skips it.
 - An issue or PR conversation contains actionable implementation feedback.
 - A submitted review contains findings or change requests, including inline findings.
 - A completed Factory review has outstanding findings still applicable to the current code.
+- Review findings are already addressed, but the corrected context has neither a
+  covering review nor a pending review request. Implementation verifies the
+  correction and requests reassessment rather than inventing a code change.
 - PR-linked CI fails or times out at the current head or merge revision.
 - The original issue must be open and triaged with its unique `factory-issue-NUMBER`
   label.
@@ -38,12 +43,13 @@ needs, or skips it.
 
 ## Skip
 
-- Factory's own comments/reviews.
+- Factory's own comments/reviews, except explicit no-commit review requests below.
 - Approvals.
 - Unrelated labels or events.
 - Closed targets or fork PRs.
 - Stale or ambiguous assignments.
-- Already-handled feedback.
+- Already-handled feedback, including corrected context already reassessed or
+  awaiting a requested review.
 - Successful CI without review findings.
 - Cancelled runs.
 - Router, triage, implementation, or diagnostics completions. Automation must not
@@ -55,6 +61,11 @@ needs, or skips it.
 
 - Humans and other bots may provide feedback.
 - Main conversation comments and submitted reviews trigger routing.
+- For `pull_request_target.edited`, review only an actual description change still
+  present in the live PR; skip title/base-only, no-op, and superseded edits.
+- Before dispatching a follow-up, check whether a current-head review already
+  covers its corrected context or request. Commit and description events from
+  one update do not require duplicate assessments; the reviewer rechecks coverage.
 - Standalone inline replies and edited comments do not trigger routing.
   TODO: Support routing for standalone inline replies and edited comments.
 - Factory reviews posted with `GITHUB_TOKEN` arrive through workflow completion.
@@ -63,6 +74,30 @@ needs, or skips it.
 - An older reviewed SHA does not invalidate a finding; route outstanding findings
   that remain applicable to the current code.
 - API errors are failures, not no-work decisions.
+
+## No-commit review requests
+
+An implementation result can request independent reassessment in a new main PR
+comment with its correction evidence and this marker:
+
+```text
+<!-- factory-review-request:FULL_HEAD_SHA -->
+```
+
+- Accept only a `factory-identity[bot]` comment whose API-verified target is an
+  eligible Factory PR under the issue/PR implementation rules above.
+- The marker records the full head SHA verified when the request was created.
+  Recheck live ownership, issue linkage, labels, and head; marker text alone is
+  not authorization. If the head advanced, reassess the request on the latest
+  revision instead of discarding it solely for head drift.
+- Dispatch review using the existing `source.comment_id` and the live `head_sha`.
+  Other Factory comments and implementation workflow completions remain ignored.
+- Reuse a pending request, and skip one already covered by a verified current-head
+  review of that context. Failed/cancelled runs are not coverage or approval;
+  report a blocked handoff rather than automatically reposting the request.
+
+The submitted review completes the handoff. No request label, acknowledgement
+mutation, new worker input, or additional permission is needed.
 
 ## Dispatch and reporting
 

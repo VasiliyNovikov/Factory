@@ -2,7 +2,9 @@
 
 [PR review](../.github/workflows/pr-review.yml) is dispatched on the default branch
 by the [Factory router](factory-router.md) for PR opened, synchronize, reopened,
-and ready-for-review events, or conversation comments requesting review/reassessment.
+ready-for-review, and actual description-edit events, or conversation comments
+requesting review/reassessment, including explicit
+[Factory no-commit requests](factory-router.md#no-commit-review-requests).
 The router uses `pull_request_target` for PR changes and selects
 open, non-draft, same-repository PRs. New worker jobs cancel older reviews of the
 same PR and head SHA. Different heads cannot cancel each other; stale-head workers
@@ -29,6 +31,26 @@ Its prompt tells Copilot to budget the remaining time, reserving time for requir
 GitHub reporting and final verification without relaxing required checks or
 approving an incomplete review.
 
+## Same-head reassessment
+
+- A description correction or new request needs assessment even if the head was
+  previously reviewed. Skip only when a current-head review demonstrably covers
+  the corrected context/request, not merely because that SHA has a review.
+- Refresh the live diff, description, full discussion, reviews, and thread history
+  before assessment and again before submission. Reassess intervening changes.
+- Account for pending requests in the live discussion, not only the dispatched
+  source; a newer same-head worker can replace or cancel an earlier request's job.
+  Recheck coverage before posting to avoid duplicate assessments.
+- Verify a source comment's membership in this PR through the API. Link the
+  request being assessed in the submitted review so later workers can establish
+  coverage without relying on job success.
+- Independently verify addressed findings. A request, resolved thread, or
+  implementation-success report does not establish that the PR is clean.
+- Read back the submitted review's author, commit, state, run marker, and URL.
+  This completes a request without label removal or another acknowledgement.
+  Failed/cancelled reviews leave the handoff incomplete, with no automatic retry
+  guarantee.
+
 ## Review outcome
 
 Reviews follow the shared [test-value policy](../AGENTS.md#test-value-and-verification).
@@ -49,7 +71,7 @@ that the PR is still open, ready, and at that commit before posting. A final API
 check requires a submitted bot review matching that commit, its full SHA visibly
 included in the review body, and a unique run
 marker, so a successful Copilot exit alone does not make the job pass. A stale or
-already-reviewed assignment skips before posting, with AI-recorded evidence in the
+already-covered assignment skips before posting, with AI-recorded evidence in the
 job summary and `skipped=true`; the posted-review check then skips too. The worker
 does not repeat the router's eligibility analysis.
 
@@ -78,3 +100,8 @@ To enable automatic runs and let `github-actions[bot]` approve clean PRs, follow
 the [Factory GitHub App setup](github-app.md).
 The App creates PRs under a separate identity; the review workflow keeps using
 its built-in token.
+
+The no-commit handoff needs live verification after reaching the default branch:
+confirm the source edit/request, accepted dispatch, and submitted review's state,
+commit, and run marker. Static inspection cannot establish AI adherence, event
+delivery, queue ordering, or approval.

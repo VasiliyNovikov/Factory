@@ -42,7 +42,8 @@ flowchart TD
     implementation -->|Unclear, blocked, or already satisfied| reply["Agentic: reply in triggering conversation<br/>Comment author: Factory"]
     reply -->|New feedback| feedback["Human / bot: issue / PR comments or submitted reviews<br/>Author: submitting account"]
     feedback -->|Comments and submitted reviews| router
-    pr -->|PR events| router
+    pr -->|PR events, including description edits| router
+    implementation -->|Verified addressed feedback, unchanged PR<br/>Explicit Factory review-request comment| router
     review -->|Workflow completion| router
     review -->|Clean and approval permitted| approval["Agentic: approval<br/>Review author: Actions"]
     pr --> ci["Automation: PR-linked CI<br/>Checks produced by: GitHub Actions"]
@@ -63,7 +64,8 @@ flowchart TD
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
 triaged issue and, when present, a matching open Factory PR. CI must match the
 PR's current head or merge revision. Factory does not automatically merge PRs
-or close issues.
+or close issues. Description edits and explicit Factory review requests allow fresh
+review without a new commit; only the reviewer decides whether to approve.
 
 ## CI examples
 
