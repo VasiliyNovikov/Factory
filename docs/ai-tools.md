@@ -49,9 +49,6 @@ to your calling shell before invoking `scripts/ai.sh`:
 export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 ```
 
-No explicit Node setup is needed for these tools. Runner-provided Node and the
-internal runtimes of JavaScript actions are unaffected.
-
 Use `--harness opencode` to run the same prompt through OpenCode. Both harnesses
 read named profiles from [`.github/model-config.json`](../.github/model-config.json).
 `--profile NAME` defaults to `default`; select `route`, `triage`, `implement`,
