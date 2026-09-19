@@ -6,4 +6,14 @@ if ! command -v jq >/dev/null; then
   sudo apt-get install -y jq
 fi
 
-npm install -g @github/copilot opencode-ai@latest
+export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
+
+curl -fsSL https://gh.io/copilot-install | PREFIX="$HOME/.local" bash
+curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path
+
+copilot --version
+opencode --version
+
+if [[ -n "${GITHUB_PATH:-}" ]]; then
+  printf '%s\n' "$HOME/.local/bin" "$HOME/.opencode/bin" >> "$GITHUB_PATH"
+fi

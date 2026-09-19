@@ -54,11 +54,6 @@ jobs:
           token: ${{ steps.factory-token.outputs.token }}
           fetch-depth: 0
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '24'
-
       - name: Install AI tools
         run: ./scripts/install-tools.sh
 
