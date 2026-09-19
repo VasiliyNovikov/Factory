@@ -70,6 +70,9 @@ The [Factory router](factory-router.md) uses the built-in token with Actions wri
 for worker dispatch and Contents/Issues/Pull requests read for analysis. It needs
 no App token or additional App installation permission. Worker dispatches target
 the default branch and use the workers' own token permissions.
+The review workflow's separate completion-notification job uses only built-in
+Actions write to dispatch the router; the review job retains its existing token
+and permissions. No credential or installation change is needed for this handoff.
 
 Set these variables on the AI invocation, keeping any Git author/committer variables:
 

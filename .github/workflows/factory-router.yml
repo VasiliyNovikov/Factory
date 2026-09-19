@@ -1,6 +1,24 @@
 name: Factory router
+run-name: >-
+  ${{ github.event_name == 'workflow_dispatch' &&
+      format('Factory router: review {0}:{1} (PR {2})', inputs.review_run_id, inputs.review_run_attempt, inputs.pr_number) ||
+      'Factory router' }}
 
 on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: PR assessed by the review worker
+        required: true
+        type: string
+      review_run_id:
+        description: Source PR review workflow run
+        required: true
+        type: string
+      review_run_attempt:
+        description: Attempt that completed the review job
+        required: true
+        type: string
   issues:
     types: [opened, labeled]
   issue_comment:
@@ -18,11 +36,14 @@ on:
 jobs:
   route:
     if: >-
+      (github.event_name != 'workflow_dispatch' ||
+        github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) &&
       (!github.event.pull_request ||
         github.event.pull_request.head.repo.full_name == github.repository) &&
       (github.event_name != 'workflow_run' ||
         (github.event.workflow_run.head_repository.full_name == github.repository &&
-         github.event.workflow_run.path != '.github/workflows/factory-router.yml'))
+         github.event.workflow_run.path != '.github/workflows/factory-router.yml' &&
+         github.event.workflow_run.path != '.github/workflows/pr-review.yml'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
