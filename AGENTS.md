@@ -18,6 +18,9 @@
   use focused bullets, with one independently actionable rule or condition per
   bullet. Split dense paragraphs and multi-rule bullets; keep closely related
   qualifications together without adding repetition.
+- Prefer nested bullets for sets of required inputs, conditions, or outcomes
+  under a shared rule rather than dense inline lists. Keep short, simple lists
+  inline when splitting would not improve scanning.
 - Apply separation of concerns and information hiding: keep decisions in the
   component or stage that owns them and reuse existing contracts. Do not expose
   internal details or spread local changes across boundaries without a concrete
@@ -64,8 +67,10 @@
 - `.github/workflows/issue-triage.yml` assesses assigned untriaged issues and clarification
   comments, then applies a unique tracking label followed by `triaged` when ready.
 - `.github/workflows/issue-implementation.yml` implements triaged issues and feedback on
-  their Factory PRs using the Factory App. See its example for permissions,
-  shared-label concurrency, PR tracking, and result checks.
+  their Factory PRs using the Factory App. Its short invocation follows
+  `docs/issue-implementation.md`; Copilot owns freshness and result verification.
+  Unlike triage and review, implementation intentionally has no deterministic receipt check.
+  See that guidance for permissions, per-issue concurrency, and PR tracking.
 - `.github/workflows/workflow-diagnostics.yml` analyzes repository workflow runs
   daily or manually with parallel Copilot subagents and creates findings issues
   for normal triage. Copilot selects same-repository runs, verifies its actions,
