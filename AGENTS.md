@@ -5,10 +5,30 @@
 - Keep code understandable and maintainable by humans and AI: use clear
   structure and naming, avoid unnecessary duplication, and reuse existing logic
   where appropriate without needless abstraction.
-- Prefer AI-led task handling with simple prompts and existing tools over
-  unnecessary custom workflow scripts or scripted decision logic. Keep automation
-  simple and flexible; use scripts when critical performance needs or lower
-  overall complexity justify them.
+- Prefer AI-led task handling with concise prompts, existing tools, native GitHub
+  features, and minimal workflow glue over custom scripted decision systems.
+  Add scripts or orchestration only for a concrete requirement or a demonstrated
+  reduction in overall complexity.
+- In AI prompts and guidance, state **what** is required: goals, when to act or
+  skip, constraints, and verifiable outcomes. Let capable models determine
+  **how** using available tools and context. Keep instructions concise; prescribe
+  procedures only where a required contract, safety boundary, or demonstrated
+  failure makes them necessary. Avoid duplicating implementation details in docs.
+- Make guidance easy to scan: group related rules under descriptive headers and
+  use focused bullets, with one independently actionable rule or condition per
+  bullet. Split dense paragraphs and multi-rule bullets; keep closely related
+  qualifications together without adding repetition.
+- Prefer nested bullets for sets of required inputs, conditions, or outcomes
+  under a shared rule rather than dense inline lists. Keep short, simple lists
+  inline when splitting would not improve scanning.
+- Apply separation of concerns and information hiding: keep decisions in the
+  component or stage that owns them and reuse existing contracts. Do not expose
+  internal details or spread local changes across boundaries without a concrete
+  need.
+- Apply KISS (keep it simple) and YAGNI (you aren't gonna need it): avoid
+  speculative machinery. During implementation and review, remove unnecessary
+  mechanisms rather than merely renaming concepts, while preserving required
+  safety checks and verification.
 - Design for capable, current AI models and continued improvement rather than
   incidental limitations of today's models. This preference does not relax
   required permissions, safety boundaries, or result verification.
@@ -21,25 +41,44 @@
   - [Factory GitHub App setup](docs/github-app.md)
   - [PR creation](docs/create-pull-request.md)
   - [Issue creation](docs/create-issue.md)
+  - [Central event routing and dispatch](docs/factory-router.md)
   - [PR review](docs/pr-review.md)
   - [Issue triage and label handoff](docs/issue-triage.md)
   - [Issue implementation and follow-ups](docs/issue-implementation.md)
-- No application toolchain or dependency manifest is configured. The workflow's
-  Bash/jq output-contract checks run with `./scripts/test-work-items.sh`; see
-  [issue implementation](docs/issue-implementation.md) for their scope and limits.
-- `.github/workflows/ci.yml` runs read-only validator checks at the PR head and a
-  separate, manually triggered (`workflow_dispatch`) Copilot PR-creation test.
-  See the linked examples for setup, permissions, invocation, and result
-  verification.
-- `.github/workflows/pr-review.yml` reviews non-draft, same-repository PRs on
-  PR events and verifies that Copilot posted a review. See the PR-review example
+  - [Periodic workflow diagnostics](docs/workflow-diagnostics.md)
+- No application toolchain, dependency manifest, or build/test/lint commands are
+  configured. Automated workflow tests are deferred for now.
+- `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
+  Copilot PR-creation test. See the linked examples for setup, permissions,
+  invocation, and result verification.
+- `.github/workflows/factory-router.yml` analyzes issue, comment, PR-target, submitted-review,
+  workflow-completion, and default-branch push events with Copilot. Pushes dispatch
+  one conflict-maintenance worker per eligible Factory PR; other events dispatch at
+  most one worker. Router jobs run independently; worker AI owns freshness checks and
+  result verification. `docs/factory-router.md` defines dispatch inputs.
+- Submitted reviews directly run the router from the PR merge revision. Router
+  and setup changes can execute before merge with the router's token permissions;
+  this accepted risk and dispatch compatibility requirements are documented in
+  `docs/factory-router.md`. Other router triggers use the default branch.
+- Review, triage, and implementation are dispatch-only workers. Factory setup
+  checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
+- `.github/workflows/pr-review.yml` reviews non-draft, same-repository PRs and
+  verifies that Copilot posted a review unless AI skipped a stale/handled task. See the PR-review example
   for triggering and bot-approval constraints.
-- `.github/workflows/issue-triage.yml` assesses untriaged issues and clarification
+- `.github/workflows/issue-triage.yml` assesses assigned untriaged issues and clarification
   comments, then applies a unique tracking label followed by `triaged` when ready.
 - `.github/workflows/issue-implementation.yml` implements triaged issues and feedback on
-  their Factory PRs using the Factory App, and checks for merge conflicts after
-  default-branch updates. See its example for permissions, shared-label concurrency,
-  PR tracking, conflict repair, and result checks.
+  their Factory PRs using the Factory App, including merge-conflict maintenance.
+  Each invocation handles only its assigned issue/PR. Its short invocation follows
+  `docs/issue-implementation.md`; Copilot owns freshness and result verification.
+  Unlike triage and review, implementation intentionally has no deterministic receipt check.
+  See that guidance for permissions, per-issue concurrency, and PR tracking.
+- `.github/workflows/workflow-diagnostics.yml` analyzes repository workflow runs
+  daily or manually with parallel Copilot subagents and creates findings issues
+  for normal triage. Copilot selects same-repository runs, verifies its actions,
+  and records results in the job summary. Its first invocation establishes a
+  boundary without analysis. Diagnostics verification is AI-owned; no separate
+  report/receipt-check job is required.
 
 ## Test value and verification
 
