@@ -72,7 +72,8 @@ The PR-creation CI uses the [GitHub App setup](docs/github-app.md)
 with `FACTORY_CLIENT_ID` and `FACTORY_PRIVATE_KEY` to enable automatic runs and
 distinct PR author/reviewer identities.
 
-- `scripts/install-tools.sh` installs Copilot CLI, OpenCode, and missing `jq`.
+- `scripts/install-tools.sh` installs standalone Copilot CLI and OpenCode via their
+  official scripts (no Node.js/npm setup), plus missing `jq`.
 - `scripts/ai.sh` reads `.github/model-config.json` and invokes the selected CLI.
 - `GITHUB_TOKEN: ${{ github.token }}` authenticates both Copilot model requests and
   the `gh` commands in the basic examples. App-based PR creation sets `GH_TOKEN`
