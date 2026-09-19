@@ -53,10 +53,21 @@ already-reviewed assignment skips before posting, with AI-recorded evidence in t
 job summary and `skipped=true`; the posted-review check then skips too. The worker
 does not repeat the router's eligibility analysis.
 
-Successful completion wakes the router, which can dispatch implementation for
-findings still applicable to the current code, even if the PR advanced after posting.
-It correlates the review's run marker and `commit_id`;
-the dispatched workflow's own `head_sha` is the default-branch revision.
+After a successful, non-skipped assessment job, a separate job with only
+`actions: write` explicitly dispatches a completion notification to the router on
+the current default branch. It checks out no code and does not change the
+reviewer's permissions or identity. This avoids relying on `workflow_run`
+delivery from workers launched with `GITHUB_TOKEN`; no new secret or App grant
+is needed. Dispatch errors fail the notification job, and acceptance alone does
+not establish that routing or implementation completed.
+
+The router [verifies the source assessment](factory-router.md#review-completion-delivery)
+and can dispatch implementation for findings still applicable to current code,
+even if the PR advanced after posting. The review job exports its attempt so
+notification-only retries retain the original review marker. The router
+correlates that marker and the review's `commit_id`, not the dispatched
+workflow's default-branch `head_sha`. Native PR-review completion events are
+excluded from routing to avoid duplicate delivery.
 
 ## Run and verify
 
@@ -70,9 +81,12 @@ a branch in this repository using a user or App token. PR changes made using
 
 Check **Actions → PR review** and the PR's review timeline. The job's verification
 step confirms that a review was posted; it does not independently validate the
-quality of Copilot's findings. Before the router migration, the comment-review path was tested successfully:
-Copilot identified both deliberate regressions and posted inline findings, and
-the verification step passed. Central dispatch and the approval path have not yet been tested live.
+quality of Copilot's findings. Comment reviews and central review dispatch have
+[live evidence](factory-router.md#execution-and-verification); approval behavior
+was not assessed in the completion-delivery investigation.
+The new explicit completion handoff also requires post-merge live verification:
+link a successful assessment to its completion router run and any correlated
+implementation worker, including approval/already-handled no-op evidence.
 
 To enable automatic runs and let `github-actions[bot]` approve clean PRs, follow
 the [Factory GitHub App setup](github-app.md).

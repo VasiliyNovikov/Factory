@@ -43,7 +43,7 @@ flowchart TD
     reply -->|New feedback| feedback["Human / bot: issue / PR comments or submitted reviews<br/>Author: submitting account"]
     feedback -->|Comments and submitted reviews| router
     pr -->|PR events| router
-    review -->|Workflow completion| router
+    review -->|Verified assessment: completion dispatch| router
     review -->|Clean and approval permitted| approval["Agentic: approval<br/>Review author: Actions"]
     pr --> ci["Automation: PR-linked CI<br/>Checks produced by: GitHub Actions"]
     pr -->|Discussion or review| feedback

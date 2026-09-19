@@ -24,6 +24,9 @@ on:
 jobs:
   review:
     if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    outputs:
+      skipped: ${{ steps.worker.outputs.skipped }}
+      run_attempt: ${{ github.run_attempt }}
     concurrency:
       group: pr-review-${{ inputs.pr_number }}-${{ inputs.head_sha }}
       cancel-in-progress: true
@@ -99,3 +102,26 @@ jobs:
                 ((.body // "") | contains($sha)) and
                 ((.body // "") | contains($marker)))
             ' >/dev/null
+
+  notify-router:
+    needs: review
+    if: needs.review.result == 'success' && needs.review.outputs.skipped != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ inputs.pr_number }}
+      REVIEW_RUN_ATTEMPT: ${{ needs.review.outputs.run_attempt }}
+    steps:
+      - name: Dispatch review completion to router
+        run: |
+          default_branch=$(gh api "repos/${GITHUB_REPOSITORY}" --jq .default_branch)
+          gh workflow run factory-router.yml --repo "$GITHUB_REPOSITORY" --ref "$default_branch" \
+            -f pr_number="$PR_NUMBER" \
+            -f review_run_id="$GITHUB_RUN_ID" \
+            -f review_run_attempt="$REVIEW_RUN_ATTEMPT"
+          printf 'Accepted router notification for review [%s:%s](%s/%s/actions/runs/%s/attempts/%s), PR #%s. Routing and implementation are not yet verified.\n' \
+            "$GITHUB_RUN_ID" "$REVIEW_RUN_ATTEMPT" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" \
+            "$GITHUB_RUN_ID" "$REVIEW_RUN_ATTEMPT" "$PR_NUMBER" >> "$GITHUB_STEP_SUMMARY"
