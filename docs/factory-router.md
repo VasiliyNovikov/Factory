@@ -86,9 +86,11 @@ comment with its correction evidence and this marker:
 
 - Accept only a `factory-identity[bot]` comment whose API-verified target is an
   eligible Factory PR under the issue/PR implementation rules above.
-- The marker must contain the full current PR head SHA. Verify live ownership,
-  issue linkage, labels, and head; marker text alone is not authorization.
-- Dispatch review using the existing `source.comment_id` and `head_sha` inputs.
+- The marker records the full head SHA verified when the request was created.
+  Recheck live ownership, issue linkage, labels, and head; marker text alone is
+  not authorization. If the head advanced, reassess the request on the latest
+  revision instead of discarding it solely for head drift.
+- Dispatch review using the existing `source.comment_id` and the live `head_sha`.
   Other Factory comments and implementation workflow completions remain ignored.
 - Reuse a pending request, and skip one already covered by a verified current-head
   review of that context. Failed/cancelled runs are not coverage or approval;
