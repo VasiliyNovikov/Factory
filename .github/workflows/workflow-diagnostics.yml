@@ -36,11 +36,6 @@ jobs:
           permission-pull-requests: read
           permission-issues: write
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '24'
-
       - name: Install AI tools
         run: ./scripts/install-tools.sh
 
