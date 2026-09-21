@@ -66,38 +66,42 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 
 ## Merge-conflict maintenance
 
-- Check existing PRs for conflicts on every assignment, including after implementation
-  changes. A push-sourced assignment maintains only `source_pr`; it cannot create a
-  new PR or expand the issue's scope.
-- Establish conflict status for the exact latest remote PR head and default-branch
-  revisions. A behind branch, failing checks, or a blocked merge state is not a conflict.
-- GitHub's unknown/null mergeability is pending, not clean or conflicting. Use an
-  exact-revision local merge probe when API state is pending or stale:
-  - `git merge-tree --write-tree <head> <base>` exits 0 for a clean merge.
-  - Exit 1 with conflict details confirms conflicts; other results are failures.
+- Every assignment involving an existing PR needs a current conflict assessment,
+  including after implementation changes.
+- Push maintenance covers only `source_pr`; it cannot create a PR or expand the
+  issue's scope.
+
+### Conflict evidence
+
+- Conflict status must describe the exact latest remote PR head and default-branch
+  revisions. An exact-revision local merge check is authoritative.
+- A behind branch, failing checks, or a blocked merge state is not conflict
+  evidence. Tool errors or incomplete evidence do not establish conflicts.
+- GitHub `mergeable` is supplementary evidence only when its reported head and
+  `base.sha` match the checked revisions. Unknown/null or stale API mergeability
+  is a verification limit, not failure of a successful exact-revision local check.
+
+### Repair outcomes
+
 - Maintenance alone must not merge clean/behind branches or create repair commits.
   An explicitly requested base update is separate work, not a conflict repair.
-- Resolve confirmed conflicts with a merge of the checked default branch into the
-  existing PR branch, preserving both histories and intended changes. Do not
-  blindly select one side or weaken required checks.
-- Ambiguous intent, a required product decision, or an unverifiable resolution
-  requires a specific blocker on the PR. Abort an incomplete local merge rather
-  than pushing a speculative or partial repair.
-- Recheck eligibility and both remote revisions before mutation. Head or base drift
-  requires reassessment and renewed checks, not overwriting intervening work.
-- Verify the combined result before a normal push. Claim resolution only after
-  confirming:
-  - The remote head equals the checked commit.
+- Confirmed-conflict repairs must merge the checked default branch into the
+  existing PR branch while preserving both histories and intended changes.
+  Blind side selection and weakened checks are not acceptable.
+- Ambiguous intent, a required product decision, or an unverifiable repair needs
+  a specific blocker on the PR, not a speculative or partial push.
+- Eligibility and both remote revisions must still be current at mutation. Head
+  or base drift requires reassessment and renewed checks, not overwritten work.
+- A resolved-conflict claim requires:
+  - The combined result passed required checks before a normal push.
+  - The published remote head equals the checked commit.
   - Both the previous PR head and integrated base remain ancestors.
-  - A clean exact-revision merge probe for the current remote head/default-branch
-    pair; this is the authoritative conflict check.
-- GitHub `mergeable` is supplementary evidence only when its reported head and
-  `base.sha` match the checked revisions. Record pending or stale API mergeability
-  as a verification limit, not as failure of a successful exact-revision probe.
-- Include checked revisions, conflict classification, changes or blockers, and
-  verification limits in the result. Unverified probes, changed remote revisions,
-  API errors, denied actions, or failed required checks are not success; an
-  issue-triggered run must also report an unresolved conflict on the existing PR.
+  - A clean authoritative check of the current remote head/default-branch pair.
+- Results must identify checked revisions, conflict status, changes or blockers,
+  and verification limits.
+- Unverified results, changed remote revisions, API errors, denied actions, or
+  failed required checks are not success.
+- An issue-triggered run must also report an unresolved conflict on the existing PR.
 
 ## Review-thread feedback
 

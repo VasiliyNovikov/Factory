@@ -29,7 +29,7 @@ jobs:
         (github.event.workflow_run.head_repository.full_name == github.repository &&
          github.event.workflow_run.path != '.github/workflows/factory-router.yml'))
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ github.event_name == 'push' && 30 || 15 }}
+    timeout-minutes: 30
     permissions:
       actions: write
       contents: read
@@ -61,4 +61,4 @@ jobs:
           make other repository/GitHub changes. Verify dispatch acceptance, avoid duplicate
           retries, and summarize the decision and evidence in GITHUB_STEP_SUMMARY.
           Report API failures accurately, not as skips.
-          Budget the ${{ github.event_name == 'push' && 30 || 15 }}-minute job including setup and reporting."
+          Budget the 30-minute job including setup and reporting."

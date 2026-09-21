@@ -43,18 +43,18 @@ needs, or skips it.
 ## Default-branch conflict checks
 
 - A non-deletion default-branch push checks all eligible Factory PRs, not just PRs
-  referenced by the pushed commits. Enumerate all pages and apply
-  [implementation eligibility](#implementation-eligibility); the feedback triggers
-  in that section are not prerequisites for push checks.
-- Dispatch a separate implementation worker for each eligible issue/PR, including
-  clean, behind, and unknown-mergeability PRs. Each worker owns its current-revision
-  conflict check and any repair; it never maintains other PRs.
-- Prioritize reported conflicting PRs, then unknown mergeability, then clean PRs;
-  use ascending PR number within each group. This ordering is not conflict evidence.
-- Push routing has a 30-minute job budget, including setup and reporting; other
-  events retain 15 minutes. Reserve time to record an incomplete batch.
-- Use live context rather than the push's possibly superseded revision. Supply the
-  existing PR as `source_pr` with its current `head_sha`; never create issues or PRs.
+  referenced by the pushed commits. [Implementation eligibility](#implementation-eligibility)
+  applies without requiring a comment, review, or CI failure.
+- Each eligible issue/PR gets its own implementation worker, including clean,
+  behind, and unknown-mergeability PRs. Workers own their assigned PR's
+  current-revision conflict check and any repair, never other PRs.
+- Conflicting and unknown-mergeability PRs take priority over clean PRs so partial
+  batches cover the highest-risk work. Reported mergeability is a scheduling hint,
+  not conflict evidence.
+- The job budget includes discovery, dispatch verification, and reporting of
+  complete or partial outcomes.
+- Assignments identify existing PRs at their current live heads, not a possibly
+  superseded push revision. Maintenance routing never creates issues or PRs.
 - The push trigger lists `master`; update that filter if the default branch is
   renamed. Ordinary Factory-branch pushes do not match. This filter is not an
   isolation boundary against actors able to rewrite workflows.
@@ -114,16 +114,16 @@ Default-branch discovery therefore belongs here, not in each implementer.
   provenance, not as a substitute for workers' live revision checks.
 - Workers receive these inputs, not the original webhook.
 - Verify dispatch acceptance; acceptance is not completed work.
-- If fan-out is incomplete, report accepted, uncertain, and undispatched targets
-  separately, with target revisions and worker links for verified acceptances.
-  Partial dispatch or an API failure is not a successful batch or a skip.
-- For incomplete batches, direct the operator to GitHub's native **Re-run jobs**
-  on the original router run rather than waiting for another push.
-- On retry, recheck live eligibility and reconcile prior attempts' acceptances
-  using `router_run_id`, the target, and worker evidence before dispatching
-  remaining work.
-- Do not blindly redispatch accepted or uncertain requests, or treat
-  old-revision evidence as current coverage.
+- Incomplete fan-out needs distinct outcomes for accepted, uncertain, and
+  undispatched targets, with target revisions and verified worker links.
+  Partial dispatch or an API failure is not success or a skip.
+- Reports of incomplete batches must identify recovery through a native rerun of
+  the original router run, without depending on another push.
+- Reruns must cover remaining eligible work without duplicating accepted dispatches.
+  Retry decisions require current eligibility and revisions, plus reconciled
+  acceptance evidence for the target across attempts of the same `router_run_id`.
+- Uncertain dispatches cannot be blindly retried; old-revision evidence does not
+  establish coverage of current work.
 - Avoid duplicate retries.
 - Record the decision, reason, source, and worker link when available in the job summary.
 - Report failures and uncertain outcomes accurately.
@@ -139,7 +139,7 @@ Default-branch discovery therefore belongs here, not in each implementer.
   cannot cancel each other.
 - Triage and implementation preserve active jobs.
 - Push maintenance and ordinary feedback share the existing per-issue worker
-  concurrency; no matrix or separate implementation scheduler is needed.
+  concurrency.
 - Pending jobs can be replaced, so workers consider the latest discussion and
   outstanding feedback.
 - AI-owned skips are explained in the job summary.
