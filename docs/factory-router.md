@@ -24,11 +24,15 @@ needs, or skips it.
 - A submitted review contains findings or change requests, including inline findings.
 - A completed Factory review has outstanding findings still applicable to the current code.
 - PR-linked CI fails or times out at the current head or merge revision.
-- The original issue must be open and triaged with its unique `factory-issue-NUMBER`
-  label.
-- An existing PR must be open and authored by `factory-identity[bot]`.
+
+#### Implementation eligibility
+
+- The original issue must be open with `triaged` and exactly one tracking label,
+  `factory-issue-NUMBER`, matching its issue number.
+- An existing PR must be open, in the same repository, and authored by
+  `factory-identity[bot]`.
 - Its branch must be `factory/issue-NUMBER`, targeting the default branch.
-- It must carry the same labels as the original issue.
+- It must carry `triaged` and exactly the same tracking label as the original issue.
 
 ### [Issue triage](issue-triage.md)
 
@@ -39,11 +43,16 @@ needs, or skips it.
 ## Default-branch conflict checks
 
 - A non-deletion default-branch push checks all eligible Factory PRs, not just PRs
-  referenced by the pushed commits. Enumerate all pages and use the implementation
-  eligibility rules above.
+  referenced by the pushed commits. Enumerate all pages and apply
+  [implementation eligibility](#implementation-eligibility); the feedback triggers
+  in that section are not prerequisites for push checks.
 - Dispatch a separate implementation worker for each eligible issue/PR, including
   clean, behind, and unknown-mergeability PRs. Each worker owns its current-revision
   conflict check and any repair; it never maintains other PRs.
+- Prioritize reported conflicting PRs, then unknown mergeability, then clean PRs;
+  use ascending PR number within each group. This ordering is not conflict evidence.
+- Push routing has a 30-minute job budget, including setup and reporting; other
+  events retain 15 minutes. Reserve time to record an incomplete batch.
 - Use live context rather than the push's possibly superseded revision. Supply the
   existing PR as `source_pr` with its current `head_sha`; never create issues or PRs.
 - The push trigger lists `master`; update that filter if the default branch is
@@ -106,7 +115,15 @@ Default-branch discovery therefore belongs here, not in each implementer.
 - Workers receive these inputs, not the original webhook.
 - Verify dispatch acceptance; acceptance is not completed work.
 - If fan-out is incomplete, report accepted, uncertain, and undispatched targets
-  separately. Partial dispatch or an API failure is not a successful batch or a skip.
+  separately, with target revisions and worker links for verified acceptances.
+  Partial dispatch or an API failure is not a successful batch or a skip.
+- For incomplete batches, direct the operator to GitHub's native **Re-run jobs**
+  on the original router run rather than waiting for another push.
+- On retry, recheck live eligibility and reconcile prior attempts' acceptances
+  using `router_run_id`, the target, and worker evidence before dispatching
+  remaining work.
+- Do not blindly redispatch accepted or uncertain requests, or treat
+  old-revision evidence as current coverage.
 - Avoid duplicate retries.
 - Record the decision, reason, source, and worker link when available in the job summary.
 - Report failures and uncertain outcomes accurately.

@@ -75,7 +75,8 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
   exact-revision local merge probe when API state is pending or stale:
   - `git merge-tree --write-tree <head> <base>` exits 0 for a clean merge.
   - Exit 1 with conflict details confirms conflicts; other results are failures.
-- Clean/behind branches get no base merge or conflict-repair commit.
+- Maintenance alone must not merge clean/behind branches or create repair commits.
+  An explicitly requested base update is separate work, not a conflict repair.
 - Resolve confirmed conflicts with a merge of the checked default branch into the
   existing PR branch, preserving both histories and intended changes. Do not
   blindly select one side or weaken required checks.
@@ -88,12 +89,15 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
   confirming:
   - The remote head equals the checked commit.
   - Both the previous PR head and integrated base remain ancestors.
-  - A clean merge probe and GitHub `MERGEABLE` for the same current remote
-    head/default-branch pair.
+  - A clean exact-revision merge probe for the current remote head/default-branch
+    pair; this is the authoritative conflict check.
+- GitHub `mergeable` is supplementary evidence only when its reported head and
+  `base.sha` match the checked revisions. Record pending or stale API mergeability
+  as a verification limit, not as failure of a successful exact-revision probe.
 - Include checked revisions, conflict classification, changes or blockers, and
-  verification limits in the result. Pending, stale, denied, or failed verification
-  is not success; an issue-triggered run must also report an unresolved conflict on
-  the existing PR.
+  verification limits in the result. Unverified probes, changed remote revisions,
+  API errors, denied actions, or failed required checks are not success; an
+  issue-triggered run must also report an unresolved conflict on the existing PR.
 
 ## Review-thread feedback
 
