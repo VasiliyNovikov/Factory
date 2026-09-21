@@ -20,9 +20,9 @@ implementation**, not just inspected. Do not implement code or create PRs.
 
 ## Decision and handoff
 
-- Post a new Factory comment with exactly one decision marker and the exact value
-  read from the worker-provided `RESULT_MARKER` environment variable as an HTML
-  comment:
+- Post a new Factory comment with exactly one decision marker and
+  `<!-- ${RESULT_MARKER} -->`, substituting the exact value of the worker-provided
+  `RESULT_MARKER` environment variable and preserving the single space on each side:
   - **Ready:** agreed scope and acceptance criteria, with `<!-- factory-triage:ready -->`.
   - **Reply:** specific questions or an explanation of unclear, unsuitable,
     blocked, already-satisfied, or conflicting requests, with `<!-- factory-triage:reply -->`.
