@@ -1,7 +1,8 @@
 # Install AI tools and run a prompt
 
 Start with this manually triggered workflow. It checks out the scripts and model
-configuration, installs the tools with Node.js 24, and runs a basic prompt.
+configuration, installs the standalone tools without Node.js/npm, and runs a basic
+prompt.
 
 ```yaml
 name: CI
@@ -20,11 +21,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '24'
-
       - name: Install AI tools
         run: ./scripts/install-tools.sh
 
@@ -35,6 +31,22 @@ jobs:
           ./scripts/ai.sh
           --harness copilot
           --prompt "Reply with 'Hello from CI'. Do not use any tools."
+```
+
+[`scripts/install-tools.sh`](../scripts/install-tools.sh) uses the official
+[Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli)
+and [OpenCode](https://opencode.ai/docs/#install) install scripts to install their
+latest stable standalone binaries. It retains missing-`jq` installation and
+checks both CLI versions; download, installation, or version-check failures fail
+the setup.
+
+Copilot installs to `$HOME/.local/bin` and OpenCode to `$HOME/.opencode/bin`.
+The installer adds both to its `PATH` and to `GITHUB_PATH` for subsequent Actions
+steps, without relying on shell startup files. For local use, add those directories
+to your calling shell before invoking `scripts/ai.sh`:
+
+```sh
+export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 ```
 
 Use `--harness opencode` to run the same prompt through OpenCode. Both harnesses

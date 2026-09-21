@@ -27,11 +27,6 @@ jobs:
           ref: ${{ github.workflow_sha }}
           token: ${{ steps.pr-app-token.outputs.token }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '24'
-
       - name: Install AI tools
         run: ./scripts/install-tools.sh
 
