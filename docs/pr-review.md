@@ -26,7 +26,8 @@ changing or executing it.
 - Submit exactly one review while the PR remains eligible, with:
   - `commit_id` equal to `PR_HEAD_SHA`.
   - The full reviewed SHA visibly stated in the body.
-  - The value of `REVIEW_MARKER` in the body.
+  - The exact value read from the worker-provided `REVIEW_MARKER` environment
+    variable in the body.
 - Use `COMMENT` for findings, with paths, lines, impact, and suggested fixes;
   use inline comments where possible.
 - If clean, use `APPROVE`. For `github-actions[bot]`-authored PRs, use `COMMENT`
