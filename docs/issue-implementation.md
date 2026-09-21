@@ -3,15 +3,11 @@
 [Implementation AI](../.github/workflows/issue-implementation.yml) handles triaged
 issues and feedback on their Factory PRs, selected by the [router](factory-router.md).
 
-- Copilot owns context gathering, freshness, implementation, replies, and verification.
-- Implement clear requests, update the matching PR, or ask/explain when work is
-  unclear, blocked, or already satisfied.
+- Copilot owns context gathering, freshness, implementation, decomposition,
+  replies, and verification.
+- Choose a focused PR or native sub-issues for clear requests, update matching
+  work, or ask/explain when work is unclear, blocked, or already satisfied.
 - Follow repository guidance, including the [test-value policy](../AGENTS.md#test-value-and-verification).
-
-Decomposition belongs to [triage](issue-triage.md): tracking parents stay
-untriaged, and each child receives its own tracking label, branch, and PR only
-through normal triage and implementation. Resume a partial split with a parent
-comment, not by manually applying `triaged` to bypass triage's handoff decision.
 
 ## Assignment and context
 
@@ -50,6 +46,46 @@ comment, not by manually applying `triaged` to bypass triage's handoff decision.
 - New work must be based on the current remote default branch;
   the setup checkout is pinned to the worker's workflow revision.
 - Never force-push, push to the default branch, merge PRs, or close issues.
+
+## Choose a PR or sub-issues
+
+- Triage may suggest decomposition; implementation owns the decision and creation.
+  Prefer one PR for cohesive work and native sub-issues for independently
+  actionable parts. Keep tightly coupled changes together.
+- Reconcile the issue's branch, PRs in all states, native children, and earlier
+  Factory decisions before choosing or resuming work. Decomposition must not
+  bypass ownership checks or duplicate existing PR work.
+- A parent with active or unreconciled child-owned work tracks that outcome;
+  do not also implement the same scope in a parent PR.
+- A cancelled or changed split needs maintainer clarification and reconciliation
+  of all planned, linked, and previously created children and their implementation
+  work before returning to a parent PR. Closed children or removed links alone
+  do not establish cancellation; explain unresolved overlap instead.
+
+## Decompose into sub-issues
+
+- Keep the parent open with `triaged` and its own tracking label, so parent
+  follow-ups return to implementation. No new label or routing protocol is needed.
+- Record the intended split in a Factory-authored parent comment before creating
+  work, so interrupted attempts can be reconciled without custom markers.
+- Each child's initial body needs a bounded scope, acceptance criteria, a parent
+  link, relevant context, and explicit dependencies.
+- Create children in this repository with their native parent in the same
+  GraphQL `createIssue` mutation using `parentIssueId`. Do not copy `triaged` or
+  the parent's tracking label onto new children.
+- Each new child's ordinary `issues: opened` event enters normal
+  [triage](issue-triage.md), including clarification and its own label handoff.
+  Do not triage or implement children in the parent's run.
+- On retries, reconcile the Factory-authored split and existing issues, native
+  relationships, and implementation work in all states before creating missing
+  children. Reuse matching work, including closed children; do not duplicate,
+  reopen, or reparent it. Explain ambiguous ownership or scope.
+- Reconcile uncertain creation responses with fresh, paginated issue and
+  relationship reads, not search indexing alone. Never retry creation blindly.
+- Verify every intended child's scope, dependencies, and native relationship,
+  and the open parent's handoff labels before claiming completed decomposition.
+  Report partial failures with child links and remaining work; a parent comment
+  can resume recovery.
 
 ## Implement or reply
 
@@ -94,10 +130,11 @@ comment, not by manually applying `triaged` to bypass triage's handoff decision.
   - The outcome.
   - A link to the producing workflow run attempt, so retries remain distinguishable.
   - The PR link when available.
+  - Child links and any incomplete decomposition work when applicable.
   - Addressed/outstanding feedback with thread links.
 - Claimed outcomes require confirmed remote state:
-  - The checked commit.
-  - The eligible PR and required metadata.
+  - The checked commit and eligible PR metadata for code changes.
+  - The native child relationships and eligible parent for decomposition.
   - Resolved threads.
   - Factory-authored replies/comments on the intended targets.
 - Mutation responses must agree with fresh state.
@@ -137,4 +174,6 @@ comment, not by manually applying `triaged` to bypass triage's handoff decision.
 - Issue-to-PR implementation and addressed-thread resolution ran in CI before the
   router migration. Central dispatch, clarification, duplicate-reply prevention,
   denied-resolution paths, and this refactor have not yet been exercised live.
+- Implementation-owned decomposition, child triage, parent follow-ups, and
+  partial/cancelled-split recovery still need live verification.
 - Static checks do not establish AI adherence or end-to-end GitHub behavior.
