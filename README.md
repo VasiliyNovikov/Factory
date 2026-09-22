@@ -55,6 +55,9 @@ flowchart TD
     pr --> ci["Automation: PR-linked CI<br/>Checks produced by: GitHub Actions"]
     pr -->|Discussion or review| feedback
     ci -->|Failure or timeout| router
+    base["Human / bot: default-branch update"] --> router
+    implementation -->|Behind default branch| baseMerge["Agentic: verified base merge<br/>Own PR only; resolve conflicts"]
+    baseMerge --> pr
 ```
 
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
@@ -63,6 +66,14 @@ PR's current head or merge revision. Factory does not automatically merge PRs
 or close issues. Implementation reuses existing child work on retries and does
 not duplicate it in a parent PR. Parent comments resume partial splits through
 the same implementation route; see [issue implementation](docs/factory/issue-implementation.md).
+
+Default-branch updates dispatch maintenance for all eligible Factory PRs; each
+worker handles only its assigned PR. Whenever a PR is behind the current default
+branch, implementation merges it and resolves any conflicts, including on ordinary
+follow-ups. Verified merges preserve both histories and intended changes. Push-only
+maintenance skips without PR comments only when the PR already includes the current
+default branch and there are no changes, outstanding feedback, errors, or blockers.
+Conflicts that cannot be resolved safely get a specific blocker on the PR.
 
 ## Workflow diagnostics
 
