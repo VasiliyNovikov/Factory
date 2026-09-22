@@ -13,7 +13,8 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 
 - `GITHUB_EVENT_PATH` contains dispatch inputs, not the original webhook.
   Input definitions belong to the worker YAML and [router contract](factory-router.md#dispatch-and-reporting).
-- Handle the selected task without repeating routing analysis.
+- Handle only the selected issue's scope without repeating routing analysis;
+  repository-wide discovery belongs to the router.
 - Decisions must account for:
   - The full current discussion.
   - Outstanding feedback, including beyond the triggering event because pending jobs can be superseded.
@@ -100,6 +101,39 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
   - Actual verification results.
 - Answer ordinary issue/PR comments and review summaries in their main conversation;
   they are not resolvable threads.
+- Answer absorbed feedback in the conversation where it was raised as well as the
+  triggering conversation, and verify each reply. An up-to-date PR must not
+  discard feedback from a superseded pending job.
+
+## Default-branch maintenance
+
+- Every assignment involving an existing eligible PR must merge the current remote
+  default branch whenever that revision is not already an ancestor of the PR head,
+  including after implementation changes. Cleanly mergeable branches are no exception.
+- Resolve any conflicts as part of the merge, preserving both histories and intended
+  changes. Blind side selection and weakened checks are not acceptable.
+- GitHub mergeability or policy status does not gate this work or replace
+  current-revision verification.
+- Push maintenance covers only `source_pr`; it cannot create issues or PRs, or
+  expand the issue's scope.
+
+### Verification and blockers
+
+- Ambiguous intent, a required product decision, or an unverifiable merge needs
+  a specific blocker on the PR, not a speculative or partial push.
+- Eligibility and both remote revisions must still be current at mutation. Head
+  or base drift requires reassessment and renewed checks, not overwritten work.
+- A completed base update requires:
+  - The combined result passed required checks before a normal push.
+  - The published remote head equals the checked commit.
+  - Both the previous PR head and current default-branch revision remain ancestors.
+  - A clean exact-revision local merge check of that remote head/default-branch pair;
+    GitHub's pending or stale mergeability is not failure of this authoritative check.
+- Results must identify checked revisions, conflict status, changes or blockers,
+  and verification limits.
+- Unverified results, changed remote revisions, API errors, denied actions, or
+  failed required checks are not success.
+- An issue-triggered run must also report an unresolved conflict on the existing PR.
 
 ## Review-thread feedback
 
@@ -121,8 +155,12 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 
 ## Skip and report
 
-- Skip stale or already-handled assignments before mutations, with evidence in
-  `GITHUB_STEP_SUMMARY` and no GitHub changes.
+- Skip stale or already-handled assignments before mutations only when no current
+  eligible work remains, including a required base merge. Record evidence in
+  `GITHUB_STEP_SUMMARY` and make no GitHub changes.
+- Push-only maintenance is a skip when the verified PR head already includes the
+  current default branch, with no changes, unhandled feedback, errors, or blockers.
+  Do not post no-op PR comments.
 - Once mutations begin, verify and report partial outcomes rather than claiming a skip.
 - Unless skipped before mutation, post a new Factory comment to the triggering
   conversation (`source_pr` when supplied, otherwise `issue_number`), even after
@@ -174,6 +212,7 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 - Issue-to-PR implementation and addressed-thread resolution ran in CI before the
   router migration. Central dispatch, clarification, duplicate-reply prevention,
   denied-resolution paths, and this refactor have not yet been exercised live.
+- Default-branch maintenance fan-out still needs post-merge live verification.
 - Implementation-owned decomposition, child triage, parent follow-ups, and
   partial/cancelled-split recovery still need live verification.
 - Static checks do not establish AI adherence or end-to-end GitHub behavior.
