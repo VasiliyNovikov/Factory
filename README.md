@@ -98,7 +98,9 @@ identities.
 - `scripts/ai.sh` reads `.github/model-config.json` and invokes the selected CLI.
 - `GITHUB_TOKEN: ${{ github.token }}` authenticates both Copilot model requests and
   the `gh` commands in the basic examples. App-based PR creation sets `GH_TOKEN`
-  to the App token and `COPILOT_GITHUB_TOKEN` to the built-in token.
+  to the App token and `COPILOT_GITHUB_TOKEN` to the built-in token: three standard
+  variable names, two credentials. See [token names and identities](docs/github-app.md#token-names-and-identities)
+  for tool precedence and separate Git push authentication.
 
 The router dispatches PR review on PR events. Issue triage assesses new
 issues and clarification comments; implementation handles triaged issues and
