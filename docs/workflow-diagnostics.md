@@ -10,6 +10,9 @@ Copilot owns history selection, investigation, duplicate checks, issue creation,
 and result verification. It reuses `scripts/install-tools.sh`,
 `scripts/ai.sh --harness copilot`, and the `default` model profile.
 
+For a fresh review of the whole source snapshot on every invocation, use
+[repository review](repository-review.md), not this run-history analysis.
+
 ## Scope and investigation
 
 The first invocation establishes a boundary with **no analysis or findings

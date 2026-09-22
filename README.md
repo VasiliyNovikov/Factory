@@ -65,6 +65,12 @@ flowchart TD
     boundary --> diagnosticsSummary["Agentic: verify actions and summarize results<br/>Job summary and logs"]
     findings --> diagnosticsSummary
     diagnosticsIssue --> diagnosticsSummary
+
+    repositoryReviewTrigger["Automation: daily 03:17 UTC or manual<br/>Default branch only"] --> repositoryReview{"Agentic: full repository review on every invocation<br/>Identity: Factory; source analysis read-only"}
+    repositoryReview -->|New findings after duplicate checks| repositoryReviewIssue["Agentic: new unlabeled issue per finding<br/>Author: Factory"]
+    repositoryReviewIssue --> router
+    repositoryReview --> repositoryReviewSummary["Agentic: verify outcomes and record coverage / gaps<br/>Job summary and logs"]
+    repositoryReviewIssue --> repositoryReviewSummary
 ```
 
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
@@ -99,6 +105,11 @@ same-repository run window, analyzes workflows with parallel subagents, and send
 actionable findings through triage. It verifies its actions and summarizes results
 in the job summary and logs.
 
+[Repository review](docs/repository-review.md) runs daily at 03:17 UTC or manually,
+reviewing the whole source snapshot from scratch even on its first invocation.
+It checks existing issues/PRs before publishing new actionable findings for triage,
+and records the reviewed commit, coverage, issue links, and gaps in the job summary.
+
 1. [Install AI tools and run a prompt](docs/ai-tools.md)
 2. [Create a pull request](docs/create-pull-request.md) — tested successfully.
 3. [Create an issue](docs/create-issue.md) — tested successfully.
@@ -107,3 +118,4 @@ in the job summary and logs.
 6. [Implement a triaged issue or decompose it into sub-issues](docs/issue-implementation.md)
 7. [Diagnose workflow runs and create actionable issues](docs/workflow-diagnostics.md)
 8. [Route events to default-branch workers](docs/factory-router.md)
+9. [Review the whole repository and create actionable issues](docs/repository-review.md)

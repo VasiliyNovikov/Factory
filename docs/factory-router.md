@@ -46,8 +46,9 @@ needs, or skips it.
 - Already-handled feedback.
 - Successful CI without review findings.
 - Cancelled runs.
-- Router, triage, implementation, or diagnostics completions. Automation must not
-  trigger itself.
+- Router, triage, implementation, diagnostics, or
+  [repository review](repository-review.md) completions. Automation must not
+  trigger itself; source-review findings enter through new issues instead.
 - Failed review workers: these are not PR-code CI failures.
 - Skipped reviews: these have no findings.
 

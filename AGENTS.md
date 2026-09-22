@@ -54,6 +54,7 @@
   - [Issue triage and label handoff](docs/issue-triage.md)
   - [Issue implementation and follow-ups](docs/issue-implementation.md)
   - [Periodic workflow diagnostics](docs/workflow-diagnostics.md)
+  - [Full repository source review](docs/repository-review.md)
 - No application toolchain, dependency manifest, or build/test/lint commands are
   configured. Automated workflow tests are deferred for now.
 - `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
@@ -87,6 +88,12 @@
   and records results in the job summary. Its first invocation establishes a
   boundary without analysis. Diagnostics verification is AI-owned; no separate
   report/receipt-check job is required.
+- `.github/workflows/repository-review.yml` reviews the full source snapshot daily
+  or manually, including its first invocation, using the existing `review` profile.
+  Copilot checks issues/PRs in all states for duplicates and publishes only new
+  actionable findings as unlabeled Factory issues for normal triage. Analysis is
+  read-only; verification and coverage reporting are AI-owned. Its completion is
+  not PR feedback. See `docs/repository-review.md` for scope and token boundaries.
 
 ## Test value and verification
 
