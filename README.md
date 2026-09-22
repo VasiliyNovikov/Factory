@@ -95,6 +95,23 @@ flowchart TD
     diagnosticsIssue --> diagnosticsSummary
 ```
 
+## Repository review
+
+[Repository review](docs/factory/repository-review.md) runs daily at 00:00 UTC or manually,
+reviewing the whole source snapshot from scratch.
+It checks existing issues/PRs before publishing new actionable findings for triage,
+and records the reviewed commit, coverage, issue links, and gaps in the job summary.
+
+```mermaid
+flowchart TD
+    repositoryReviewTrigger["Automation: daily 00:00 UTC or manual<br/>Default branch only"] --> repositoryReview{"Agentic: full repository review from scratch<br/>Identity: Factory; source analysis read-only"}
+    repositoryReview -->|New findings after duplicate checks| repositoryReviewIssue["Agentic: new unlabeled issue per finding<br/>Author: Factory"]
+    repositoryReviewIssue -->|Issue opened| router{"Agentic: Factory router<br/>Default branch; identity: Actions"}
+    router -->|Triage| triage{"Agentic: issue triage<br/>Identity: Factory"}
+    repositoryReview --> repositoryReviewSummary["Agentic: verify outcomes and record coverage / gaps<br/>Job summary and logs"]
+    repositoryReviewIssue --> repositoryReviewSummary
+```
+
 ## CI examples
 
 The AI setup and issue/PR-creation examples in [docs/examples/](docs/examples/)
@@ -136,3 +153,4 @@ in the job summary and logs.
 4. [Implement a triaged issue or decompose it into sub-issues](docs/factory/issue-implementation.md)
 5. [Diagnose workflow runs and create actionable issues](docs/factory/workflow-diagnostics.md)
 6. [Route events to default-branch workers](docs/factory/factory-router.md)
+7. [Review the whole repository and create actionable issues](docs/factory/repository-review.md)
