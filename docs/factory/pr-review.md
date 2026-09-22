@@ -1,6 +1,6 @@
 # PR review
 
-[Review AI](../.github/workflows/pr-review.yml) handles PRs and reassessment
+[Review AI](../../.github/workflows/pr-review.yml) handles PRs and reassessment
 requests selected by the [router](factory-router.md). Review proposed code without
 changing or executing it.
 
@@ -22,7 +22,7 @@ changing or executing it.
 
 - Find actionable bugs, regressions, security issues, and missing necessary tests
   introduced by the PR. Avoid speculative or style-only findings and follow the
-  [test-value policy](../AGENTS.md#test-value-and-verification).
+  [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Submit exactly one review while the PR remains eligible, with:
   - `commit_id` equal to `PR_HEAD_SHA`.
   - The full reviewed SHA visibly stated in the body.
@@ -68,9 +68,9 @@ excluded from routing to avoid duplicate delivery.
 
 - Use the built-in `GITHUB_TOKEN` for review as `github-actions[bot]`, separate
   from the [Factory App](github-app.md) that authors implementation PRs.
-  The worker YAML owns the token permissions and shared [AI setup](ai-tools.md).
+  The worker YAML owns the token permissions and shared [AI setup](../examples/ai-tools.md).
 - The dispatch-only worker runs on the default branch, checks out `github.workflow_sha`,
-  and uses the `review` [model profile](../.github/model-config.json).
+  and uses the `review` [model profile](../../.github/model-config.json).
 - Same-PR/head jobs cancel older reviews. Different heads cannot cancel each
   other; each worker remains responsible for checking freshness before posting.
 - Approvals require **Settings → Actions → General → Workflow permissions →
