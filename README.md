@@ -5,8 +5,8 @@ Starting with small things:
 
 - [x] Run GitHub Copilot CLI in CI Job
 - [x] Have GitHub Copilot CLI on CI read/write repo/issues/PRs
-- [ ] Review PRs with GitHub Copilot CLI in CI and post comments or approval
-- [ ] Turn issues and user follow-up comments into PRs or Factory replies
+- [x] Review PRs with GitHub Copilot CLI in CI and post comments or approval
+- [x] Turn issues and user follow-up comments into PRs or Factory replies
 
 ## Factory workflow
 
@@ -97,10 +97,12 @@ flowchart TD
 
 ## CI examples
 
-The basic examples use this repository's scripts and require no PAT or custom secret.
-The PR-creation CI uses the [GitHub App setup](docs/github-app.md)
-with `FACTORY_CLIENT_ID` and `FACTORY_PRIVATE_KEY` to enable automatic runs and
-distinct PR author/reviewer identities.
+The AI setup and issue/PR-creation examples below are reusable snippets, not
+installed workflows. The basic examples use this repository's scripts and require
+no PAT or custom secret. App-based PR creation uses the
+[GitHub App setup](docs/github-app.md) with `FACTORY_CLIENT_ID` and
+`FACTORY_PRIVATE_KEY` for automatic downstream runs and distinct PR author/reviewer
+identities.
 
 - `scripts/install-tools.sh` installs standalone Copilot CLI and OpenCode via their
   official scripts (no Node.js/npm setup), plus missing `jq`.
@@ -109,9 +111,7 @@ distinct PR author/reviewer identities.
   the `gh` commands in the basic examples. App-based PR creation sets `GH_TOKEN`
   to the App token and `COPILOT_GITHUB_TOKEN` to the built-in token.
 
-Run the manual examples from **Actions → CI → Run workflow** once the workflow is
-on the default branch; select that branch (other refs skip). The router dispatches
-PR review on PR events. Issue triage assesses new
+The router dispatches PR review on PR events. Issue triage assesses new
 issues and clarification comments; implementation handles triaged issues and
 feedback on their Factory PRs. See
 [GitHub's Copilot CLI Actions guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli-in-actions).

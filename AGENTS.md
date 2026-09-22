@@ -56,9 +56,9 @@
   - [Periodic workflow diagnostics](docs/workflow-diagnostics.md)
 - No application toolchain, dependency manifest, or build/test/lint commands are
   configured. Automated workflow tests are deferred for now.
-- `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
-  Copilot PR-creation test. See the linked examples for setup, permissions,
-  invocation, and result verification.
+- AI setup and issue/PR-creation examples are documentation snippets, not installed
+  workflows. See those examples for setup, permissions, invocation, and result
+  verification.
 - `.github/workflows/factory-router.yml` analyzes issue, comment, PR-target, submitted-review,
   workflow-completion, and default-branch push events with Copilot. Pushes dispatch
   one default-branch maintenance worker per eligible Factory PR; other events
