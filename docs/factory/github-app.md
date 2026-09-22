@@ -35,7 +35,7 @@ the App definition alone does not grant new permissions to an existing installat
 
 ## Use the App in a workflow
 
-For [PR creation](create-pull-request.md), generate a token before checkout and
+For [PR creation](../examples/create-pull-request.md), generate a token before checkout and
 use it for checkout's persisted push credentials:
 
 ```yaml
@@ -102,4 +102,4 @@ GitHub Actions to create and approve pull requests**.
 Using the same App identity to create and review PRs reintroduces the self-approval
 problem. Existing PRs retain their original author; create a new PR with the App
 to test approval. App-based PR creation has been tested successfully; approval
-testing is tracked in the [review example](pr-review.md).
+testing is tracked in the [review guidance](pr-review.md).

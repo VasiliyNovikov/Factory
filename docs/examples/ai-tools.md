@@ -34,7 +34,7 @@ jobs:
           --prompt "Reply with 'Hello from CI'. Do not use any tools."
 ```
 
-[`scripts/install-tools.sh`](../scripts/install-tools.sh) uses the official
+[`scripts/install-tools.sh`](../../scripts/install-tools.sh) uses the official
 [Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli)
 and [OpenCode](https://opencode.ai/docs/#install) install scripts to install their
 latest stable standalone binaries. It retains missing-`jq` installation and
@@ -51,7 +51,7 @@ export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 ```
 
 Use `--harness opencode` to run the same prompt through OpenCode. Both harnesses
-read named profiles from [`.github/model-config.json`](../.github/model-config.json).
+read named profiles from [`.github/model-config.json`](../../.github/model-config.json).
 `--profile NAME` defaults to `default`; select `route`, `triage`, `implement`,
 `review`, or any other configured name explicitly:
 
