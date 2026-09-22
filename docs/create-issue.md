@@ -1,8 +1,8 @@
 # Create an issue
 
-This issue-creation example was tested successfully. Keep the setup steps from
-[Install AI tools and run a prompt](ai-tools.md) and replace the job permissions
-with:
+This issue-creation example was tested successfully and is retained as a reusable
+documentation snippet, not an installed workflow. Keep the setup steps from
+[Install AI tools and run a prompt](ai-tools.md) and replace the job permissions with:
 
 ```yaml
 permissions:

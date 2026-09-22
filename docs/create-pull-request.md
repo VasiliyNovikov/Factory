@@ -1,12 +1,11 @@
 # Create a pull request
 
-This PR-creation example was tested successfully.
+This PR-creation example was tested successfully and is retained as a reusable
+documentation snippet, not an installed workflow.
 Copilot creates a unique branch, commits a small Markdown file, pushes it, and
 opens a PR titled `test` against `master`.
 
-The basic example below uses `GITHUB_TOKEN`. The repository's CI workflow uses
-the [GitHub App setup](github-app.md) with
-`factoryidentity` to enable automatic review runs and a separate reviewer identity.
+The basic example below uses `GITHUB_TOKEN`.
 
 Enable **Settings → Actions → General → Workflow permissions → Allow GitHub
 Actions to create and approve pull requests**. Without this setting, the branch

@@ -1,8 +1,9 @@
 # Install AI tools and run a prompt
 
-Start with this manually triggered workflow. It checks out the scripts and model
-configuration, installs the standalone tools without Node.js/npm, and runs a basic
-prompt.
+Use this reusable snippet as a starting point for a manually triggered workflow;
+it is not an installed workflow in this repository. It checks out the scripts and
+model configuration, installs the standalone tools without Node.js/npm, and runs a
+basic prompt.
 
 ```yaml
 name: CI
