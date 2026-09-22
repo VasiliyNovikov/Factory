@@ -35,7 +35,7 @@ the App definition alone does not grant new permissions to an existing installat
 
 ## Use the App in a workflow
 
-For [PR creation](create-pull-request.md), generate a token before checkout and
+For [PR creation](../examples/create-pull-request.md), generate a token before checkout and
 use it for checkout's persisted push credentials:
 
 ```yaml
@@ -74,7 +74,22 @@ for worker dispatch and Contents/Issues/Pull requests read for analysis. It need
 no App token or additional App installation permission. Worker dispatches target
 the default branch and use the workers' own token permissions.
 
-Set these variables on the AI invocation, keeping any Git author/committer variables:
+## Token names and identities
+
+These are standard tool-recognized environment variable names, not three separate
+credentials. App-based jobs expose two tokens through three variables:
+
+| Variable | Value in App-based jobs | Purpose |
+|---|---|---|
+| `GITHUB_TOKEN` | Built-in `${{ github.token }}` | Workflow access as `github-actions[bot]`; fallback authentication for `gh` when `GH_TOKEN` is unset |
+| `COPILOT_GITHUB_TOKEN` | The same built-in token | Explicit authentication for Copilot model requests |
+| `GH_TOKEN` | Generated Factory App installation token | Preferred authentication for `gh`, acting as `<app-slug>[bot]` |
+
+`GH_TOKEN` identifies the credential to use for GitHub CLI, not a particular token
+type. For example, the router sets it to the built-in token instead of an App token.
+
+Set these variables on the AI invocation in App-based jobs, keeping any Git
+author/committer variables:
 
 ```yaml
 GITHUB_TOKEN: ${{ github.token }}
@@ -82,9 +97,12 @@ COPILOT_GITHUB_TOKEN: ${{ github.token }}
 GH_TOKEN: ${{ steps.pr-app-token.outputs.token }}
 ```
 
-`gh` prefers `GH_TOKEN`, so GitHub operations use the App identity. Explicit
-`COPILOT_GITHUB_TOKEN` keeps model requests on the built-in token. For PR creation,
-the built-in token only needs:
+Git push authentication is configured separately: the checkout `token` input above
+persists App credentials for subsequent pushes. Setting `GH_TOKEN` alone does not
+configure Git credentials, and Git author/committer names do not select the
+authenticated identity.
+
+For PR creation, the built-in token only needs:
 
 ```yaml
 permissions:
@@ -105,4 +123,4 @@ GitHub Actions to create and approve pull requests**.
 Using the same App identity to create and review PRs reintroduces the self-approval
 problem. Existing PRs retain their original author; create a new PR with the App
 to test approval. App-based PR creation has been tested successfully; approval
-testing is tracked in the [review example](pr-review.md).
+testing is tracked in the [review guidance](pr-review.md).

@@ -44,41 +44,43 @@
   `README.md` tracks completed CI access milestones. No application code is
   implemented yet.
 - Keep documentation concise, maintainable, and synchronized with the code,
-  scripts, and workflows it describes. CI examples live in `docs/`:
-  - [AI tool setup and invocation](docs/ai-tools.md)
-  - [Factory GitHub App setup](docs/github-app.md)
-  - [PR creation](docs/create-pull-request.md)
-  - [Issue creation](docs/create-issue.md)
-  - [Central event routing and dispatch](docs/factory-router.md)
-  - [PR review](docs/pr-review.md)
-  - [Issue triage and label handoff](docs/issue-triage.md)
-  - [Issue implementation and follow-ups](docs/issue-implementation.md)
-  - [Periodic workflow diagnostics](docs/workflow-diagnostics.md)
-  - [Full repository source review](docs/repository-review.md)
+  scripts, and workflows it describes.
+- Reusable CI examples live in `docs/examples/`:
+  - [AI tool setup and invocation](docs/examples/ai-tools.md)
+  - [PR creation](docs/examples/create-pull-request.md)
+  - [Issue creation](docs/examples/create-issue.md)
+- Factory workflow guidance and shared App setup live in `docs/factory/`:
+  - [Factory GitHub App setup](docs/factory/github-app.md)
+  - [Central event routing and dispatch](docs/factory/factory-router.md)
+  - [PR review](docs/factory/pr-review.md)
+  - [Issue triage and label handoff](docs/factory/issue-triage.md)
+  - [Issue implementation and follow-ups](docs/factory/issue-implementation.md)
+  - [Periodic workflow diagnostics](docs/factory/workflow-diagnostics.md)
+  - [Full repository source review](docs/factory/repository-review.md)
 - No application toolchain, dependency manifest, or build/test/lint commands are
   configured. Automated workflow tests are deferred for now.
-- `.github/workflows/ci.yml` is a manually triggered (`workflow_dispatch`)
-  Copilot PR-creation test. See the linked examples for setup, permissions,
-  invocation, and result verification.
+- AI setup and issue/PR-creation examples are documentation snippets, not installed
+  workflows. See those examples for setup, permissions, invocation, and result
+  verification.
 - `.github/workflows/factory-router.yml` analyzes issue, comment, PR-target, submitted-review, and
   workflow-completion events with Copilot and dispatches a worker on the default
   branch. Router jobs run independently; worker AI owns freshness checks and
-  result verification. `docs/factory-router.md` defines dispatch inputs.
+  result verification. `docs/factory/factory-router.md` defines dispatch inputs.
 - Submitted reviews directly run the router from the PR merge revision. Router
   and setup changes can execute before merge with the router's token permissions;
   this accepted risk and dispatch compatibility requirements are documented in
-  `docs/factory-router.md`. Other router triggers use the default branch.
+  `docs/factory/factory-router.md`. Other router triggers use the default branch.
 - Review, triage, and implementation are dispatch-only workers. Factory setup
   checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
 - `.github/workflows/pr-review.yml` reviews non-draft, same-repository PRs and
-  verifies that Copilot posted a review unless AI skipped a stale/handled task. See the PR-review example
+  verifies that Copilot posted a review unless AI skipped a stale/handled task. See the PR-review guidance
   for triggering and bot-approval constraints.
 - `.github/workflows/issue-triage.yml` assesses assigned untriaged issues and clarification
   comments, suggests decomposition when useful, and applies a unique tracking
   label followed by `triaged` when ready. It does not create issues or PRs.
 - `.github/workflows/issue-implementation.yml` implements triaged issues and feedback on
   their Factory PRs, or creates native sub-issues for independent delivery, using
-  the Factory App. Its short invocation follows `docs/issue-implementation.md`;
+  the Factory App. Its short invocation follows `docs/factory/issue-implementation.md`;
   Copilot owns decomposition, recovery, freshness, and result verification.
   Unlike triage and review, implementation intentionally has no deterministic receipt check.
   See that guidance for permissions, per-issue concurrency, and PR tracking.
@@ -93,7 +95,7 @@
   Copilot checks issues/PRs in all states for duplicates and publishes only new
   actionable findings as unlabeled Factory issues for normal triage. Analysis is
   read-only; verification and coverage reporting are AI-owned. Its completion is
-  not PR feedback. See `docs/repository-review.md` for scope and token boundaries.
+  not PR feedback. See `docs/factory/repository-review.md` for scope and token boundaries.
 
 ## Test value and verification
 

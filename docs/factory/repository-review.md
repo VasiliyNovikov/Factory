@@ -1,6 +1,6 @@
 # Review the whole repository
 
-[Repository review](../.github/workflows/repository-review.yml) runs daily at
+[Repository review](../../.github/workflows/repository-review.yml) runs daily at
 **03:17 UTC** (`17 3 * * *`) or manually from **Actions -> Repository review ->
 Run workflow** on the default branch. Manual dispatches on other refs skip;
 scheduled runs use the default branch and can be delayed by GitHub. Checkout uses
@@ -25,7 +25,7 @@ one pending invocation. The 30-minute budget includes setup and reporting.
   There is no first-run initialization or incremental run-history boundary.
 - Report only distinct, evidenced, actionable fixes, optimizations, or other
   improvements. Avoid speculative issues, style churn, and unnecessary refactoring.
-  Apply the repository's [test-value policy](../AGENTS.md#test-value-and-verification)
+  Apply the repository's [test-value policy](../../AGENTS.md#test-value-and-verification)
   when proposing verification work.
 - Before publication, check the current default revision. If it advanced, confirm
   each candidate still applies; do not claim that the original review covered

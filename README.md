@@ -5,17 +5,17 @@ Starting with small things:
 
 - [x] Run GitHub Copilot CLI in CI Job
 - [x] Have GitHub Copilot CLI on CI read/write repo/issues/PRs
-- [ ] Review PRs with GitHub Copilot CLI in CI and post comments or approval
-- [ ] Turn issues and user follow-up comments into PRs or Factory replies
+- [x] Review PRs with GitHub Copilot CLI in CI and post comments or approval
+- [x] Turn issues and user follow-up comments into PRs or Factory replies
 
 ## Factory workflow
 
-The [Factory router](docs/factory-router.md) analyzes events and dispatches triage,
+The [Factory router](docs/factory/factory-router.md) analyzes events and dispatches triage,
 review, or implementation on the default branch. Router runs are independent;
 workers own issue/PR concurrency and AI-led freshness checks. Setup checkouts use
 the workflow's exact revision. Submitted reviews directly run the PR-revision
 router, so router/setup changes can execute before merge; see the
-[accepted risk](docs/factory-router.md#accepted-risk-router-changes-can-run-before-merge).
+[accepted risk](docs/factory/factory-router.md#accepted-risk-router-changes-can-run-before-merge).
 
 Triage applies the unique `factory-issue-<number>` tracking label before `triaged`
 enters routing for implementation. Triage may suggest decomposition in its comment
@@ -62,11 +62,11 @@ triaged issue and, when present, a matching open Factory PR. CI must match the
 PR's current head or merge revision. Factory does not automatically merge PRs
 or close issues. Implementation reuses existing child work on retries and does
 not duplicate it in a parent PR. Parent comments resume partial splits through
-the same implementation route; see [issue implementation](docs/issue-implementation.md).
+the same implementation route; see [issue implementation](docs/factory/issue-implementation.md).
 
 ## Workflow diagnostics
 
-[Workflow diagnostics](docs/workflow-diagnostics.md) analyzes past workflow runs
+[Workflow diagnostics](docs/factory/workflow-diagnostics.md) analyzes past workflow runs
 separately from the main Factory workflow. New unlabeled findings issues enter the
 [Factory workflow](#factory-workflow) through the router and normal issue triage.
 
@@ -86,7 +86,7 @@ flowchart TD
 
 ## Repository review
 
-[Repository review](docs/repository-review.md) runs daily at 03:17 UTC or manually,
+[Repository review](docs/factory/repository-review.md) runs daily at 03:17 UTC or manually,
 reviewing the whole source snapshot from scratch even on its first invocation.
 It checks existing issues/PRs before publishing new actionable findings for triage,
 and records the reviewed commit, coverage, issue links, and gaps in the job summary.
@@ -103,21 +103,31 @@ flowchart TD
 
 ## CI examples
 
-The basic examples use this repository's scripts and require no PAT or custom secret.
-The PR-creation CI uses the [GitHub App setup](docs/github-app.md)
-with `FACTORY_CLIENT_ID` and `FACTORY_PRIVATE_KEY` to enable automatic runs and
-distinct PR author/reviewer identities.
+The AI setup and issue/PR-creation examples in [docs/examples/](docs/examples/)
+are reusable snippets, not installed workflows. The basic examples use this
+repository's scripts and require no PAT or custom secret. App-based PR creation uses the
+[GitHub App setup](docs/factory/github-app.md) with `FACTORY_CLIENT_ID` and
+`FACTORY_PRIVATE_KEY` for automatic downstream runs and distinct PR author/reviewer
+identities.
 
 - `scripts/install-tools.sh` installs standalone Copilot CLI and OpenCode via their
   official scripts (no Node.js/npm setup), plus missing `jq`.
 - `scripts/ai.sh` reads `.github/model-config.json` and invokes the selected CLI.
 - `GITHUB_TOKEN: ${{ github.token }}` authenticates both Copilot model requests and
   the `gh` commands in the basic examples. App-based PR creation sets `GH_TOKEN`
-  to the App token and `COPILOT_GITHUB_TOKEN` to the built-in token.
+  to the App token and `COPILOT_GITHUB_TOKEN` to the built-in token: three standard
+  variable names, two credentials. See [token names and identities](docs/factory/github-app.md#token-names-and-identities)
+  for tool precedence and separate Git push authentication.
 
-Run the manual examples from **Actions → CI → Run workflow** once the workflow is
-on the default branch; select that branch (other refs skip). The router dispatches
-PR review on PR events. Issue triage assesses new
+1. [Install AI tools and run a prompt](docs/examples/ai-tools.md)
+2. [Create a pull request](docs/examples/create-pull-request.md) — tested successfully.
+3. [Create an issue](docs/examples/create-issue.md) — tested successfully.
+
+## Factory guidance
+
+Active workflow instructions and shared App setup live in [docs/factory/](docs/factory/).
+
+The router dispatches PR review on PR events. Issue triage assesses new
 issues and clarification comments; implementation handles triaged issues and
 feedback on their Factory PRs. See
 [GitHub's Copilot CLI Actions guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli-in-actions).
@@ -126,12 +136,10 @@ same-repository run window, analyzes workflows with parallel subagents, and send
 actionable findings through triage. It verifies its actions and summarizes results
 in the job summary and logs.
 
-1. [Install AI tools and run a prompt](docs/ai-tools.md)
-2. [Create a pull request](docs/create-pull-request.md) — tested successfully.
-3. [Create an issue](docs/create-issue.md) — tested successfully.
-4. [PR review](docs/pr-review.md) — comment reviews tested successfully; approvals pending.
-5. [Triage issues before implementation](docs/issue-triage.md)
-6. [Implement a triaged issue or decompose it into sub-issues](docs/issue-implementation.md)
-7. [Diagnose workflow runs and create actionable issues](docs/workflow-diagnostics.md)
-8. [Route events to default-branch workers](docs/factory-router.md)
-9. [Review the whole repository and create actionable issues](docs/repository-review.md)
+1. [Factory GitHub App setup](docs/factory/github-app.md)
+2. [PR review](docs/factory/pr-review.md) — comment reviews tested successfully; approvals pending.
+3. [Triage issues before implementation](docs/factory/issue-triage.md)
+4. [Implement a triaged issue or decompose it into sub-issues](docs/factory/issue-implementation.md)
+5. [Diagnose workflow runs and create actionable issues](docs/factory/workflow-diagnostics.md)
+6. [Route events to default-branch workers](docs/factory/factory-router.md)
+7. [Review the whole repository and create actionable issues](docs/factory/repository-review.md)
