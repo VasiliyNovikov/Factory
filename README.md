@@ -5,8 +5,8 @@ Starting with small things:
 
 - [x] Run GitHub Copilot CLI in CI Job
 - [x] Have GitHub Copilot CLI on CI read/write repo/issues/PRs
-- [ ] Review PRs with GitHub Copilot CLI in CI and post comments or approval
-- [ ] Turn issues and user follow-up comments into PRs or Factory replies
+- [x] Review PRs with GitHub Copilot CLI in CI and post comments or approval
+- [x] Turn issues and user follow-up comments into PRs or Factory replies
 
 ## Factory workflow
 
