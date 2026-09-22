@@ -18,7 +18,10 @@ router, so router/setup changes can execute before merge; see the
 [accepted risk](docs/factory-router.md#accepted-risk-router-changes-can-run-before-merge).
 
 Triage applies the unique `factory-issue-<number>` tracking label before `triaged`
-enters routing for implementation. The resulting Factory PR carries both labels.
+enters routing for implementation. Triage may suggest decomposition in its comment
+but creates no issues. Implementation chooses a focused PR or native sub-issues.
+A PR carries both labels; a split parent stays open with its existing labels.
+Each child enters normal triage and receives its own tracking identity when ready.
 
 **Actors:** Agentic blocks use Copilot in CI; human / bot input can come from a
 human or another bot under its own account. Automation denotes CI runs and checks.
@@ -36,9 +39,13 @@ flowchart TD
     triage -->|Not ready| clarification["Agentic: clarification or explanation<br/>Comment author: Factory"]
     clarification --> answer["Human / bot: answer or comment<br/>Author: submitting account"]
     answer --> router
-    triage -->|Ready| tracking["Agentic: ready comment + factory-issue-NUMBER<br/>Created / applied by: Factory"]
+    implementation -->|Independent delivery is useful| decomposition["Agentic: plan split; parent stays open and triaged<br/>Identity: Factory; no duplicate parent PR"]
+    decomposition --> children["Agentic: create / reuse native sub-issues<br/>Author: Factory for new children"]
+    children -->|New child opened| router
+    decomposition -->|Human / bot parent follow-up| router
+    triage -->|Ready| tracking["Agentic: ready comment, optional split suggestion + factory-issue-NUMBER<br/>Created / applied by: Factory"]
     tracking -->|Factory then applies triaged| router
-    implementation -->|Actionable| pr["Agentic: create / update PR + commits<br/>Author: Factory"]
+    implementation -->|Cohesive delivery| pr["Agentic: create / update PR + commits<br/>Author: Factory"]
     implementation -->|Unclear, blocked, or already satisfied| reply["Agentic: reply in triggering conversation<br/>Comment author: Factory"]
     reply -->|New feedback| feedback["Human / bot: issue / PR comments or submitted reviews<br/>Author: submitting account"]
     feedback -->|Comments and submitted reviews| router
@@ -66,6 +73,10 @@ triaged issue and, when present, a matching open Factory PR. CI must match the
 PR's current head or merge revision. Factory does not automatically merge PRs
 or close issues. Description edits and explicit Factory review requests allow fresh
 review without a new commit; only the reviewer decides whether to approve.
+
+Implementation reuses existing child work on retries and does
+not duplicate it in a parent PR. Parent comments resume partial splits through
+the same implementation route; see [issue implementation](docs/issue-implementation.md).
 
 ## CI examples
 
@@ -97,6 +108,6 @@ in the job summary and logs.
 3. [Create an issue](docs/create-issue.md) — tested successfully.
 4. [PR review](docs/pr-review.md) — comment reviews tested successfully; approvals pending.
 5. [Triage issues before implementation](docs/issue-triage.md)
-6. [Turn a triaged issue or follow-up comment into a PR](docs/issue-implementation.md)
+6. [Implement a triaged issue or decompose it into sub-issues](docs/issue-implementation.md)
 7. [Diagnose workflow runs and create actionable issues](docs/workflow-diagnostics.md)
 8. [Route events to default-branch workers](docs/factory-router.md)
