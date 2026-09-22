@@ -97,14 +97,14 @@ flowchart TD
 
 ## Repository review
 
-[Repository review](docs/factory/repository-review.md) runs daily at 03:17 UTC or manually,
-reviewing the whole source snapshot from scratch even on its first invocation.
+[Repository review](docs/factory/repository-review.md) runs daily at 00:00 UTC or manually,
+reviewing the whole source snapshot from scratch.
 It checks existing issues/PRs before publishing new actionable findings for triage,
 and records the reviewed commit, coverage, issue links, and gaps in the job summary.
 
 ```mermaid
 flowchart TD
-    repositoryReviewTrigger["Automation: daily 03:17 UTC or manual<br/>Default branch only"] --> repositoryReview{"Agentic: full repository review on every invocation<br/>Identity: Factory; source analysis read-only"}
+    repositoryReviewTrigger["Automation: daily 00:00 UTC or manual<br/>Default branch only"] --> repositoryReview{"Agentic: full repository review from scratch<br/>Identity: Factory; source analysis read-only"}
     repositoryReview -->|New findings after duplicate checks| repositoryReviewIssue["Agentic: new unlabeled issue per finding<br/>Author: Factory"]
     repositoryReviewIssue -->|Issue opened| router{"Agentic: Factory router<br/>Default branch; identity: Actions"}
     router -->|Triage| triage{"Agentic: issue triage<br/>Identity: Factory"}
