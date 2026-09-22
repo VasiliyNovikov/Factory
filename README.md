@@ -124,6 +124,9 @@ identities.
 - `scripts/install-tools.sh` installs standalone Copilot CLI and OpenCode via their
   official scripts (no Node.js/npm setup), plus missing `jq`.
 - `scripts/ai.sh` reads `.github/model-config.json` and invokes the selected CLI.
+- Factory workflows share the [Run Copilot action](docs/examples/ai-tools.md#shared-factory-action)
+  for installation and invocation; checkout, credentials, and result checks stay
+  in each workflow.
 - `GITHUB_TOKEN: ${{ github.token }}` authenticates both Copilot model requests and
   the `gh` commands in the basic examples. App-based PR creation sets `GH_TOKEN`
   to the App token and `COPILOT_GITHUB_TOKEN` to the built-in token: three standard

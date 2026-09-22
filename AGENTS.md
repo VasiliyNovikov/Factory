@@ -65,6 +65,9 @@
 - AI setup and issue/PR-creation examples are documentation snippets, not installed
   workflows. See those examples for setup, permissions, invocation, and result
   verification.
+- Factory workflows share `.github/actions/run-copilot` for tool installation and
+  invocation. Keep checkout, credential selection, prompts, and receipt checks in
+  callers; see `docs/examples/ai-tools.md#shared-factory-action` for its contract.
 - `.github/workflows/factory-router.yml` analyzes issue, comment, PR-target, submitted-review,
   workflow-completion, and default-branch push events with Copilot. Pushes dispatch
   one default-branch maintenance worker per eligible Factory PR; other events

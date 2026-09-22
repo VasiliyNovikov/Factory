@@ -35,17 +35,14 @@ jobs:
           permission-pull-requests: read
           permission-issues: write
 
-      - name: Install AI tools
-        run: ./scripts/install-tools.sh
-
       - name: Review the full repository with Copilot
+        uses: ./.github/actions/run-copilot
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          COPILOT_GITHUB_TOKEN: ${{ github.token }}
-          GH_TOKEN: ${{ steps.factory-token.outputs.token }}
           FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
-        run: >-
-          ./scripts/ai.sh --harness copilot --profile review
-          --prompt "Review the full source snapshot of ${GITHUB_REPOSITORY} from scratch
-          and create issues for actionable improvements.
-          Follow repository guidance and docs/factory/repository-review.md."
+        with:
+          gh-token: ${{ steps.factory-token.outputs.token }}
+          profile: review
+          prompt: >-
+            Review the full source snapshot of ${{ github.repository }} from scratch
+            and create issues for actionable improvements.
+            Follow repository guidance and docs/factory/repository-review.md.
