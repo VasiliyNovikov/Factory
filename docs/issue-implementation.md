@@ -102,42 +102,33 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 - Answer ordinary issue/PR comments and review summaries in their main conversation;
   they are not resolvable threads.
 - Answer absorbed feedback in the conversation where it was raised as well as the
-  triggering conversation, and verify each reply. A clean conflict check must not
+  triggering conversation, and verify each reply. An up-to-date PR must not
   discard feedback from a superseded pending job.
 
-## Merge-conflict maintenance
+## Default-branch maintenance
 
-- Every assignment involving an existing PR needs a current conflict assessment,
-  including after implementation changes.
+- Every assignment involving an existing eligible PR must merge the current remote
+  default branch whenever that revision is not already an ancestor of the PR head,
+  including after implementation changes. Cleanly mergeable branches are no exception.
+- Resolve any conflicts as part of the merge, preserving both histories and intended
+  changes. Blind side selection and weakened checks are not acceptable.
+- GitHub mergeability or policy status does not gate this work or replace
+  current-revision verification.
 - Push maintenance covers only `source_pr`; it cannot create issues or PRs, or
   expand the issue's scope.
 
-### Conflict evidence
+### Verification and blockers
 
-- Conflict status must describe the exact latest remote PR head and default-branch
-  revisions. An exact-revision local merge check is authoritative.
-- A behind branch, failing checks, or a blocked merge state is not conflict
-  evidence. Tool errors or incomplete evidence do not establish conflicts.
-- GitHub `mergeable` is supplementary evidence only when its reported head and
-  `base.sha` match the checked revisions. Unknown/null or stale API mergeability
-  is a verification limit, not failure of a successful exact-revision local check.
-
-### Repair outcomes
-
-- Maintenance alone must not merge clean/behind branches or create repair commits.
-  An explicitly requested base update is separate work, not a conflict repair.
-- Confirmed-conflict repairs must merge the checked default branch into the
-  existing PR branch while preserving both histories and intended changes.
-  Blind side selection and weakened checks are not acceptable.
-- Ambiguous intent, a required product decision, or an unverifiable repair needs
+- Ambiguous intent, a required product decision, or an unverifiable merge needs
   a specific blocker on the PR, not a speculative or partial push.
 - Eligibility and both remote revisions must still be current at mutation. Head
   or base drift requires reassessment and renewed checks, not overwritten work.
-- A resolved-conflict claim requires:
+- A completed base update requires:
   - The combined result passed required checks before a normal push.
   - The published remote head equals the checked commit.
-  - Both the previous PR head and integrated base remain ancestors.
-  - A clean authoritative check of the current remote head/default-branch pair.
+  - Both the previous PR head and current default-branch revision remain ancestors.
+  - A clean exact-revision local merge check of that remote head/default-branch pair;
+    GitHub's pending or stale mergeability is not failure of this authoritative check.
 - Results must identify checked revisions, conflict status, changes or blockers,
   and verification limits.
 - Unverified results, changed remote revisions, API errors, denied actions, or
@@ -164,10 +155,12 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 
 ## Skip and report
 
-- Skip stale or already-handled assignments before mutations, with evidence in
-  `GITHUB_STEP_SUMMARY` and no GitHub changes.
-- A push-only check with a verified clean head/base pair, no changes, no unhandled
-  feedback, and no errors or blockers is also a skip. Do not post no-op PR comments.
+- Skip stale or already-handled assignments before mutations only when no current
+  eligible work remains, including a required base merge. Record evidence in
+  `GITHUB_STEP_SUMMARY` and make no GitHub changes.
+- Push-only maintenance is a skip when the verified PR head already includes the
+  current default branch, with no changes, unhandled feedback, errors, or blockers.
+  Do not post no-op PR comments.
 - Once mutations begin, verify and report partial outcomes rather than claiming a skip.
 - Unless skipped before mutation, post a new Factory comment to the triggering
   conversation (`source_pr` when supplied, otherwise `issue_number`), even after
@@ -219,7 +212,7 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 - Issue-to-PR implementation and addressed-thread resolution ran in CI before the
   router migration. Central dispatch, clarification, duplicate-reply prevention,
   denied-resolution paths, and this refactor have not yet been exercised live.
-- Default-branch conflict-check fan-out still needs post-merge live verification.
+- Default-branch maintenance fan-out still needs post-merge live verification.
 - Implementation-owned decomposition, child triage, parent follow-ups, and
   partial/cancelled-split recovery still need live verification.
 - Static checks do not establish AI adherence or end-to-end GitHub behavior.

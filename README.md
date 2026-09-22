@@ -56,8 +56,8 @@ flowchart TD
     pr -->|Discussion or review| feedback
     ci -->|Failure or timeout| router
     base["Human / bot: default-branch update"] --> router
-    implementation -->|Confirmed merge conflicts| repair["Agentic: verified conflict repair<br/>Own PR only; preserve both histories"]
-    repair --> pr
+    implementation -->|Behind default branch| baseMerge["Agentic: verified base merge<br/>Own PR only; resolve conflicts"]
+    baseMerge --> pr
 
     diagnosticsTrigger["Automation: daily 00:00 UTC or manual<br/>Default branch only"] --> diagnostics{"Agentic: workflow diagnostics<br/>Identity: Factory"}
     diagnostics -->|First invocation| boundary["Agentic: establish boundary only<br/>No analysis or findings"]
@@ -77,12 +77,13 @@ or close issues. Implementation reuses existing child work on retries and does
 not duplicate it in a parent PR. Parent comments resume partial splits through
 the same implementation route; see [issue implementation](docs/issue-implementation.md).
 
-Default-branch updates check all eligible Factory PRs for merge conflicts; each
-maintenance assignment covers only one PR. Ordinary follow-ups check conflicts
-too. Verified repairs preserve both histories and intended changes. Clean/behind
-branches get no conflict-repair commit; clean maintenance checks without
-outstanding feedback, errors, or blockers skip without PR comments. Ambiguous
-resolutions get a blocker on the PR.
+Default-branch updates dispatch maintenance for all eligible Factory PRs; each
+worker handles only its assigned PR. Whenever a PR is behind the current default
+branch, implementation merges it and resolves any conflicts, including on ordinary
+follow-ups. Verified merges preserve both histories and intended changes. Push-only
+maintenance skips without PR comments only when the PR already includes the current
+default branch and there are no changes, outstanding feedback, errors, or blockers.
+Conflicts that cannot be resolved safely get a specific blocker on the PR.
 
 ## CI examples
 

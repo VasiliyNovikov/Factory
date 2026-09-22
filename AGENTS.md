@@ -61,9 +61,9 @@
   invocation, and result verification.
 - `.github/workflows/factory-router.yml` analyzes issue, comment, PR-target, submitted-review,
   workflow-completion, and default-branch push events with Copilot. Pushes dispatch
-  one conflict-maintenance worker per eligible Factory PR; other events dispatch at
-  most one worker. Router jobs run independently; worker AI owns freshness checks and
-  result verification. `docs/factory-router.md` defines dispatch inputs.
+  one default-branch maintenance worker per eligible Factory PR; other events
+  dispatch at most one worker. Router jobs run independently; worker AI owns
+  freshness checks and result verification. `docs/factory-router.md` defines dispatch inputs.
 - Submitted reviews directly run the router from the PR merge revision. Router
   and setup changes can execute before merge with the router's token permissions;
   this accepted risk and dispatch compatibility requirements are documented in
@@ -77,8 +77,8 @@
   comments, suggests decomposition when useful, and applies a unique tracking
   label followed by `triaged` when ready. It does not create issues or PRs.
 - `.github/workflows/issue-implementation.yml` implements triaged issues and feedback on
-  their Factory PRs, including merge-conflict maintenance, or creates native
-  sub-issues for independent delivery using the Factory App. Maintenance handles
+  their Factory PRs, including default-branch merges and conflict resolution, or
+  creates native sub-issues for independent delivery using the Factory App. Maintenance handles
   only the assigned PR. Its short invocation follows `docs/issue-implementation.md`;
   Copilot owns decomposition, recovery, freshness, and result verification.
   Unlike triage and review, implementation intentionally has no deterministic receipt check.
