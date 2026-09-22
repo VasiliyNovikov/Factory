@@ -22,6 +22,9 @@
   **how** using available tools and context. Keep instructions concise; prescribe
   procedures only where a required contract, safety boundary, or demonstrated
   failure makes them necessary. Avoid duplicating implementation details in docs.
+- When a prompt references a guidance document, keep detailed requirements in
+  that document rather than duplicating them in the prompt. Use the prompt for
+  the task and invocation-specific context.
 - Make guidance easy to scan: group related rules under descriptive headers and
   use focused bullets, with one independently actionable rule or condition per
   bullet. Split dense paragraphs and multi-rule bullets; keep closely related
@@ -56,6 +59,7 @@
   - [Issue triage and label handoff](docs/factory/issue-triage.md)
   - [Issue implementation and follow-ups](docs/factory/issue-implementation.md)
   - [Periodic workflow diagnostics](docs/factory/workflow-diagnostics.md)
+  - [Full repository source review](docs/factory/repository-review.md)
 - No application toolchain, dependency manifest, or build/test/lint commands are
   configured. Automated workflow tests are deferred for now.
 - AI setup and issue/PR-creation examples are documentation snippets, not installed
@@ -91,6 +95,12 @@
   and records results in the job summary. Its first invocation establishes a
   boundary without analysis. Diagnostics verification is AI-owned; no separate
   report/receipt-check job is required.
+- `.github/workflows/repository-review.yml` reviews the full source snapshot from
+  scratch daily or manually, using the existing `review` profile.
+  Copilot checks issues/PRs in all states for duplicates and publishes only new
+  actionable findings as unlabeled Factory issues for normal triage. Analysis is
+  read-only; verification and coverage reporting are AI-owned. Its completion is
+  not PR feedback. See `docs/factory/repository-review.md` for scope and token boundaries.
 
 ## Test value and verification
 

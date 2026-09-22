@@ -65,6 +65,9 @@ default branch before Factory can implement such an issue.
 Pull requests read, and Issues write on its App token. The built-in token supplies
 `actions: read` for same-repository run/job/log analysis. Copilot verifies issue
 creation with the App token and reports results in the job summary.
+[Repository review](repository-review.md) uses the same App permissions for source
+review and findings publication, but needs no built-in Actions access. Both workflows
+create unlabeled findings for normal triage without modifying existing work.
 
 The [Factory router](factory-router.md) uses the built-in token with Actions write
 for worker dispatch and Contents/Issues/Pull requests read for analysis. It needs
