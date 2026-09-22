@@ -47,7 +47,9 @@ needs, or skips it.
 - A non-deletion default-branch push routes all eligible Factory PRs, not just PRs
   referenced by the pushed commits. [Implementation eligibility](#implementation-eligibility)
   applies without requiring a comment, review, or CI failure.
-- Each eligible issue/PR gets its own implementation worker. Workers bring only
+- Push maintenance requires an existing PR; the PR-optional issue-only path does
+  not apply.
+- Each eligible PR gets its own implementation worker. Workers bring only
   their assigned PR up to date with the current default branch, resolving any
   conflicts. Routing does not depend on mergeability or conflict detection.
 - The job budget includes discovery, dispatch verification, and reporting of
@@ -96,12 +98,12 @@ Default-branch discovery therefore belongs here, not in each implementer.
 ## Dispatch and reporting
 
 - Dispatch on the current default branch. Default-branch pushes may dispatch one
-  implementation worker per eligible issue/PR; all other events dispatch at most
+  implementation worker per eligible PR; all other events dispatch at most
   one of the three workers.
 - Worker YAML defines its inputs; keep router changes compatible with that schema.
 - Supply target IDs and the expected PR head.
-- For implementation, `source_pr` and
-  `head_sha` are paired for PR feedback and omitted for issue events.
+- For implementation, `source_pr` and `head_sha` are paired for PR feedback and
+  push maintenance, and omitted for issue-only events.
 - Head drift requires reassessing conversation requests and review findings on the latest eligible
   revision, not discarding them.
 - CI evidence must match the current head or merge revision.

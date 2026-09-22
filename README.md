@@ -58,16 +58,6 @@ flowchart TD
     base["Human / bot: default-branch update"] --> router
     implementation -->|Behind default branch| baseMerge["Agentic: verified base merge<br/>Own PR only; resolve conflicts"]
     baseMerge --> pr
-
-    diagnosticsTrigger["Automation: daily 00:00 UTC or manual<br/>Default branch only"] --> diagnostics{"Agentic: workflow diagnostics<br/>Identity: Factory"}
-    diagnostics -->|First invocation| boundary["Agentic: establish boundary only<br/>No analysis or findings"]
-    diagnostics -->|Later invocations| workflowAnalysis["Agentic: analyze same-repository runs since previous diagnostics<br/>All workflows / outcomes; include previous run<br/>Parallel read-only Copilot subagents"]
-    workflowAnalysis --> findings["Agentic: consolidate findings<br/>Check issues / PRs in all states for duplicates"]
-    findings -->|New actionable findings only| diagnosticsIssue["Agentic: new unlabeled issue per finding<br/>Author: Factory"]
-    diagnosticsIssue --> router
-    boundary --> diagnosticsSummary["Agentic: verify actions and summarize results<br/>Job summary and logs"]
-    findings --> diagnosticsSummary
-    diagnosticsIssue --> diagnosticsSummary
 ```
 
 PR review runs on non-draft, same-repository PRs. Follow-ups require an open,
@@ -84,6 +74,26 @@ follow-ups. Verified merges preserve both histories and intended changes. Push-o
 maintenance skips without PR comments only when the PR already includes the current
 default branch and there are no changes, outstanding feedback, errors, or blockers.
 Conflicts that cannot be resolved safely get a specific blocker on the PR.
+
+## Workflow diagnostics
+
+[Workflow diagnostics](docs/workflow-diagnostics.md) analyzes past workflow runs
+separately from the main Factory workflow. New unlabeled findings issues enter the
+[Factory workflow](#factory-workflow) through the router and normal issue triage.
+
+```mermaid
+flowchart TD
+    diagnosticsTrigger["Automation: daily 00:00 UTC or manual<br/>Default branch only"] --> diagnostics{"Agentic: workflow diagnostics<br/>Identity: Factory"}
+    diagnostics -->|First invocation| boundary["Agentic: establish boundary only<br/>No analysis or findings"]
+    diagnostics -->|Later invocations| workflowAnalysis["Agentic: analyze same-repository runs since previous diagnostics<br/>All workflows / outcomes; include previous run<br/>Parallel read-only Copilot subagents"]
+    workflowAnalysis --> findings["Agentic: consolidate findings<br/>Check issues / PRs in all states for duplicates"]
+    findings -->|New actionable findings only| diagnosticsIssue["Agentic: new unlabeled issue per finding<br/>Author: Factory"]
+    diagnosticsIssue -->|Issue opened| router{"Agentic: Factory router<br/>Default branch; identity: Actions"}
+    router -->|Triage| triage{"Agentic: issue triage<br/>Identity: Factory"}
+    boundary --> diagnosticsSummary["Agentic: verify actions and summarize results<br/>Job summary and logs"]
+    findings --> diagnosticsSummary
+    diagnosticsIssue --> diagnosticsSummary
+```
 
 ## CI examples
 
