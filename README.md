@@ -98,7 +98,9 @@ identities.
 - `scripts/ai.sh` reads `.github/model-config.json` and invokes the selected CLI.
 - `GITHUB_TOKEN: ${{ github.token }}` authenticates both Copilot model requests and
   the `gh` commands in the basic examples. App-based PR creation sets `GH_TOKEN`
-  to the App token and `COPILOT_GITHUB_TOKEN` to the built-in token.
+  to the App token and `COPILOT_GITHUB_TOKEN` to the built-in token: three standard
+  variable names, two credentials. See [token names and identities](docs/factory/github-app.md#token-names-and-identities)
+  for tool precedence and separate Git push authentication.
 
 1. [Install AI tools and run a prompt](docs/examples/ai-tools.md)
 2. [Create a pull request](docs/examples/create-pull-request.md) — tested successfully.
