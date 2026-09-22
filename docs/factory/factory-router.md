@@ -1,6 +1,6 @@
 # Factory event router
 
-[Router AI](../.github/workflows/factory-router.yml) decides which workers an event
+[Router AI](../../.github/workflows/factory-router.yml) decides which workers an event
 needs, or skips it.
 
 - Keep the router simple and AI-driven.

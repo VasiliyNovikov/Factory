@@ -1,13 +1,13 @@
 # Issue and PR implementation
 
-[Implementation AI](../.github/workflows/issue-implementation.yml) handles triaged
+[Implementation AI](../../.github/workflows/issue-implementation.yml) handles triaged
 issues and feedback on their Factory PRs, selected by the [router](factory-router.md).
 
 - Copilot owns context gathering, freshness, implementation, decomposition,
   replies, and verification.
 - Choose a focused PR or native sub-issues for clear requests, update matching
   work, or ask/explain when work is unclear, blocked, or already satisfied.
-- Follow repository guidance, including the [test-value policy](../AGENTS.md#test-value-and-verification).
+- Follow repository guidance, including the [test-value policy](../../AGENTS.md#test-value-and-verification).
 
 ## Assignment and context
 

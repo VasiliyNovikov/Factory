@@ -44,16 +44,18 @@
   `README.md` tracks completed CI access milestones. No application code is
   implemented yet.
 - Keep documentation concise, maintainable, and synchronized with the code,
-  scripts, and workflows it describes. CI examples live in `docs/`:
-  - [AI tool setup and invocation](docs/ai-tools.md)
-  - [Factory GitHub App setup](docs/github-app.md)
-  - [PR creation](docs/create-pull-request.md)
-  - [Issue creation](docs/create-issue.md)
-  - [Central event routing and dispatch](docs/factory-router.md)
-  - [PR review](docs/pr-review.md)
-  - [Issue triage and label handoff](docs/issue-triage.md)
-  - [Issue implementation and follow-ups](docs/issue-implementation.md)
-  - [Periodic workflow diagnostics](docs/workflow-diagnostics.md)
+  scripts, and workflows it describes.
+- Reusable CI examples live in `docs/examples/`:
+  - [AI tool setup and invocation](docs/examples/ai-tools.md)
+  - [PR creation](docs/examples/create-pull-request.md)
+  - [Issue creation](docs/examples/create-issue.md)
+- Factory workflow guidance and shared App setup live in `docs/factory/`:
+  - [Factory GitHub App setup](docs/factory/github-app.md)
+  - [Central event routing and dispatch](docs/factory/factory-router.md)
+  - [PR review](docs/factory/pr-review.md)
+  - [Issue triage and label handoff](docs/factory/issue-triage.md)
+  - [Issue implementation and follow-ups](docs/factory/issue-implementation.md)
+  - [Periodic workflow diagnostics](docs/factory/workflow-diagnostics.md)
 - No application toolchain, dependency manifest, or build/test/lint commands are
   configured. Automated workflow tests are deferred for now.
 - AI setup and issue/PR-creation examples are documentation snippets, not installed
@@ -63,15 +65,15 @@
   workflow-completion, and default-branch push events with Copilot. Pushes dispatch
   one default-branch maintenance worker per eligible Factory PR; other events
   dispatch at most one worker. Router jobs run independently; worker AI owns
-  freshness checks and result verification. `docs/factory-router.md` defines dispatch inputs.
+  freshness checks and result verification. `docs/factory/factory-router.md` defines dispatch inputs.
 - Submitted reviews directly run the router from the PR merge revision. Router
   and setup changes can execute before merge with the router's token permissions;
   this accepted risk and dispatch compatibility requirements are documented in
-  `docs/factory-router.md`. Other router triggers use the default branch.
+  `docs/factory/factory-router.md`. Other router triggers use the default branch.
 - Review, triage, and implementation are dispatch-only workers. Factory setup
   checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
 - `.github/workflows/pr-review.yml` reviews non-draft, same-repository PRs and
-  verifies that Copilot posted a review unless AI skipped a stale/handled task. See the PR-review example
+  verifies that Copilot posted a review unless AI skipped a stale/handled task. See the PR-review guidance
   for triggering and bot-approval constraints.
 - `.github/workflows/issue-triage.yml` assesses assigned untriaged issues and clarification
   comments, suggests decomposition when useful, and applies a unique tracking
@@ -79,7 +81,7 @@
 - `.github/workflows/issue-implementation.yml` implements triaged issues and feedback on
   their Factory PRs, including default-branch merges and conflict resolution, or
   creates native sub-issues for independent delivery using the Factory App. Maintenance handles
-  only the assigned PR. Its short invocation follows `docs/issue-implementation.md`;
+  only the assigned PR. Its short invocation follows `docs/factory/issue-implementation.md`;
   Copilot owns decomposition, recovery, freshness, and result verification.
   Unlike triage and review, implementation intentionally has no deterministic receipt check.
   See that guidance for permissions, per-issue concurrency, and PR tracking.

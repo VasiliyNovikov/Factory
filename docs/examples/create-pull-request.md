@@ -59,4 +59,4 @@ run alone does not prove the PR was created. Check the reported URL with
 `gh pr view <URL>`, or add an explicit CI existence check.
 
 For automatic downstream workflow runs and a separate PR author/reviewer identity,
-follow the [Factory GitHub App setup](github-app.md).
+follow the [Factory GitHub App setup](../factory/github-app.md).

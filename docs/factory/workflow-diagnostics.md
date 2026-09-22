@@ -1,6 +1,6 @@
 # Diagnose workflow runs
 
-[Workflow diagnostics](../.github/workflows/workflow-diagnostics.yml) runs daily
+[Workflow diagnostics](../../.github/workflows/workflow-diagnostics.yml) runs daily
 at **00:00 UTC** (`0 0 * * *`) or manually from **Actions → Workflow diagnostics
 → Run workflow** on the default branch. Manual dispatches on other refs skip;
 scheduled runs use the default branch and can be delayed by GitHub. Checkout uses
