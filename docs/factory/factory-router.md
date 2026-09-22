@@ -19,8 +19,14 @@ needs, or skips it.
   - The source belongs to this repository's default-branch `pr-review.yml`.
   - The exact attempt's `review` job completed successfully, including its
     posted-review verification. Failed, cancelled, or skipped assessments cannot route.
-  - The supplied PR has a `github-actions[bot]` review containing
-    `factory-review:RUN_ID:RUN_ATTEMPT` and the full reviewed `commit_id`.
+  - The supplied PR has a `github-actions[bot]` review whose body contains
+    `factory-review:RUN_ID:RUN_ATTEMPT` and explicitly identifies the full reviewed
+    SHA, matching that source attempt's `PR_HEAD_SHA`.
+- Use that recorded SHA for feedback correlation. GitHub can advance a surviving
+  review's API `commit_id` after the branch moves; neither that later value nor
+  the run's default-branch `head_sha` replaces the reviewed revision.
+  Missing or conflicting source evidence is a verification failure, not an
+  already-handled or stale skip.
 - The notification job can still be running when the router starts; use the
   completed assessment job, not the enclosing workflow's in-progress status.
   A notification-only retry preserves the successful review job's original
@@ -117,8 +123,9 @@ Default-branch discovery therefore belongs here, not in each implementer.
   TODO: Support routing for standalone inline replies and edited comments.
 - Factory reviews posted with `GITHUB_TOKEN` arrive through the explicit
   review-completion notification above.
-- Their findings must belong to that run and the review's `commit_id`, not the
-  review worker's default-branch SHA.
+- Their findings must belong to that run and its
+  [verified reviewed SHA](#review-completion-delivery), not the review worker's
+  default-branch SHA.
 - An older reviewed SHA does not invalidate a finding; route outstanding findings
   that remain applicable to the current code.
 - API errors are failures, not no-work decisions.

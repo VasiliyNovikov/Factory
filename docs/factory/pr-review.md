@@ -60,9 +60,10 @@ The router [verifies the source assessment](factory-router.md#review-completion-
 and can dispatch implementation for findings still applicable to current code,
 even if the PR advanced after posting. The review job exports its attempt so
 notification-only retries retain the original review marker. The router
-correlates that marker and the review's `commit_id`, not the dispatched
-workflow's default-branch `head_sha`. Native PR-review completion events are
-excluded from routing to avoid duplicate delivery.
+correlates that marker and the reviewed SHA recorded in the review body, not a
+later API `commit_id` or the dispatched workflow's default-branch `head_sha`.
+Native PR-review completion events are excluded from routing to avoid duplicate
+delivery.
 
 ## Identity and execution
 
