@@ -38,9 +38,10 @@ implementation**, not just inspected. Do not implement code or create issues or 
 - Skip before mutation when an equivalent Factory approval request or rejection
   reply already covers unchanged discussion. A clarification that does not supply
   the missing owner decision is not approval.
-- After explicit owner approval, verify its author, link, scope, and continued
-  applicability, then assess readiness normally. Ask about any new external
-  scope separately; approval is not an automatic ready decision.
+- After explicit owner approval, apply the
+  [shared decision checks](participant-approval.md#scoped-owner-decisions), then
+  assess readiness normally. Ask about any new external scope separately;
+  approval is not an automatic ready decision.
 - Verify approval again before the ready comment and each label mutation.
   Existing Factory comments or labels cannot approve external work.
 
