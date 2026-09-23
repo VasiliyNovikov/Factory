@@ -20,7 +20,7 @@
     "longContext": true
   },
   "review": {
-    "model": "claude-opus-5",
+    "model": "claude-opus-5.5",
     "reasoningEffort": "max",
     "longContext": true
   }
