@@ -48,9 +48,20 @@ or isolation from untrusted content.
 - Verify the request's content and edit history to establish the scope the owner
   approved. Later edits cannot expand that approval; materially expanded,
   ambiguous, or unverifiable scope needs a new, specific owner decision.
-- Read the full current discussion and honor the latest applicable owner decision.
-  Rejection or revocation holds further work until the owner explicitly approves
-  again.
+- Before relying on an earlier approval, check the conversation's complete,
+  paginated `CommentDeletedEvent` history (`actor`, `deletedCommentAuthor`,
+  `createdAt`).
+  - A non-owner deletion of an owner-authored comment requires a hold and a new,
+    verified owner decision after that deletion.
+  - Unknown deletion actors/authors or incomplete/unverifiable history are
+    blockers, not permission to infer approval from surviving comments.
+- Read the full current discussion, including minimized comments (`isMinimized`,
+  `minimizedReason`), and honor the latest applicable owner decision. Minimization
+  does not revoke, supersede, or restore a decision; its content retains its
+  meaning. Unreadable decision content is a blocker.
+- Rejection or revocation holds further work until the owner explicitly approves
+  again. Deleting a decision cannot restore an earlier approval, even when the
+  owner performed the deletion.
 - An approved issue does not authorize unrelated external comments, reviews,
   or later scope changes. An unrelated writer comment, Factory reply, prior
   dispatch, or existing `triaged`/tracking labels cannot supply missing approval.
