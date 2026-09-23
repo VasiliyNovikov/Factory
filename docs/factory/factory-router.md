@@ -181,8 +181,8 @@ Default-branch discovery therefore belongs here, not in each implementer.
 
 - Router runs are independent.
 - Workers coordinate per issue/PR and check freshness before acting.
-- Review jobs may cancel reviews of the same PR and head SHA; different heads
-  cannot cancel each other.
+- Review jobs serialize per PR/head without cancelling the active assessment or
+  its posted-review check. Different heads run independently.
 - Triage and implementation preserve active jobs.
 - Push maintenance and ordinary feedback share the existing per-issue worker
   concurrency.
@@ -225,7 +225,8 @@ Default-branch discovery therefore belongs here, not in each implementer.
   (or evidenced no-op). The submitted-review router still uses the PR merge
   revision; dispatched workers use the default branch.
 - Record the source/run/worker links, approval/already-handled/ineligible no-ops,
-  failed/skipped-assessment exclusion, and duplicate prevention. Dispatch
+  failed/skipped-assessment exclusion, and duplicate prevention, including
+  [overlapping same-head reviews](pr-review.md#verification-limits). Dispatch
   acceptance is not completed implementation. This live check remains pending.
 - Default-branch fan-out needs post-merge verification; a PR cannot exercise its
   changed default-branch push trigger before deployment.

@@ -74,8 +74,9 @@ completed implementation.
   keeps `COPILOT_GITHUB_TOKEN` on that token; never substitute it for reviewer API calls.
 - The dispatch-only worker runs on the default branch, checks out `github.workflow_sha`,
   and uses the `review` [model profile](../../.github/model-config.json).
-- Same-PR/head jobs cancel older reviews. Different heads cannot cancel each
-  other; each worker remains responsible for checking freshness before posting.
+- Same-PR/head jobs preserve the active review through its posted-review check;
+  pending jobs may be superseded. Different heads run independently, and each
+  worker still checks freshness and outstanding requests before posting.
 - App approvals require the installation's Pull requests write grant and remain
   subject to repository review policies and GitHub's self-approval restriction.
 - User/App-authenticated PR changes trigger routing; `GITHUB_TOKEN`-generated PR
@@ -94,4 +95,6 @@ The reviewer-App migration still needs live verification after it reaches the
 default branch. Link a successful App-authored assessment to its submitted-review
 router run and any correlated implementation worker, including approval,
 already-handled, ineligible, and failed/skipped-assessment no-op evidence.
+Verify that a same-head redispatch after submission preserves the active
+assessment and delivers its findings once.
 Earlier built-in-token reviews do not verify the new App's grants or event delivery.
