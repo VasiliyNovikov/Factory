@@ -126,6 +126,14 @@ result verification. Keep common decisions here rather than maintaining two poli
 - Reconcile uncertain responses before retrying; never blindly dispatch again.
   A terminal failed/timed-out/cancelled worker may justify recovery only after
   checking its partial mutations, current eligibility, and remaining work.
+- Do not automatically repeat an unsuccessful recovery (failure, timeout, or
+  cancellation) for the same worker, target, revisions, and outstanding request
+  across coordinators:
+  - Retry requires changed evidence: a new PR head or relevant default-branch
+    revision, new actionable feedback/request, or an explicit human rerun/retry request.
+  - Another scheduled/manual sweep, elapsed time, or the worker's own failure
+    report does not qualify.
+  - Report unchanged failures as blocked with links to the failed attempts.
 - Reruns must reconcile accepted targets across attempts of the originating run
   and other coordinators, then recover only remaining eligible work. Report
   accepted, uncertain, blocked, and undispatched targets separately, with revisions

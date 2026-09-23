@@ -38,9 +38,11 @@ It dispatches existing workers, not repairs, findings issues, or another router.
   - An eligible Factory PR has outstanding implementation feedback, applicable
     current-revision CI failures, or lacks the current default-branch revision.
 - Apply shared eligibility, feedback-source verification, human holds, and duplicate
-  checks before selecting a worker. A failed review needs a fresh review, not
-  implementation of unverified findings. Skipped/stale runs require reassessment
-  of current need; their conclusion alone does not justify another dispatch.
+  checks, including the [unsuccessful-recovery retry gate](routing-policy.md#dispatch-reconciliation-and-retries),
+  before selecting a worker. When retry is permitted, a failed review needs a
+  fresh review, not implementation of unverified findings. Skipped/stale runs
+  require reassessment of current need; their conclusion alone does not justify
+  another dispatch.
 - For base recovery, compare the exact live PR head/default-branch ancestry;
   GitHub mergeability, an old push SHA, or the PR's age is not evidence of currency.
   Assign base-only maintenance to that existing PR with the implementation
@@ -96,9 +98,11 @@ policy and entry-point wiring, not a wording-only test suite:
 |---|---|
 | Ready comment and matching tracking label, no `triaged`, interrupted triage, no active equivalent | Dispatch triage to reassess and finish the handoff; do not label directly. |
 | Ready issue, no branch/PR/child-owned work or active implementation | Dispatch issue-only implementation. |
-| Review posted but source assessment failed its receipt check | Dispatch a fresh current-head review if still needed; do not forward its findings. |
+| Review posted but source assessment failed its receipt check; retry gate permits recovery | Dispatch a fresh current-head review if still needed; do not forward its findings. |
 | Current successful review and no new reassessment request | No review dispatch. |
 | Matching current assignment queued/running under the ordinary router | No equivalent recovery dispatch. |
+| Recovery failed/timed out/cancelled; same worker, target, revisions, and request in a later scheduled/manual sweep | Record the blocker and failed run links; no equivalent dispatch. |
+| After failed recovery, relevant revision or actionable feedback changes, or a human explicitly requests retry | Reassess eligibility, partial outcomes, and active work before dispatching remaining work. |
 | Unanswered Factory question, pending owner decision, rejection, or parent awaiting children | Record the hold; no recovery dispatch without changed evidence. |
 | Factory PR missing the live default revision, otherwise eligible and unblocked | Dispatch PR-scoped implementation for a base update, not issue creation. |
 | Batch accepted A, response for B uncertain, C not attempted | Reconcile A/B before retries; dispatch C only if still eligible. Report partial recovery. |
@@ -107,4 +111,5 @@ policy and entry-point wiring, not a wording-only test suite:
 Static/contract checks and these manual decisions do not prove AI adherence, race
 freedom, or live GitHub recovery. After merge, verify scheduled/manual runs with
 worker links and results, ordinary-routing overlap, active/handled/held no-ops,
-and interrupted-batch recovery. No live schedule is exercised by a PR alone.
+unchanged failed-recovery holds, and interrupted-batch recovery. No live schedule
+is exercised by a PR alone.
