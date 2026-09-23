@@ -38,8 +38,6 @@ jobs:
 
       - name: Analyze workflows with parallel Copilot subagents
         uses: ./.github/actions/ai
-        env:
-          FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
           prompt: >-
