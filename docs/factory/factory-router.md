@@ -64,7 +64,7 @@ needs, or skips it.
 - An existing PR is not required for issue-only work; implementation may create
   a PR or native sub-issues.
 - When a PR already exists, it must:
-  - Be open, in the same repository, and authored by `factory-identity[bot]`.
+  - Be open, in the same repository, and authored by `factory-worker-bot[bot]`.
   - Use branch `factory/issue-NUMBER`, targeting the default branch.
   - Carry `triaged` and exactly the same tracking label as the original issue.
 

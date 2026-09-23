@@ -66,5 +66,8 @@ Profiles supply `model`, `reasoningEffort`, and `longContext` without schema
 validation. `longContext` applies only to Copilot. Unknown names fail rather than
 falling back to `default`.
 
+PR review and full-repository review share `review`; changing that profile updates
+both reviewers.
+
 Build on this setup to [create a pull request](create-pull-request.md) or
 [create an issue](create-issue.md).
