@@ -26,8 +26,9 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
   scope and individual requests throughout the discussion. Only authorized
   requests count as outstanding feedback; a trusted triggering comment does not
   adopt unrelated external feedback.
-- Review-worker findings must belong to the source review and its `commit_id`,
-  not the worker run's default-branch `head_sha`.
+- Review-worker findings must belong to the source review and its
+  [verified reviewed SHA](factory-router.md#feedback-and-event-handling), not a later
+  API `commit_id` or the worker run's default-branch `head_sha`.
 - CI evidence must match the current PR head or merge revision.
 
 ## Eligibility and ownership

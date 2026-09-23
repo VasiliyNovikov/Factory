@@ -88,8 +88,9 @@
   Workers recheck individual requests, preserving configured Factory automation
   without trusting arbitrary bots or using labels as approval.
 - `.github/workflows/pr-review.yml` reviews non-draft, same-repository PRs and
-  verifies that Copilot posted a review unless AI skipped a stale/handled task. See the PR-review guidance
-  for triggering and bot-approval constraints.
+  verifies that Copilot posted a review unless AI skipped a stale/handled task.
+  Reviews use a separate App and reach the router through native submitted-review
+  events. See the PR-review guidance for triggering and bot-approval constraints.
 - `.github/workflows/issue-triage.yml` assesses assigned untriaged issues and clarification
   comments, requests owner approval for external issues, suggests decomposition
   when useful, and applies a unique tracking label followed by `triaged` when
