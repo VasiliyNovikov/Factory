@@ -26,8 +26,13 @@ needs, or skips it.
 - The submitted-review event can arrive before the assessment finishes. Wait
   within the job budget for source verification; do not discard the only event
   as already handled while the receipt check is pending. Incomplete or failed
-  verification is a failure, not a skip. A native rerun of this router run can
-  recover after the source assessment succeeds, with fresh duplicate checks.
+  verification is a failure, not a skip.
+- A router rerun can recover pending or transiently unverifiable source evidence
+  only if that same source attempt ultimately succeeds, with fresh duplicate checks.
+  For a failed, timed-out, or cancelled assessment, report recovery via a native
+  rerun of the review worker (or a new current-head review request if the PR
+  advanced), not a router-only rerun. The [replacement assessment](pr-review.md#skip-and-report)
+  must post a fresh marked review; unsuccessful submissions are not completed coverage.
 - Use that recorded SHA for feedback correlation. GitHub can advance a surviving
   review's API `commit_id` after the branch moves; neither that later value nor
   the run's default-branch `head_sha` replaces the reviewed revision.
@@ -49,7 +54,8 @@ needs, or skips it.
   reviewer reassessment.
 - The PR must be open, non-draft, and from this repository.
 - Review the current head.
-- Distinguish a new review request from an already-covered event.
+- Distinguish a new review request from an already-covered event; prior Factory
+  reviews follow the [successful-assessment coverage rule](pr-review.md#skip-and-report).
 
 ### [Issue / PR implementation](issue-implementation.md)
 

@@ -39,8 +39,17 @@ changing or executing it.
 - Skip stale or already-covered assignments only before mutation: write
   `skipped=true` to `GITHUB_OUTPUT`, record evidence in `GITHUB_STEP_SUMMARY`,
   and make no GitHub changes.
+- An already-covered skip based on a prior Factory review requires verified
+  successful source-assessment completion, including its posted-review check.
+  Failed, timed-out, cancelled, skipped, or unverified attempts are not coverage.
+- If allowed reads cannot establish that completion, record the limitation and
+  perform the requested assessment; do not change tokens or permissions.
+- For an eligible rerun or replacement of an unsuccessful assessment, reassess
+  the current code and discussion, retain still-applicable findings, and submit
+  a fresh review with this attempt's `REVIEW_MARKER`.
 - Once mutations begin, verify and report partial outcomes rather than skipping.
-  Reconcile uncertain submissions before retrying to avoid duplicate reviews.
+  Reconcile uncertain submissions from this attempt before retrying to avoid
+  duplicate reviews.
 - Confirm the submitted review is authored by `REVIEWER_LOGIN` and satisfies the outcome
   contract above; a successful CLI exit is not proof.
 - Record the review URL, decision, verification evidence, and outstanding work in
@@ -96,5 +105,8 @@ default branch. Link a successful App-authored assessment to its submitted-revie
 router run and any correlated implementation worker, including approval,
 already-handled, ineligible, and failed/skipped-assessment no-op evidence.
 Verify that a same-head redispatch after submission preserves the active
-assessment and delivers its findings once.
+assessment and delivers its findings once. Also verify recovery after
+post-submission failure, timeout, or cancellation: the unsuccessful assessment
+cannot dispatch implementation, and a fresh marked assessment can deliver
+still-actionable findings without an already-covered skip.
 Earlier built-in-token reviews do not verify the new App's grants or event delivery.
