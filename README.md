@@ -23,8 +23,13 @@ but creates no issues. Implementation chooses a focused PR or native sub-issues.
 A PR carries both labels; a split parent stays open with its existing labels.
 Each child enters normal triage and receives its own tracking identity when ready.
 
-**Actors:** Agentic blocks use Copilot in CI; human / bot input can come from a
-human or another bot under its own account. Automation denotes CI runs and checks.
+**Actors:** Agentic blocks use Copilot in CI. Writers' own requests and configured
+Factory automation proceed normally; external human/bot requests need scoped
+[repository-owner approval](docs/factory/participant-approval.md). AI can inspect
+external input and ask the owner to approve or reject an issue before normal
+triage. Approval does not mark it ready or authorize unrelated later feedback.
+This is an AI-owned hold, not a pre-Copilot gate or spending limit.
+Automation denotes CI runs and checks.
 
 **Identities:** Factory = `factory-worker-bot[bot]`; Actions = `github-actions[bot]`.
 Running in Actions does not make Factory-created content Actions-authored.
@@ -36,6 +41,9 @@ flowchart TD
     router -->|Implement| implementation["Agentic: issue implementation<br/>Identity: Factory"]
     router -->|Review| review{"Agentic: PR review<br/>Review author: Actions"}
     router -->|No actionable work| skip["Skip with reason"]
+    triage -->|External issue needs approval| ownerRequest["Agentic: ask owner to approve / reject scope<br/>Comment author: Factory; labels unchanged"]
+    ownerRequest --> ownerDecision["Human: approval / rejection in a new issue comment<br/>Author: repository owner"]
+    ownerDecision --> router
     triage -->|Not ready| clarification["Agentic: clarification or explanation<br/>Comment author: Factory"]
     clarification --> answer["Human / bot: answer or comment<br/>Author: submitting account"]
     answer --> router
@@ -154,3 +162,4 @@ in the job summary and logs.
 5. [Diagnose workflow runs and create actionable issues](docs/factory/workflow-diagnostics.md)
 6. [Route events to default-branch workers](docs/factory/factory-router.md)
 7. [Review the whole repository and create actionable issues](docs/factory/repository-review.md)
+8. [Approve external requests before substantive work](docs/factory/participant-approval.md)

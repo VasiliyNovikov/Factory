@@ -22,6 +22,10 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
   - Source evidence, including failed CI logs when applicable.
 - Conversation requests and review findings remain actionable when they still
   apply to current code, regardless of head drift or outdated inline locations.
+- Apply [participant approval](participant-approval.md) to the original issue
+  scope and individual requests throughout the discussion. Only authorized
+  requests count as outstanding feedback; a trusted triggering comment does not
+  adopt unrelated external feedback.
 - Review-worker findings must belong to the source review and its `commit_id`,
   not the worker run's default-branch `head_sha`.
 - CI evidence must match the current PR head or merge revision.
@@ -30,6 +34,10 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 
 - Editing and GitHub mutations require freshly verified eligibility and a current
   work revision; the dispatched `head_sha` alone is not evidence of freshness.
+- Recheck any required owner approval before implementation, decomposition, or
+  maintenance and their mutations. Missing, ambiguous, or revoked approval needs
+  an owner-decision hold, not a code change. Existing handoff labels and a Factory
+  PR do not replace approval; explain the hold using the normal reporting contract.
 - The original issue must be open with `triaged` and exactly one tracking label,
   `factory-issue-NUMBER`, matching its issue number.
 - Each issue owns branch `factory/issue-NUMBER`. Existing work in any PR state
@@ -170,6 +178,8 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
   - The PR link when available.
   - Child links and any incomplete decomposition work when applicable.
   - Addressed/outstanding feedback with thread links.
+  - Required owner approval with its source link and adopted scope, or the
+    specific outstanding owner decision.
 - Claimed outcomes require confirmed remote state:
   - The checked commit and eligible PR metadata for code changes.
   - The native child relationships and eligible parent for decomposition.

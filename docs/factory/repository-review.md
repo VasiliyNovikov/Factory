@@ -87,3 +87,6 @@ issue creation and triage; this new workflow still needs live verification.
   Any delegated analysis has the same read-only scope and token boundaries.
   These are behavioral constraints, not a sandbox separating analysis from the
   coordinator's Issues write access.
+- Apply [participant approval](participant-approval.md) to external discussion
+  requests. Publishing them as Factory findings does not confer approval;
+  findings must come from this workflow's own evidenced source review.
