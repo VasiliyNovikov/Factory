@@ -80,8 +80,9 @@
 - Review, triage, and implementation are dispatch-only workers. Factory setup
   checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
 - `.github/workflows/pr-review.yml` reviews non-draft, same-repository PRs and
-  verifies that Copilot posted a review unless AI skipped a stale/handled task. See the PR-review guidance
-  for triggering and bot-approval constraints.
+  verifies that Copilot posted a review unless AI skipped a stale/handled task.
+  Reviews use a separate App and reach the router through native submitted-review
+  events. See the PR-review guidance for triggering and bot-approval constraints.
 - `.github/workflows/issue-triage.yml` assesses assigned untriaged issues and clarification
   comments, suggests decomposition when useful, and applies a unique tracking
   label followed by `triaged` when ready. It does not create issues or PRs.

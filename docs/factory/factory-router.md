@@ -15,14 +15,14 @@ needs, or skips it.
   reviewer reassessment.
 - The PR must be open, non-draft, and from this repository.
 - Review the current head.
-- Distinguish a new review request from an already-covered event.
+- Distinguish a new review request from an already-covered event; prior Factory
+  reviews follow the [successful-assessment coverage rule](pr-review.md#skip-and-report).
 
 ### [Issue / PR implementation](issue-implementation.md)
 
 - An issue receives `triaged`.
 - An issue or PR conversation contains actionable implementation feedback.
 - A submitted review contains findings or change requests, including inline findings.
-- A completed Factory review has outstanding findings still applicable to the current code.
 - PR-linked CI fails or times out at the current head or merge revision.
 
 #### Implementation eligibility
@@ -69,7 +69,7 @@ Default-branch discovery therefore belongs here, not in each implementer.
 
 ## Skip
 
-- Factory's own comments/reviews.
+- `factory-worker-bot[bot]` comments/reviews.
 - Approvals.
 - Unrelated labels or events.
 - Closed targets or fork PRs.
@@ -89,9 +89,19 @@ Default-branch discovery therefore belongs here, not in each implementer.
 - Main conversation comments and submitted reviews trigger routing.
 - Standalone inline replies and edited comments do not trigger routing.
   TODO: Support routing for standalone inline replies and edited comments.
-- Factory reviews posted with `GITHUB_TOKEN` arrive through workflow completion.
-- Their findings must belong to that run and the review's `commit_id`, not the
-  review worker's default-branch SHA.
+- Reviewer-App submissions use `pull_request_review: submitted`; PR-review
+  `workflow_run` events are excluded to avoid duplicate delivery.
+- Before routing reviewer-App findings, verify:
+  - The review belongs to the event's PR, is authored by `REVIEWER_LOGIN`, and its
+    marker identifies this repository's default-branch `pr-review.yml` attempt.
+  - The full reviewed SHA in the body matches that attempt's `PR_HEAD_SHA`, not a
+    later review API `commit_id` or the worker's default-branch `head_sha`.
+  - The source assessment succeeded without skipping, including its posted-review
+    check. If the event arrives first, wait within the job budget for completion.
+- Failed, incomplete, or conflicting source verification is a failure, not a skip.
+  A router rerun requires that same source attempt to succeed; failed, timed-out,
+  or cancelled assessments need a [fresh assessment](pr-review.md#skip-and-report)
+  via a review-worker rerun or a current-head review request.
 - An older reviewed SHA does not invalidate a finding; route outstanding findings
   that remain applicable to the current code.
 - API errors are failures, not no-work decisions.
@@ -112,6 +122,7 @@ Default-branch discovery therefore belongs here, not in each implementer.
 - `source` is a JSON-encoded object of
   source identifiers: `event`, `action`, and applicable `issue_number`, `pr_number`,
   `comment_id`, `review_id`, `run_id`, `run_attempt`.
+- Include the verified source assessment's `run_id`/`run_attempt` for reviewer-App findings.
 - For push maintenance, include `event: "push"`, `ref`, and `after` in `source` for
   provenance, not as a substitute for workers' live revision checks.
 - Workers receive these inputs, not the original webhook.
@@ -127,6 +138,8 @@ Default-branch discovery therefore belongs here, not in each implementer.
 - Uncertain dispatches cannot be blindly retried; old-revision evidence does not
   establish coverage of current work.
 - Avoid duplicate retries.
+  For review feedback, reconcile the verified review ID and source run/attempt
+  with pending/running implementation tasks and earlier dispatches.
 - Record the decision, reason, source, and worker link when available in the job summary.
 - `GITHUB_STEP_SUMMARY` is an existing runner-provided file. Preserve its current
   content when adding the report; do not use a create-only file operation.
@@ -139,8 +152,8 @@ Default-branch discovery therefore belongs here, not in each implementer.
 
 - Router runs are independent.
 - Workers coordinate per issue/PR and check freshness before acting.
-- Review jobs may cancel reviews of the same PR and head SHA; different heads
-  cannot cancel each other.
+- Review jobs serialize per PR/head without cancelling the active assessment or
+  its posted-review check. Different heads run independently.
 - Triage and implementation preserve active jobs.
 - Push maintenance and ordinary feedback share the existing per-issue worker
   concurrency.
@@ -164,7 +177,8 @@ Default-branch discovery therefore belongs here, not in each implementer.
 - Other router events and all workers use the default branch.
 - Setup checkouts use `github.workflow_sha` to match the executing workflow.
 - Manual jobs skip non-default refs in workflow versions containing the guard.
-- The central routing path has not yet been verified live on GitHub.
+- Central review dispatch has been verified live. The reviewer-App handoff still
+  needs [post-deployment verification](pr-review.md#verification-limits).
 - Default-branch fan-out needs post-merge verification; a PR cannot exercise its
   changed default-branch push trigger before deployment.
 - Static checks do not establish AI adherence or end-to-end event delivery.
