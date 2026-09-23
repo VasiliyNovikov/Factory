@@ -26,15 +26,16 @@ Each child enters normal triage and receives its own tracking identity when read
 **Actors:** Agentic blocks use Copilot in CI; human / bot input can come from a
 human or another bot under its own account. Automation denotes CI runs and checks.
 
-**Identities:** Factory = `factory-worker-bot[bot]`; Actions = `github-actions[bot]`.
-Running in Actions does not make Factory-created content Actions-authored.
+**Identities:** Factory = `factory-worker-bot[bot]`;
+Reviewer = `factory-reviewer-bot[bot]`; Actions = `github-actions[bot]`.
+Running in Actions does not make App-created content Actions-authored.
 
 ```mermaid
 flowchart TD
     issue["Human / bot: new untriaged issue<br/>Author: submitting account"] --> router{"Agentic: Factory router<br/>Default branch except submitted reviews<br/>Independent events; identity: Actions"}
     router -->|Triage| triage{"Agentic: issue triage<br/>Identity: Factory"}
     router -->|Implement| implementation["Agentic: issue implementation<br/>Identity: Factory"]
-    router -->|Review| review{"Agentic: PR review<br/>Review author: Actions"}
+    router -->|Review| review{"Agentic: PR review<br/>Review author: Reviewer"}
     router -->|No actionable work| skip["Skip with reason"]
     triage -->|Not ready| clarification["Agentic: clarification or explanation<br/>Comment author: Factory"]
     clarification --> answer["Human / bot: answer or comment<br/>Author: submitting account"]
@@ -50,8 +51,8 @@ flowchart TD
     reply -->|New feedback| feedback["Human / bot: issue / PR comments or submitted reviews<br/>Author: submitting account"]
     feedback -->|Comments and submitted reviews| router
     pr -->|PR events| router
-    review -->|Verified assessment: completion dispatch| router
-    review -->|Clean and approval permitted| approval["Agentic: approval<br/>Review author: Actions"]
+    review -->|App-authored submitted review| router
+    review -->|Clean and approval permitted| approval["Agentic: approval<br/>Review author: Reviewer"]
     pr --> ci["Automation: PR-linked CI<br/>Checks produced by: GitHub Actions"]
     pr -->|Discussion or review| feedback
     ci -->|Failure or timeout| router
@@ -120,6 +121,9 @@ repository's scripts and require no PAT or custom secret. App-based PR creation 
 [GitHub App setup](docs/factory/github-app.md) with `FACTORY_CLIENT_ID` and
 `FACTORY_PRIVATE_KEY` for automatic downstream runs and distinct PR author/reviewer
 identities.
+PR review uses a separate App with `FACTORY_REVIEWER_CLIENT_ID` and
+`FACTORY_REVIEWER_PRIVATE_KEY`; see [reviewer setup](docs/factory/github-app.md#configure-the-reviewer-app).
+Its native submitted-review handoff still needs post-merge live verification.
 
 - `scripts/install-tools.sh` installs standalone Copilot CLI and OpenCode via their
   official scripts (no Node.js/npm setup), plus missing `jq`.
@@ -151,7 +155,7 @@ actionable findings through triage. It verifies its actions and summarizes resul
 in the job summary and logs.
 
 1. [Factory GitHub App setup](docs/factory/github-app.md)
-2. [PR review](docs/factory/pr-review.md) — comment reviews tested successfully; approvals pending.
+2. [PR review](docs/factory/pr-review.md) — prior built-in-token comment reviews tested; reviewer-App verification pending.
 3. [Triage issues before implementation](docs/factory/issue-triage.md)
 4. [Implement a triaged issue or decompose it into sub-issues](docs/factory/issue-implementation.md)
 5. [Diagnose workflow runs and create actionable issues](docs/factory/workflow-diagnostics.md)

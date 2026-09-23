@@ -30,7 +30,7 @@ changing or executing it.
     variable in the body.
 - Use `COMMENT` for findings, with paths, lines, impact, and suggested fixes;
   use inline comments where possible.
-- If clean, use `APPROVE`. For `github-actions[bot]`-authored PRs, use `COMMENT`
+- If clean, use `APPROVE`. For PRs authored by `REVIEWER_LOGIN`, use `COMMENT`
   explaining the self-approval restriction instead.
 - Never approve an incomplete review. Report incomplete work or API failures accurately.
 
@@ -41,41 +41,43 @@ changing or executing it.
   and make no GitHub changes.
 - Once mutations begin, verify and report partial outcomes rather than skipping.
   Reconcile uncertain submissions before retrying to avoid duplicate reviews.
-- Confirm the submitted `github-actions[bot]` review satisfies the outcome
+- Confirm the submitted review is authored by `REVIEWER_LOGIN` and satisfies the outcome
   contract above; a successful CLI exit is not proof.
 - Record the review URL, decision, verification evidence, and outstanding work in
   `GITHUB_STEP_SUMMARY`, or report the actual failure. API errors are not skips.
 - Budget the 30-minute job including setup, reporting, and verification;
   do not relax required checks to meet the deadline.
 
-After a successful, non-skipped assessment job, a separate job with only
-`actions: write` explicitly dispatches a completion notification to the router on
-the current default branch. It checks out no code and does not change the
-reviewer's permissions or identity. This avoids relying on `workflow_run`
-delivery from workers launched with `GITHUB_TOKEN`; no new secret or App grant
-is needed. Dispatch errors fail the notification job, and acceptance alone does
-not establish that routing or implementation completed.
+App-authored reviews trigger the existing native `pull_request_review: submitted`
+router. There is no explicit notification job, and PR-review `workflow_run`
+events are excluded to prevent duplicate delivery. The submitted-review router
+uses the PR merge revision, with the existing [accepted risk](factory-router.md#accepted-risk-router-changes-can-run-before-merge).
 
-The router [verifies the source assessment](factory-router.md#review-completion-delivery)
-and can dispatch implementation for findings still applicable to current code,
-even if the PR advanced after posting. The review job exports its attempt so
-notification-only retries retain the original review marker. The router
-correlates that marker and the reviewed SHA recorded in the review body, not a
-later API `commit_id` or the dispatched workflow's default-branch `head_sha`.
-Native PR-review completion events are excluded from routing to avoid duplicate
-delivery.
+The router [verifies the source assessment](factory-router.md#review-completion-delivery),
+waiting for its posted-review check if the event arrives first. It correlates the
+marker and reviewed SHA recorded in the body, not a later API `commit_id` or the
+worker's default-branch `head_sha`. Outstanding findings may still apply after
+the PR advances. Submission alone does not prove a successful assessment or
+completed implementation.
 
 ## Identity and execution
 
-- Use the built-in `GITHUB_TOKEN` for review as `github-actions[bot]`, separate
-  from the [Factory App](github-app.md) that authors implementation PRs.
-  The worker YAML owns the token permissions and shared [AI setup](../examples/ai-tools.md).
+- Use the [reviewer App](github-app.md#configure-the-reviewer-app) token as
+  `GH_TOKEN` for all repository/review operations, including receipt verification.
+  The workflow verifies its authenticated login against `REVIEWER_LOGIN`
+  (`factory-reviewer-bot[bot]`) before invoking Copilot.
+- The reviewer is distinct from the Factory App that authors implementation PRs.
+  It has Contents read and Pull requests write, but no Contents write, Issues
+  write, Workflows write, or Actions write.
+- The built-in token retains Contents read for checkout and
+  `copilot-requests: write` for model requests. Shared [AI setup](../examples/ai-tools.md)
+  keeps `COPILOT_GITHUB_TOKEN` on that token; never substitute it for reviewer API calls.
 - The dispatch-only worker runs on the default branch, checks out `github.workflow_sha`,
   and uses the `review` [model profile](../../.github/model-config.json).
 - Same-PR/head jobs cancel older reviews. Different heads cannot cancel each
   other; each worker remains responsible for checking freshness before posting.
-- Approvals require **Settings → Actions → General → Workflow permissions →
-  Allow GitHub Actions to create and approve pull requests**.
+- App approvals require the installation's Pull requests write grant and remain
+  subject to repository review policies and GitHub's self-approval restriction.
 - User/App-authenticated PR changes trigger routing; `GITHUB_TOKEN`-generated PR
   events do not. See [GitHub's triggering guide](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow).
 
@@ -88,7 +90,8 @@ delivery. Comment reviews and central review dispatch have
 [live evidence](factory-router.md#execution-and-verification); approval behavior
 was not assessed in the completion-delivery investigation.
 
-The AI-forward review refactor and the new explicit completion handoff still need
-live verification. After merge, link a successful assessment to its completion
-router run and any correlated implementation worker, including
-approval/already-handled no-op evidence.
+The reviewer-App migration still needs live verification after it reaches the
+default branch. Link a successful App-authored assessment to its submitted-review
+router run and any correlated implementation worker, including approval,
+already-handled, ineligible, and failed/skipped-assessment no-op evidence.
+Earlier built-in-token reviews do not verify the new App's grants or event delivery.

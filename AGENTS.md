@@ -69,7 +69,7 @@
   invocation. Keep checkout, credential selection, prompts, and receipt checks in
   callers; see `docs/examples/ai-tools.md#shared-factory-action` for its contract.
 - `.github/workflows/factory-router.yml` analyzes issue, comment, PR-target, and
-  submitted-review events, review-completion notifications, CI completions, and
+  submitted-review events, CI completions, and
   default-branch pushes with Copilot. Pushes dispatch one default-branch maintenance
   worker per eligible Factory PR; other events dispatch at most one worker.
   Router jobs run independently; worker AI owns freshness checks and result
@@ -82,8 +82,10 @@
   checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
 - `.github/workflows/pr-review.yml` reviews non-draft, same-repository PRs and
   verifies that Copilot posted a review unless AI skipped a stale/handled task.
-  A separate Actions-write job notifies the router after a verified assessment;
-  native PR-review completion events are excluded to avoid duplicate routing.
+  The separate reviewer App posts reviews and verifies receipts; its native
+  submitted-review events reach the router, which verifies the source assessment.
+  PR-review workflow completions are excluded to avoid duplicate routing.
+  The built-in token remains responsible only for checkout and model access.
   See the PR-review guidance for triggering and bot-approval constraints.
 - `.github/workflows/issue-triage.yml` assesses assigned untriaged issues and clarification
   comments, suggests decomposition when useful, and applies a unique tracking

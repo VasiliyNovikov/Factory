@@ -92,8 +92,9 @@ to combine tool installation and harness invocation through these same scripts:
 - `harness` defaults to `copilot`; set `harness: opencode` under `with:` to use
   OpenCode. Other values fail invocation through `scripts/ai.sh`. Existing Factory
   callers omit this input and continue to use Copilot.
-- The caller selects `gh-token`: the built-in token for routing/PR review, or
-  `steps.factory-token.outputs.token` for App workers. The action exports it as
+- The caller selects `gh-token`: the built-in token for routing,
+  `steps.reviewer-token.outputs.token` for PR review, or
+  `steps.factory-token.outputs.token` for other App workers. The action exports it as
   `GH_TOKEN` only for invocation, not installation. `GITHUB_TOKEN` and
   `COPILOT_GITHUB_TOKEN` use the built-in token in that same invocation.
 - `skipped` forwards the invocation's `GITHUB_OUTPUT` value, preserving
