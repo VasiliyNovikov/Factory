@@ -7,8 +7,9 @@ scheduled runs use the default branch and can be delayed by GitHub. Checkout use
 `github.workflow_sha` so scripts match the executing workflow revision.
 
 Copilot owns history selection, investigation, duplicate checks, issue creation,
-and result verification. It reuses `scripts/install-tools.sh`,
-`scripts/ai.sh --harness copilot`, and the `default` model profile.
+and result verification. It uses the shared
+[Run AI action](../examples/ai-tools.md#shared-factory-action) with the `default`
+model profile. The prompt supplies the current run ID, attempt, and Factory login.
 
 For a fresh review of the whole source snapshot on every invocation, use
 [repository review](repository-review.md), not this run-history analysis.

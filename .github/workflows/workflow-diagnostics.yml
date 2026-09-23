@@ -36,19 +36,12 @@ jobs:
           permission-pull-requests: read
           permission-issues: write
 
-      - name: Install AI tools
-        run: ./scripts/install-tools.sh
-
       - name: Analyze workflows with parallel Copilot subagents
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          COPILOT_GITHUB_TOKEN: ${{ github.token }}
-          GH_TOKEN: ${{ steps.factory-token.outputs.token }}
-          FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
-        run: >-
-          ./scripts/ai.sh --harness copilot
-          --prompt "Diagnose ${GITHUB_REPOSITORY}'s workflow runs and create issues for actionable findings.
-          Follow repository guidance and docs/factory/workflow-diagnostics.md.
-          Current run ID: ${GITHUB_RUN_ID}; attempt: ${GITHUB_RUN_ATTEMPT};
-          Factory login: ${FACTORY_LOGIN}."
+        uses: ./.github/actions/ai
+        with:
+          gh-token: ${{ steps.factory-token.outputs.token }}
+          prompt: >-
+            Diagnose ${{ github.repository }}'s workflow runs and create issues for actionable findings.
+            Follow repository guidance and docs/factory/workflow-diagnostics.md.
+            Current run ID: ${{ github.run_id }}; attempt: ${{ github.run_attempt }};
+            Factory login: ${{ steps.factory-token.outputs.app-slug }}[bot].
