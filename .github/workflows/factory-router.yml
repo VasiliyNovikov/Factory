@@ -2,7 +2,7 @@ name: Factory router
 run-name: >-
   ${{ github.event_name == 'workflow_dispatch' &&
       format('Factory router: review {0}:{1} (PR {2})', inputs.review_run_id, inputs.review_run_attempt, inputs.pr_number) ||
-      'Factory router' }}
+      '' }}
 
 on:
   push:

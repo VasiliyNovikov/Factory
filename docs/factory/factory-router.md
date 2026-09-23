@@ -13,6 +13,8 @@ needs, or skips it.
   [GitHub's `GITHUB_TOKEN` recursion protection](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow)
   permits explicit dispatch, but completion events from token-dispatched workers
   cannot be relied on to cascade through `workflow_run`.
+- Only review-completion dispatches set a custom run title; other events retain
+  GitHub's event-specific defaults.
 - Inputs `pr_number`, `review_run_id`, and `review_run_attempt` identify the
   assessment, not an authorized mutation target. Dispatches run only on the
   default branch. Validate with live APIs:
