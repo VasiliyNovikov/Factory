@@ -75,8 +75,9 @@ creation with the App token and reports results in the job summary.
 review and findings publication, but needs no built-in Actions access. Both workflows
 create unlabeled findings for normal triage without modifying existing work.
 
-The [Factory router](factory-router.md) uses the built-in token with Actions write
-for worker dispatch and Contents/Issues/Pull requests read for analysis. It needs
+The [Factory router](factory-router.md) and [maintenance](factory-maintenance.md)
+use the built-in token with Actions write
+for worker dispatch and Contents/Issues/Pull requests read for analysis. They need
 no App token or additional App installation permission. Worker dispatches target
 the default branch and use the workers' own token permissions.
 The reviewer App's submitted reviews trigger the native router event without
@@ -100,7 +101,7 @@ The shared [Factory action](../examples/ai-tools.md#shared-factory-action) takes
 the caller's repository credential as `gh-token` and sets these three variables
 only on its AI invocation. Factory App workers pass
 `steps.factory-token.outputs.token`; PR review passes
-`steps.reviewer-token.outputs.token`; the router passes `github.token`.
+`steps.reviewer-token.outputs.token`; routing and maintenance pass `github.token`.
 Token creation and Git identity remain in the workflows.
 
 For direct script invocations in App-based jobs, set these variables, keeping

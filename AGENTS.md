@@ -55,6 +55,8 @@
 - Factory workflow guidance and shared App setup live in `docs/factory/`:
   - [Factory GitHub App setup](docs/factory/github-app.md)
   - [Central event routing and dispatch](docs/factory/factory-router.md)
+  - [Shared worker routing policy](docs/factory/routing-policy.md)
+  - [Periodic lifecycle recovery](docs/factory/factory-maintenance.md)
   - [PR review](docs/factory/pr-review.md)
   - [Issue triage and label handoff](docs/factory/issue-triage.md)
   - [Issue implementation and follow-ups](docs/factory/issue-implementation.md)
@@ -72,13 +74,20 @@
   workflow-completion, and default-branch push events with Copilot. Pushes dispatch
   one default-branch maintenance worker per eligible Factory PR; other events
   dispatch at most one worker. Router jobs run independently; worker AI owns
-  freshness checks and result verification. `docs/factory/factory-router.md` defines dispatch inputs.
+  freshness checks and result verification. `docs/factory/routing-policy.md`
+  defines the shared dispatch contract.
 - Submitted reviews directly run the router from the PR merge revision. Router
   and setup changes can execute before merge with the router's token permissions;
   this accepted risk and dispatch compatibility requirements are documented in
   `docs/factory/factory-router.md`. Other router triggers use the default branch.
 - Review, triage, and implementation are dispatch-only workers. Factory setup
   checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
+- `.github/workflows/factory-maintenance.yml` runs hourly at minute 17 UTC or
+  manually on the default branch to recover unattended issue/PR lifecycle work.
+  It shares `docs/factory/routing-policy.md` with the event router and dispatches
+  existing workers with the built-in token, without other GitHub mutations.
+  Copilot owns discovery, cross-coordinator deduplication, and verification;
+  human/approval holds and child-owned work are not automation gaps.
 - `.github/workflows/pr-review.yml` reviews non-draft, same-repository PRs and
   verifies that Copilot posted a review unless AI skipped a stale/handled task.
   Reviews use a separate App and reach the router through native submitted-review
