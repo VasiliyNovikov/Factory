@@ -6,6 +6,9 @@ needs, or skips it.
 - Keep the router simple and AI-driven.
 - Workers own execution, freshness checks, and result verification.
 
+For design alternatives, see the [router split options](router-options.md)
+investigation; it does not change the active contracts below.
+
 ## Route to
 
 ### [PR review](pr-review.md)
