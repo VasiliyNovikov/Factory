@@ -23,7 +23,7 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 - Conversation requests and review findings remain actionable when they still
   apply to current code, regardless of head drift or outdated inline locations.
 - Review-worker findings must belong to the source review and its
-  [verified reviewed SHA](factory-router.md#review-completion-delivery), not a later
+  [verified reviewed SHA](factory-router.md#feedback-and-event-handling), not a later
   API `commit_id` or the worker run's default-branch `head_sha`.
 - CI evidence must match the current PR head or merge revision.
 

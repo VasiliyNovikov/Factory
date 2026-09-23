@@ -68,12 +68,11 @@
 - Factory workflows share `.github/actions/ai` for tool installation and
   invocation. Keep checkout, credential selection, prompts, and receipt checks in
   callers; see `docs/examples/ai-tools.md#shared-factory-action` for its contract.
-- `.github/workflows/factory-router.yml` analyzes issue, comment, PR-target, and
-  submitted-review events, CI completions, and
-  default-branch pushes with Copilot. Pushes dispatch one default-branch maintenance
-  worker per eligible Factory PR; other events dispatch at most one worker.
-  Router jobs run independently; worker AI owns freshness checks and result
-  verification. `docs/factory/factory-router.md` defines dispatch inputs.
+- `.github/workflows/factory-router.yml` analyzes issue, comment, PR-target, submitted-review,
+  workflow-completion, and default-branch push events with Copilot. Pushes dispatch
+  one default-branch maintenance worker per eligible Factory PR; other events
+  dispatch at most one worker. Router jobs run independently; worker AI owns
+  freshness checks and result verification. `docs/factory/factory-router.md` defines dispatch inputs.
 - Submitted reviews directly run the router from the PR merge revision. Router
   and setup changes can execute before merge with the router's token permissions;
   this accepted risk and dispatch compatibility requirements are documented in
@@ -82,11 +81,8 @@
   checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
 - `.github/workflows/pr-review.yml` reviews non-draft, same-repository PRs and
   verifies that Copilot posted a review unless AI skipped a stale/handled task.
-  The separate reviewer App posts reviews and verifies receipts; its native
-  submitted-review events reach the router, which verifies the source assessment.
-  PR-review workflow completions are excluded to avoid duplicate routing.
-  The built-in token remains responsible only for checkout and model access.
-  See the PR-review guidance for triggering and bot-approval constraints.
+  Reviews use a separate App and reach the router through native submitted-review
+  events. See the PR-review guidance for triggering and bot-approval constraints.
 - `.github/workflows/issue-triage.yml` assesses assigned untriaged issues and clarification
   comments, suggests decomposition when useful, and applies a unique tracking
   label followed by `triaged` when ready. It does not create issues or PRs.

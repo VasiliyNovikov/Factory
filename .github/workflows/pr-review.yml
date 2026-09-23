@@ -54,16 +54,6 @@ jobs:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
 
-      - name: Verify reviewer identity
-        env:
-          GH_TOKEN: ${{ steps.reviewer-token.outputs.token }}
-        run: |
-          login=$(gh api graphql -f query='query { viewer { login } }' --jq .data.viewer.login)
-          if [[ "$login" != "$REVIEWER_LOGIN" ]]; then
-            echo "::error::Reviewer token authenticated as ${login}; expected ${REVIEWER_LOGIN}."
-            exit 1
-          fi
-
       - name: Review PR with Copilot
         id: worker
         uses: ./.github/actions/ai

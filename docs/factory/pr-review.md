@@ -39,11 +39,10 @@ changing or executing it.
 - Skip stale or already-covered assignments only before mutation: write
   `skipped=true` to `GITHUB_OUTPUT`, record evidence in `GITHUB_STEP_SUMMARY`,
   and make no GitHub changes.
-- An already-covered skip based on a prior Factory review requires verified
-  successful source-assessment completion, including its posted-review check.
-  Failed, timed-out, cancelled, skipped, or unverified attempts are not coverage.
-- If allowed reads cannot establish that completion, record the limitation and
-  perform the requested assessment; do not change tokens or permissions.
+- Prior Factory reviews count as coverage only after verified successful,
+  non-skipped source completion, including the posted-review check. If allowed
+  reads cannot establish this, record the limitation and perform the requested
+  assessment; do not change tokens or permissions.
 - For an eligible rerun or replacement of an unsuccessful assessment, reassess
   the current code and discussion, retain still-applicable findings, and submit
   a fresh review with this attempt's `REVIEW_MARKER`.
@@ -57,30 +56,18 @@ changing or executing it.
 - Budget the 30-minute job including setup, reporting, and verification;
   do not relax required checks to meet the deadline.
 
-App-authored reviews trigger the existing native `pull_request_review: submitted`
-router. There is no explicit notification job, and PR-review `workflow_run`
-events are excluded to prevent duplicate delivery. The submitted-review router
-uses the PR merge revision, with the existing [accepted risk](factory-router.md#accepted-risk-router-changes-can-run-before-merge).
-
-The router [verifies the source assessment](factory-router.md#review-completion-delivery),
-waiting for its posted-review check if the event arrives first. It correlates the
-marker and reviewed SHA recorded in the body, not a later API `commit_id` or the
-worker's default-branch `head_sha`. Outstanding findings may still apply after
-the PR advances. Submission alone does not prove a successful assessment or
-completed implementation.
+App-authored submissions trigger the native router, which
+[verifies the source assessment](factory-router.md#feedback-and-event-handling)
+before dispatching feedback. The router uses the PR merge revision, with the
+documented [accepted risk](factory-router.md#accepted-risk-router-changes-can-run-before-merge).
 
 ## Identity and execution
 
-- Use the [reviewer App](github-app.md#configure-the-reviewer-app) token as
+- Use the [reviewer App](github-app.md#configure-the-apps) token as
   `GH_TOKEN` for all repository/review operations, including receipt verification.
-  The workflow verifies its authenticated login against `REVIEWER_LOGIN`
-  (`factory-reviewer-bot[bot]`) before invoking Copilot.
-- The reviewer is distinct from the Factory App that authors implementation PRs.
-  It has Contents read and Pull requests write, but no Contents write, Issues
-  write, Workflows write, or Actions write.
-- The built-in token retains Contents read for checkout and
-  `copilot-requests: write` for model requests. Shared [AI setup](../examples/ai-tools.md)
-  keeps `COPILOT_GITHUB_TOKEN` on that token; never substitute it for reviewer API calls.
+- Keep the built-in token for checkout and `COPILOT_GITHUB_TOKEN` model access;
+  never substitute it for reviewer API calls. The worker YAML owns permissions
+  and shared [AI setup](../examples/ai-tools.md).
 - The dispatch-only worker runs on the default branch, checks out `github.workflow_sha`,
   and uses the `review` [model profile](../../.github/model-config.json).
 - Same-PR/head jobs preserve the active review through its posted-review check;
@@ -96,17 +83,11 @@ completed implementation.
 The read-only workflow check requires a submitted bot comment review or approval
 matching the expected commit, visible full SHA, and run marker, unless Copilot
 skipped before mutation. It checks the receipt, not review quality or live event
-delivery. Comment reviews and central review dispatch have
-[live evidence](factory-router.md#execution-and-verification); approval behavior
-was not assessed in the completion-delivery investigation.
+delivery.
 
-The reviewer-App migration still needs live verification after it reaches the
-default branch. Link a successful App-authored assessment to its submitted-review
-router run and any correlated implementation worker, including approval,
-already-handled, ineligible, and failed/skipped-assessment no-op evidence.
-Verify that a same-head redispatch after submission preserves the active
-assessment and delivers its findings once. Also verify recovery after
-post-submission failure, timeout, or cancellation: the unsuccessful assessment
-cannot dispatch implementation, and a fresh marked assessment can deliver
-still-actionable findings without an already-covered skip.
-Earlier built-in-token reviews do not verify the new App's grants or event delivery.
+Reviewer-App authentication, approvals, and native handoff still need verification
+after deployment. Record a successful assessment's review, router, and worker
+links, plus approval/already-handled/ineligible and failed/skipped no-ops.
+Verify that same-head redispatch preserves the active assessment and delivers
+findings once. After post-submission failure, timeout, or cancellation, only a
+fresh successful assessment may deliver still-actionable findings.

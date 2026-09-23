@@ -122,7 +122,7 @@ repository's scripts and require no PAT or custom secret. App-based PR creation 
 `FACTORY_PRIVATE_KEY` for automatic downstream runs and distinct PR author/reviewer
 identities.
 PR review uses a separate App with `FACTORY_REVIEWER_CLIENT_ID` and
-`FACTORY_REVIEWER_PRIVATE_KEY`; see [reviewer setup](docs/factory/github-app.md#configure-the-reviewer-app).
+`FACTORY_REVIEWER_PRIVATE_KEY`; see [App setup](docs/factory/github-app.md#configure-the-apps).
 Its native submitted-review handoff still needs post-merge live verification.
 
 - `scripts/install-tools.sh` installs standalone Copilot CLI and OpenCode via their
@@ -155,7 +155,7 @@ actionable findings through triage. It verifies its actions and summarizes resul
 in the job summary and logs.
 
 1. [Factory GitHub App setup](docs/factory/github-app.md)
-2. [PR review](docs/factory/pr-review.md) — prior built-in-token comment reviews tested; reviewer-App verification pending.
+2. [PR review](docs/factory/pr-review.md) — reviewer-App live verification pending.
 3. [Triage issues before implementation](docs/factory/issue-triage.md)
 4. [Implement a triaged issue or decompose it into sub-issues](docs/factory/issue-implementation.md)
 5. [Diagnose workflow runs and create actionable issues](docs/factory/workflow-diagnostics.md)
