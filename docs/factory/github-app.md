@@ -88,8 +88,14 @@ credentials. App-based jobs expose two tokens through three variables:
 `GH_TOKEN` identifies the credential to use for GitHub CLI, not a particular token
 type. For example, the router sets it to the built-in token instead of an App token.
 
-Set these variables on the AI invocation in App-based jobs, keeping any Git
-author/committer variables:
+The shared [Factory action](../examples/ai-tools.md#shared-factory-action) takes
+the caller's repository credential as `gh-token` and sets these three variables
+only on its AI invocation. App workers pass `steps.factory-token.outputs.token`;
+router and PR review pass `github.token`. Token creation and Git identity remain
+in the workflows.
+
+For direct script invocations in App-based jobs, set these variables, keeping
+any Git author/committer variables:
 
 ```yaml
 GITHUB_TOKEN: ${{ github.token }}

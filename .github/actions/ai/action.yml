@@ -1,0 +1,42 @@
+name: Run AI
+description: Install AI tools and invoke the selected harness with a named model profile
+
+inputs:
+  harness:
+    description: AI harness (copilot or opencode)
+    default: copilot
+  prompt:
+    description: Task and invocation-specific context for the selected harness
+    required: true
+  profile:
+    description: Model profile from .github/model-config.json
+    default: default
+  gh-token:
+    description: Caller-selected token for repository, issue, and PR operations
+    required: true
+
+outputs:
+  skipped:
+    description: Whether the AI explicitly skipped before mutation
+    value: ${{ steps.invoke.outputs.skipped }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install AI tools
+      shell: bash
+      run: ./scripts/install-tools.sh
+
+    - name: Invoke AI
+      id: invoke
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        COPILOT_GITHUB_TOKEN: ${{ github.token }}
+        GH_TOKEN: ${{ inputs.gh-token }}
+        AI_HARNESS: ${{ inputs.harness }}
+        AI_PROFILE: ${{ inputs.profile }}
+        AI_PROMPT: ${{ inputs.prompt }}
+      run: |
+        : "${GH_TOKEN:?gh-token is required}"
+        ./scripts/ai.sh --harness "$AI_HARNESS" --profile "$AI_PROFILE" --prompt "$AI_PROMPT"

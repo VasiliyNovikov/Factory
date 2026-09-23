@@ -162,7 +162,7 @@ Default-branch discovery therefore belongs here, not in each implementer.
 ## Accepted risk: router changes can run before merge
 
 - Submitted reviews execute the router from the **PR merge revision**, including
-  its setup scripts, configuration, and guidance.
+  its local actions, setup scripts, configuration, and guidance.
 - Changes can run before merge with the router's Actions-write token, causing
   broken routing, unwanted dispatches, or other token-authorized actions.
 - Prompt restrictions and worker guards do not isolate modified router code.
