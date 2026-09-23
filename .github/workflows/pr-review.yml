@@ -47,7 +47,7 @@ jobs:
 
       - name: Review PR with Copilot
         id: worker
-        uses: ./.github/actions/run-copilot
+        uses: ./.github/actions/ai
         with:
           gh-token: ${{ github.token }}
           profile: review

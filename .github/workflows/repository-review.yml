@@ -36,7 +36,7 @@ jobs:
           permission-issues: write
 
       - name: Review the full repository with Copilot
-        uses: ./.github/actions/run-copilot
+        uses: ./.github/actions/ai
         env:
           FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
         with:

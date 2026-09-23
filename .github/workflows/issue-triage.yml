@@ -50,7 +50,7 @@ jobs:
 
       - name: Triage issue with Copilot
         id: worker
-        uses: ./.github/actions/run-copilot
+        uses: ./.github/actions/ai
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
           profile: triage

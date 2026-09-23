@@ -8,7 +8,7 @@ scheduled runs use the default branch and can be delayed by GitHub. Checkout use
 
 Copilot owns history selection, investigation, duplicate checks, issue creation,
 and result verification. It uses the shared
-[Run Copilot action](../examples/ai-tools.md#shared-factory-action) with the `default`
+[Run AI action](../examples/ai-tools.md#shared-factory-action) with the `default`
 model profile.
 
 For a fresh review of the whole source snapshot on every invocation, use

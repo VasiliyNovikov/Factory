@@ -71,13 +71,13 @@ both reviewers.
 
 ## Shared Factory action
 
-Factory workflows use [`.github/actions/run-copilot`](../../.github/actions/run-copilot/action.yml)
-to combine tool installation and Copilot invocation through these same scripts:
+Factory workflows use [`.github/actions/ai`](../../.github/actions/ai/action.yml)
+to combine tool installation and harness invocation through these same scripts:
 
 ```yaml
 - name: Run a prompt
   id: worker
-  uses: ./.github/actions/run-copilot
+  uses: ./.github/actions/ai
   with:
     gh-token: ${{ github.token }}
     prompt: Reply with 'Hello from CI'. Do not use any tools.
@@ -89,6 +89,9 @@ to combine tool installation and Copilot invocation through these same scripts:
 - `prompt` and `gh-token` are required; `profile` defaults to `default`.
   Prompts are passed as data, not shell code. Use Actions expressions for invocation
   values, not shell variable expansion in the input.
+- `harness` defaults to `copilot`; set `harness: opencode` under `with:` to use
+  OpenCode. Other values fail invocation through `scripts/ai.sh`. Existing Factory
+  callers omit this input and continue to use Copilot.
 - The caller selects `gh-token`: the built-in token for routing/PR review, or
   `steps.factory-token.outputs.token` for App workers. The action exports it as
   `GH_TOKEN` only for invocation, not installation. `GITHUB_TOKEN` and
@@ -98,8 +101,7 @@ to combine tool installation and Copilot invocation through these same scripts:
   invocation failures fail the action; they are not converted into skips.
 
 Checkout, App permissions/token creation, Git identity, prompts, and receipt checks
-remain in the owning workflows. The script-based examples also support OpenCode;
-the Factory action intentionally invokes only Copilot.
+remain in the owning workflows.
 
 Build on this setup to [create a pull request](create-pull-request.md) or
 [create an issue](create-issue.md).

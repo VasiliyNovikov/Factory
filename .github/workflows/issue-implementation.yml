@@ -70,7 +70,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Implement, decompose, or reply with Copilot
-        uses: ./.github/actions/run-copilot
+        uses: ./.github/actions/ai
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
           profile: implement
