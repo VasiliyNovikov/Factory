@@ -17,11 +17,13 @@
   features, and minimal workflow glue over custom scripted decision systems.
   Add scripts or orchestration only for a concrete requirement or a demonstrated
   reduction in overall complexity.
-- In AI prompts and guidance, state **what** is required: goals, when to act or
-  skip, constraints, and verifiable outcomes. Let capable models determine
-  **how** using available tools and context. Keep instructions concise; prescribe
-  procedures only where a required contract, safety boundary, or demonstrated
-  failure makes them necessary. Avoid duplicating implementation details in docs.
+- Write AI prompts and guidance as compact contracts: goals, scope, when to
+  act/hold/skip, safety boundaries, and verifiable outcomes. Let capable models
+  choose tools and steps; prescribe procedures only for required contracts,
+  safety boundaries, or demonstrated failures.
+- When review reveals a gap, strengthen the shared rule rather than append a
+  checklist for each scenario. Consolidate overlapping guidance and remove
+  redundant examples or API recipes without weakening required checks.
 - When a prompt references a guidance document, keep detailed requirements in
   that document rather than duplicating them in the prompt. Use the prompt for
   the task and invocation-specific context.
