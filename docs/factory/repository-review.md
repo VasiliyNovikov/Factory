@@ -7,7 +7,7 @@ scheduled runs use the default branch and can be delayed by GitHub. Checkout use
 `github.workflow_sha`, pinning source, guidance, and setup to the invocation revision.
 
 Copilot owns source review, duplicate checks, issue publication, and verification.
-It reuses `scripts/install-tools.sh`, `scripts/ai.sh --harness copilot --profile review`,
+It uses the shared [Run Copilot action](../examples/ai-tools.md#shared-factory-action)
 and the existing `review` model configuration. One concurrency group serializes
 scheduled and manual runs without cancelling active work; GitHub keeps at most
 one pending invocation. The 30-minute budget includes setup and reporting.

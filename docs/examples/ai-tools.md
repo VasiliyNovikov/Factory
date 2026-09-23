@@ -66,6 +66,9 @@ Profiles supply `model`, `reasoningEffort`, and `longContext` without schema
 validation. `longContext` applies only to Copilot. Unknown names fail rather than
 falling back to `default`.
 
+PR review and full-repository review share `review`; changing that profile updates
+both reviewers.
+
 ## Shared Factory action
 
 Factory workflows use [`.github/actions/run-copilot`](../../.github/actions/run-copilot/action.yml)
