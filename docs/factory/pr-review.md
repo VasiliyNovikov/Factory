@@ -79,21 +79,61 @@ documented [accepted risk](factory-router.md#accepted-risk-router-changes-can-ru
 - Same-PR/head jobs preserve the active review through its posted-review check;
   pending jobs may be superseded. Different heads run independently, and each
   worker still checks freshness and outstanding requests before posting.
-- App approvals require the installation's Pull requests write grant and remain
-  subject to repository review policies and GitHub's self-approval restriction.
+- The reviewer App's installation supplies repository writer qualification;
+  the job token stays at Contents read and Pull requests write. Follow the
+  [App setup](github-app.md#configure-the-apps), repository review policies, and
+  GitHub's self-approval restriction.
 - User/App-authenticated PR changes trigger routing; `GITHUB_TOKEN`-generated PR
   events do not. See [GitHub's triggering guide](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow).
+
+## Approval qualification
+
+- A submitted `APPROVED` review is not proof that it satisfies required reviews.
+  Check the current head's `reviewDecision` and effective rules.
+- `PullRequestReview.authorCanPushToRepository` distinguishes repository writer
+  qualification from permission to post a review. It does not by itself prove
+  that approval-count, last-push, code-owner, or other review requirements are met.
+- A missing installation grant needs an owner-approved correction, not weaker
+  rules, a bypass, or a speculative increase in the review job's token scope.
+
+### Verified installation correction
+
+[Issue #77](https://github.com/VasiliyNovikov/Factory/issues/77) recorded approvals
+with `authorCanPushToRepository: false` and `reviewDecision: REVIEW_REQUIRED`.
+After the [owner reported granting the requested permissions](https://github.com/VasiliyNovikov/Factory/issues/77#issuecomment-5814673375),
+live checks on September 24, 2026 found the following open, non-draft PRs
+`APPROVED` / `CLEAN`, with `authorCanPushToRepository: true`:
+
+| PR | Verified current head | Reviewer-App approval | Successful review attempt |
+|---|---|---|---|
+| [#71](https://github.com/VasiliyNovikov/Factory/pull/71) | `2807652469a8f72832a2e8eb764f541f940485e9` | [5304665185](https://github.com/VasiliyNovikov/Factory/pull/71#pullrequestreview-5304665185) | [36001361952 / 1](https://github.com/VasiliyNovikov/Factory/actions/runs/36001361952/attempts/1) |
+| [#75](https://github.com/VasiliyNovikov/Factory/pull/75) | `f8b31c54e952edad8483e0e6b800eda14628dc5d` | [5304681657](https://github.com/VasiliyNovikov/Factory/pull/75#pullrequestreview-5304681657) | [36001481481 / 1](https://github.com/VasiliyNovikov/Factory/actions/runs/36001481481/attempts/1) |
+
+Both attempts ran the default-branch workflow at
+`dae35635f62eb3201ea15646058b8bc3b4da609e`, requested Contents **read** and Pull
+requests **write**, and passed the expected-head/run-marker receipt check.
+Only the separate reviewer App supplied approving reviews; no human approval was
+needed for these PRs. [Ruleset 23651994](https://github.com/VasiliyNovikov/Factory/rules/23651994)
+was unchanged: one approval, stale-review dismissal, last-push approval, thread
+resolution, and extra approval for unattributed changes remained enabled.
+Code-owner/designated-reviewer approval was not required.
+
+This establishes that the observed missing writer qualification was corrected
+without expanding the workflow token. Private App settings were owner-reported,
+not independently inspected; these results do not establish qualification under
+every review policy.
 
 ## Verification limits
 
 The read-only workflow check requires a submitted bot comment review or approval
 matching the expected commit, visible full SHA, and run marker, unless Copilot
-skipped before mutation. It checks the receipt, not review quality or live event
-delivery.
+skipped before mutation. It checks the receipt, not review quality, required-review
+qualification, or live event delivery.
 
-Reviewer-App authentication, approvals, and native handoff still need verification
-after deployment. Record a successful assessment's review, router, and worker
-links, plus approval/already-handled/ineligible and failed/skipped no-ops.
+The approval evidence above does not re-exercise stale-approval invalidation,
+native findings handoff, or failure/no-op paths. For remaining post-deployment
+verification, record a successful assessment's review, router, and worker links,
+plus approval/already-handled/ineligible and failed/skipped no-ops.
 Verify that same-head redispatch preserves the active assessment and delivers
 findings once. After post-submission failure, timeout, or cancellation, only a
 fresh successful assessment may deliver still-actionable findings.
