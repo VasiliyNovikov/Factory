@@ -34,7 +34,6 @@ jobs:
       copilot-requests: write
     env:
       GITHUB_TOKEN: ${{ github.token }}
-      REVIEWER_LOGIN: factory-reviewer-bot[bot]
       PR_NUMBER: ${{ inputs.pr_number }}
       PR_HEAD_SHA: ${{ inputs.head_sha }}
       REVIEW_MARKER: factory-review:${{ github.run_id }}:${{ github.run_attempt }}
@@ -53,6 +52,13 @@ jobs:
         with:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
+
+      - name: Resolve bot identities
+        uses: ./.github/actions/identity
+        with:
+          gh-token: ${{ steps.reviewer-token.outputs.token }}
+          app-role: reviewer
+          app-slug: ${{ steps.reviewer-token.outputs.app-slug }}
 
       - name: Review PR with Copilot
         id: worker
@@ -77,13 +83,16 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.reviewer-token.outputs.token }}
         run: |
+          pr_author_id=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" |
+            jq -er '.user.id | select(type == "number" and . > 0 and floor == .)')
           gh api --paginate --slurp \
             "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews" |
-            jq -e --arg login "$REVIEWER_LOGIN" --arg sha "$PR_HEAD_SHA" --arg marker "$REVIEW_MARKER" '
+            jq -e --argjson reviewer "$REVIEWER_USER_ID" --argjson author "$pr_author_id" \
+              --arg sha "$PR_HEAD_SHA" --arg marker "$REVIEW_MARKER" '
               any(.[][];
-                .user.login == $login and
+                .user.id == $reviewer and
                 .commit_id == $sha and
-                (.state == "COMMENTED" or .state == "APPROVED") and
+                (.state == "COMMENTED" or (.state == "APPROVED" and $author != $reviewer)) and
                 ((.body // "") | contains($sha)) and
                 ((.body // "") | contains($marker)))
             ' >/dev/null

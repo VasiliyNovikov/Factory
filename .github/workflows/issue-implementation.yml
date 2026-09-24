@@ -54,19 +54,20 @@ jobs:
           token: ${{ steps.factory-token.outputs.token }}
           fetch-depth: 0
 
+      - name: Resolve bot identities
+        uses: ./.github/actions/identity
+        with:
+          gh-token: ${{ steps.factory-token.outputs.token }}
+          app-role: factory
+          app-slug: ${{ steps.factory-token.outputs.app-slug }}
+
       - name: Configure Factory identity
-        env:
-          GH_TOKEN: ${{ steps.factory-token.outputs.token }}
-          APP_SLUG: ${{ steps.factory-token.outputs.app-slug }}
         run: |
-          login="${APP_SLUG}[bot]"
-          id=$(gh api "users/${login}" --jq .id)
           {
-            printf 'FACTORY_LOGIN=%s\n' "$login"
-            printf 'GIT_AUTHOR_NAME=%s\n' "$login"
-            printf 'GIT_COMMITTER_NAME=%s\n' "$login"
-            printf 'GIT_AUTHOR_EMAIL=%s+%s@users.noreply.github.com\n' "$id" "$login"
-            printf 'GIT_COMMITTER_EMAIL=%s+%s@users.noreply.github.com\n' "$id" "$login"
+            printf 'GIT_AUTHOR_NAME=%s\n' "$FACTORY_LOGIN"
+            printf 'GIT_COMMITTER_NAME=%s\n' "$FACTORY_LOGIN"
+            printf 'GIT_AUTHOR_EMAIL=%s+%s@users.noreply.github.com\n' "$FACTORY_USER_ID" "$FACTORY_LOGIN"
+            printf 'GIT_COMMITTER_EMAIL=%s+%s@users.noreply.github.com\n' "$FACTORY_USER_ID" "$FACTORY_LOGIN"
           } >> "$GITHUB_ENV"
 
       - name: Implement, decompose, or reply with Copilot

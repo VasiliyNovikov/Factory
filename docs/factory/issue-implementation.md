@@ -29,6 +29,8 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 
 ## Eligibility and ownership
 
+- Use the shared [bot identity contract](github-app.md#bot-identity-contract)
+  for ownership, earlier Factory decisions, and every authored-result check.
 - Editing and GitHub mutations require freshly verified eligibility and a current
   work revision; the dispatched `head_sha` alone is not evidence of freshness.
 - The original issue must be open with `triaged` and exactly one tracking label,
@@ -37,7 +39,7 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
   must not be duplicated or overwritten.
 - Reuse only a PR that is:
   - Open and in the same repository.
-  - Authored by `FACTORY_LOGIN` on the issue branch.
+  - Authored by user ID `FACTORY_USER_ID` on the issue branch.
   - Targeting the current default branch.
   - Labeled `triaged` with exactly the matching tracking label.
   - The dispatched `source_pr`, when supplied.

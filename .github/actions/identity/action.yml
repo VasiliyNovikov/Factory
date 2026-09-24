@@ -1,0 +1,25 @@
+name: Resolve Factory identities
+description: Validate configured bot user IDs and expose current display logins
+
+inputs:
+  gh-token:
+    description: Caller-selected token for read-only account lookups
+    required: true
+  app-role:
+    description: Credential role (factory, reviewer, or router for the built-in token)
+    required: true
+  app-slug:
+    description: App slug returned by token creation (required for App workers)
+
+runs:
+  using: composite
+  steps:
+    - name: Validate bot identities
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.gh-token }}
+        FACTORY_USER_ID: ${{ vars.FACTORY_USER_ID }}
+        REVIEWER_USER_ID: ${{ vars.REVIEWER_USER_ID }}
+        APP_ROLE: ${{ inputs.app-role }}
+        APP_SLUG: ${{ inputs.app-slug }}
+      run: bash "$GITHUB_ACTION_PATH/resolve.sh"

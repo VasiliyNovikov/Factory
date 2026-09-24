@@ -5,6 +5,8 @@ needs, or skips it.
 
 - Keep the router simple and AI-driven.
 - Workers own execution, freshness checks, and result verification.
+- Use the shared [bot identity contract](github-app.md#bot-identity-contract);
+  author checks use numeric role IDs, not logins.
 
 ## Route to
 
@@ -32,7 +34,7 @@ needs, or skips it.
 - An existing PR is not required for issue-only work; implementation may create
   a PR or native sub-issues.
 - When a PR already exists, it must:
-  - Be open, in the same repository, and authored by `factory-worker-bot[bot]`.
+  - Be open, in the same repository, and have author user ID `FACTORY_USER_ID`.
   - Use branch `factory/issue-NUMBER`, targeting the default branch.
   - Carry `triaged` and exactly the same tracking label as the original issue.
 
@@ -72,7 +74,7 @@ Default-branch discovery therefore belongs here, not in each implementer.
 The job condition enforces the payload-only skips noted below before checkout
 or AI setup. Other skip decisions remain AI-owned.
 
-- `factory-worker-bot[bot]` comments/reviews (job-filtered for conversation
+- Factory-authored comments/reviews (job-filtered by `FACTORY_USER_ID` for conversation
   comments only; submitted reviews still reach AI).
 - Approvals.
 - Unrelated labels or events (job-filtered for non-`triaged` issue-label events).
@@ -99,7 +101,7 @@ or AI setup. Other skip decisions remain AI-owned.
 - Reviewer-App submissions use `pull_request_review: submitted`; PR-review
   `workflow_run` events are excluded to avoid duplicate delivery.
 - Before routing reviewer-App findings, verify:
-  - The review belongs to the event's PR, is authored by `REVIEWER_LOGIN`, and its
+  - The review belongs to the event's PR, has author user ID `REVIEWER_USER_ID`, and its
     marker identifies this repository's default-branch `pr-review.yml` attempt.
   - The full reviewed SHA in the body matches that attempt's `PR_HEAD_SHA`, not a
     later review API `commit_id` or the worker's default-branch `head_sha`.

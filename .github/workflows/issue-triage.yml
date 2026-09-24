@@ -48,6 +48,13 @@ jobs:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
 
+      - name: Resolve bot identities
+        uses: ./.github/actions/identity
+        with:
+          gh-token: ${{ steps.factory-token.outputs.token }}
+          app-role: factory
+          app-slug: ${{ steps.factory-token.outputs.app-slug }}
+
       - name: Triage issue with Copilot
         id: worker
         uses: ./.github/actions/ai
@@ -71,10 +78,9 @@ jobs:
         if: steps.worker.outputs.skipped != 'true'
         env:
           GH_TOKEN: ${{ steps.factory-token.outputs.token }}
-          FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
         run: |
           gh api --paginate --slurp \
             "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" |
-            jq -e --arg login "$FACTORY_LOGIN" --arg marker "<!-- ${RESULT_MARKER} -->" '
-              any(.[][]; .user.login == $login and ((.body // "") | contains($marker)))
+            jq -e --argjson factory "$FACTORY_USER_ID" --arg marker "<!-- ${RESULT_MARKER} -->" '
+              any(.[][]; .user.id == $factory and ((.body // "") | contains($marker)))
             ' >/dev/null

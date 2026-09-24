@@ -30,7 +30,7 @@ changing or executing it.
     variable in the body.
 - Use `COMMENT` for findings, with paths, lines, impact, and suggested fixes;
   use inline comments where possible.
-- If clean, use `APPROVE`. For PRs authored by `REVIEWER_LOGIN`, use `COMMENT`
+- If clean, use `APPROVE`. For PRs whose author user ID equals `REVIEWER_USER_ID`, use `COMMENT`
   explaining the self-approval restriction instead.
 - Never approve an incomplete review. Report incomplete work or API failures accurately.
 
@@ -55,7 +55,7 @@ changing or executing it.
   Reconcile uncertain submissions from this attempt before retrying to avoid
   duplicate reviews.
 - Recover a failed report write without resubmitting an already accepted review.
-- Confirm the submitted review is authored by `REVIEWER_LOGIN` and satisfies the outcome
+- Confirm the submitted review's author user ID equals `REVIEWER_USER_ID` and satisfies the outcome
   contract above; a successful CLI exit is not proof.
 - Record the review URL, decision, verification evidence, and outstanding work in
   `GITHUB_STEP_SUMMARY`, or report the actual failure. API errors are not skips.
@@ -69,6 +69,9 @@ documented [accepted risk](factory-router.md#accepted-risk-router-changes-can-ru
 
 ## Identity and execution
 
+- Follow the shared [bot identity contract](github-app.md#bot-identity-contract).
+  Use numeric user IDs for current and historical authors; resolved logins are
+  not identity evidence.
 - Use the [reviewer App](github-app.md#configure-the-apps) token as
   `GH_TOKEN` for all repository/review operations, including receipt verification.
 - Keep the built-in token for checkout and `COPILOT_GITHUB_TOKEN` model access;
@@ -86,9 +89,10 @@ documented [accepted risk](factory-router.md#accepted-risk-router-changes-can-ru
 
 ## Verification limits
 
-The read-only workflow check requires a submitted bot comment review or approval
+The read-only workflow check requires a submitted reviewer-ID comment review or approval
 matching the expected commit, visible full SHA, and run marker, unless Copilot
-skipped before mutation. It checks the receipt, not review quality or live event
+skipped before mutation. An approval cannot satisfy the check for a reviewer-authored
+PR, even after a login change. It checks the receipt, not review quality or live event
 delivery.
 
 Reviewer-App authentication, approvals, and native handoff still need verification

@@ -60,6 +60,9 @@
   - [Issue implementation and follow-ups](docs/factory/issue-implementation.md)
   - [Periodic workflow diagnostics](docs/factory/workflow-diagnostics.md)
   - [Full repository source review](docs/factory/repository-review.md)
+- Factory/reviewer author checks use `FACTORY_USER_ID` / `REVIEWER_USER_ID`,
+  following the shared [bot identity contract](docs/factory/github-app.md#bot-identity-contract).
+  Resolved logins are for display/API addressing, not ownership or trust.
 - No application toolchain, dependency manifest, or build/test/lint commands are
   configured. Automated workflow tests are deferred for now.
 - AI setup and issue/PR-creation examples are documentation snippets, not installed
