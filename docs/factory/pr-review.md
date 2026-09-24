@@ -40,6 +40,11 @@ changing or executing it.
 
 ## Skip and report
 
+- Review bodies and job summaries are literal Markdown, including backticks
+  and resolved runtime identifiers. Persist them without shell interpretation,
+  preserving the exact values read from the worker environment.
+- `GITHUB_STEP_SUMMARY` is an existing runner-provided file. Preserve its
+  current content when adding reports.
 - Skip stale or already-covered assignments, or approval holds with no authorized
   review work remaining, only before mutation: write `skipped=true` to
   `GITHUB_OUTPUT`, record evidence in `GITHUB_STEP_SUMMARY`, and make no GitHub
@@ -54,6 +59,7 @@ changing or executing it.
 - Once mutations begin, verify and report partial outcomes rather than skipping.
   Reconcile uncertain submissions from this attempt before retrying to avoid
   duplicate reviews.
+- Recover a failed report write without resubmitting an already accepted review.
 - Confirm the submitted review is authored by `REVIEWER_LOGIN` and satisfies the outcome
   contract above; a successful CLI exit is not proof.
 - Record the review URL, decision, verification evidence, and outstanding work in
