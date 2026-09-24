@@ -78,8 +78,8 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Address the request and applicable outstanding feedback with focused, verified
   changes. Use the provided Factory commit identity; avoid speculative edits and
   empty commits.
-- Create or update one PR with `triaged`, `factory-issue-NUMBER`, `Fixes #NUMBER`,
-  a change summary, and actual verification results.
+- Create or update one PR labeled `triaged` and `factory-issue-NUMBER`, with
+  `Fixes #NUMBER`, a change summary, and actual verification results.
 - Answer ordinary comments and review summaries in their main conversation;
   they are not resolvable threads.
 - Answer absorbed feedback where it was raised and in the triggering conversation.
@@ -120,8 +120,9 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
   - It belongs to the eligible PR; comment-supplied IDs are not authorization.
   - Its current contents/state and the remote head.
   - The App's current permission for the action.
-- Resolve only when every actionable point is addressed in the verified remote
-  revision. Outdated lines, attempted fixes, or passing checks alone are not enough.
+- Resolve each relevant unresolved thread once every actionable point is addressed
+  in the verified remote revision. Outdated lines, attempted fixes, or passing
+  checks alone are not enough.
 - Keep unclear, partial, blocked, or disputed feedback unresolved, with a specific
   question or explanation in its original thread.
 - Direct follow-ups to the main PR conversation or a submitted comment/change-request
