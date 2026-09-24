@@ -58,7 +58,8 @@ and attempt. No findings means no issues.
 Issues are created **without labels**, so App-authored `issues.opened` events
 enter normal [triage](issue-triage.md). Copilot verifies creation responses and
 issue URLs and leaves later labels and triage updates alone. Diagnostics
-completions are ignored by the [Factory event router](factory-router.md)'s AI.
+completions are skipped by the [Factory event router](factory-router.md)'s job
+condition.
 
 Within the 30-minute job budget, Copilot writes the window, per-workflow results,
 excluded runs, existing/new issue links, and evidence gaps or failures to the job
