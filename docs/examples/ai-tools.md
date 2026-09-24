@@ -103,7 +103,7 @@ to combine tool installation and harness invocation through these same scripts:
   Set `harness: opencode` under `with:` to install and invoke only OpenCode.
   Other values fail setup before installation. Existing Factory callers omit this
   input and continue to use Copilot, without installing OpenCode.
-- The caller selects `gh-token`: the built-in token for routing,
+- The caller selects `gh-token`: the built-in token for routing and maintenance,
   `steps.reviewer-token.outputs.token` for PR review, or
   `steps.factory-token.outputs.token` for other App workers. The action exports it as
   `GH_TOKEN` only for invocation, not installation. `GITHUB_TOKEN` and

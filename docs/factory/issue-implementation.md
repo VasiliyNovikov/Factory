@@ -1,7 +1,8 @@
 # Issue and PR implementation
 
 [Implementation AI](../../.github/workflows/issue-implementation.yml) handles triaged
-issues and feedback on their Factory PRs, selected by the [router](factory-router.md).
+issues and feedback on their Factory PRs, selected by the [router](factory-router.md)
+or [maintenance](factory-maintenance.md).
 
 - Copilot owns context gathering, freshness, implementation, decomposition,
   replies, and verification.
@@ -12,9 +13,9 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 ## Assignment and context
 
 - `GITHUB_EVENT_PATH` contains dispatch inputs, not the original webhook.
-  Input definitions belong to the worker YAML and [router contract](factory-router.md#dispatch-and-reporting).
+  Input definitions belong to the worker YAML and [shared dispatch contract](routing-policy.md#dispatch-contract).
 - Handle only the selected issue's scope without repeating routing analysis;
-  repository-wide discovery belongs to the router.
+  repository-wide discovery belongs to the coordinators.
 - Decisions must account for:
   - The full current discussion.
   - Outstanding feedback, including beyond the triggering event because pending jobs can be superseded.
@@ -23,7 +24,7 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 - Conversation requests and review findings remain actionable when they still
   apply to current code, regardless of head drift or outdated inline locations.
 - Review-worker findings must belong to the source review and its
-  [verified reviewed SHA](factory-router.md#feedback-and-event-handling), not a later
+  [verified reviewed SHA](routing-policy.md#feedback-verification), not a later
   API `commit_id` or the worker run's default-branch `head_sha`.
 - CI evidence must match the current PR head or merge revision.
 
@@ -115,8 +116,8 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
   changes. Blind side selection and weakened checks are not acceptable.
 - GitHub mergeability or policy status does not gate this work or replace
   current-revision verification.
-- Push maintenance covers only `source_pr`; it cannot create issues or PRs, or
-  expand the issue's scope.
+- Default-branch-only maintenance, from a push or periodic/manual recovery,
+  covers only `source_pr`; it cannot create issues or PRs, or expand the issue's scope.
 
 ### Verification and blockers
 
@@ -159,8 +160,9 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
 - Skip stale or already-handled assignments before mutations only when no current
   eligible work remains, including a required base merge. Record evidence in
   `GITHUB_STEP_SUMMARY` and make no GitHub changes.
-- Push-only maintenance is a skip when the verified PR head already includes the
-  current default branch, with no changes, unhandled feedback, errors, or blockers.
+- Push-only maintenance or base-only recovery is a skip when the verified PR head
+  already includes the current default branch, with no changes, unhandled feedback,
+  errors, or blockers.
   Do not post no-op PR comments.
 - Once mutations begin, verify and report partial outcomes rather than claiming a skip.
 - Unless skipped before mutation, post a new Factory comment to the triggering

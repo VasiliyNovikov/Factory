@@ -78,6 +78,22 @@ maintenance skips without PR comments only when the PR already includes the curr
 default branch and there are no changes, outstanding feedback, errors, or blockers.
 Conflicts that cannot be resolved safely get a specific blocker on the PR.
 
+## Periodic recovery
+
+[Factory maintenance](docs/factory/factory-maintenance.md) runs hourly at minute
+17 UTC or manually on the default branch. It discovers missed or interrupted
+triage handoffs, implementation, reviews, feedback, and default-branch updates,
+then dispatches the existing workers using the router's
+[shared policy](docs/factory/routing-policy.md).
+
+The coordinator uses the built-in token for read-only discovery and workflow
+dispatch, not comments, labels, code changes, or new issues/PRs. It reconciles
+active/handled work across sweeps and ordinary routing, respects human/approval
+holds and child-owned scope, and reports coverage, dispatch evidence, and partial
+failures in the job summary. Dispatch acceptance is not completed recovery.
+Scheduled delivery, overlap handling, and retry recovery still need post-merge
+live verification.
+
 ## Workflow diagnostics
 
 [Workflow diagnostics](docs/factory/workflow-diagnostics.md) analyzes past workflow runs
@@ -164,3 +180,5 @@ in the job summary and logs.
 5. [Diagnose workflow runs and create actionable issues](docs/factory/workflow-diagnostics.md)
 6. [Route events to default-branch workers](docs/factory/factory-router.md)
 7. [Review the whole repository and create actionable issues](docs/factory/repository-review.md)
+8. [Recover unattended lifecycle work](docs/factory/factory-maintenance.md)
+9. [Shared worker eligibility and dispatch rules](docs/factory/routing-policy.md)

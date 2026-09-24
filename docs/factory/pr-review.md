@@ -1,13 +1,13 @@
 # PR review
 
 [Review AI](../../.github/workflows/pr-review.yml) handles PRs and reassessment
-requests selected by the [router](factory-router.md). Review proposed code without
-changing or executing it.
+requests selected by the [router](factory-router.md) or [maintenance](factory-maintenance.md).
+Review proposed code without changing or executing it.
 
 ## Assignment and boundaries
 
 - `GITHUB_EVENT_PATH` contains dispatch inputs, not the original webhook.
-  The worker YAML and [router contract](factory-router.md#dispatch-and-reporting)
+  The worker YAML and [shared dispatch contract](routing-policy.md#dispatch-contract)
   define them; do not repeat routing analysis.
 - Before reviewing and before posting, use `gh` to verify the PR is open,
   non-draft, from this repository, and still at the expected `PR_HEAD_SHA`.
@@ -63,7 +63,7 @@ changing or executing it.
   do not relax required checks to meet the deadline.
 
 App-authored submissions trigger the native router, which
-[verifies the source assessment](factory-router.md#feedback-and-event-handling)
+[verifies the source assessment](routing-policy.md#feedback-verification)
 before dispatching feedback. The router uses the PR merge revision, with the
 documented [accepted risk](factory-router.md#accepted-risk-router-changes-can-run-before-merge).
 

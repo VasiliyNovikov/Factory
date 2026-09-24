@@ -1,13 +1,14 @@
 # Triage issues before implementation
 
 [Triage AI](../../.github/workflows/issue-triage.yml) assesses issues and clarification
-selected by the [router](factory-router.md). `triaged` means **ready for
-implementation**, not just inspected. Do not implement code or create issues or PRs.
+selected by the [router](factory-router.md) or [maintenance](factory-maintenance.md).
+`triaged` means **ready for implementation**, not just inspected.
+Do not implement code or create issues or PRs.
 
 ## Assignment and readiness
 
 - `GITHUB_EVENT_PATH` contains dispatch inputs, not the original webhook.
-  The worker YAML and [router contract](factory-router.md#dispatch-and-reporting)
+  The worker YAML and [shared dispatch contract](routing-policy.md#dispatch-contract)
   define them; do not repeat routing analysis.
 - Check live state before acting and before each mutation: the target must still
   be an open, untriaged issue, not a PR.
