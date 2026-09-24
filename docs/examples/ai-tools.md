@@ -2,7 +2,7 @@
 
 Use this reusable snippet as a starting point for a manually triggered workflow;
 it is not an installed workflow in this repository. It checks out the scripts and
-model configuration, installs the standalone tools without Node.js/npm, and runs a
+model configuration, installs standalone Copilot without Node.js/npm, and runs a
 basic prompt.
 
 ```yaml
@@ -22,8 +22,8 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Install AI tools
-        run: ./scripts/install-tools.sh
+      - name: Install Copilot
+        run: ./scripts/install-tools.sh copilot
 
       - name: Run a prompt
         env:
@@ -37,21 +37,31 @@ jobs:
 [`scripts/install-tools.sh`](../../scripts/install-tools.sh) uses the official
 [Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli)
 and [OpenCode](https://opencode.ai/docs/#install) install scripts to install their
-latest stable standalone binaries. It retains missing-`jq` installation and
-checks both CLI versions; download, installation, or version-check failures fail
-the setup.
+latest stable standalone binaries:
+
+| Command | Installed CLIs |
+| --- | --- |
+| `./scripts/install-tools.sh copilot` | Copilot only (the example above) |
+| `./scripts/install-tools.sh opencode` | OpenCode only |
+| `./scripts/install-tools.sh` | Both, preserving direct-install compatibility |
+
+Only the selected CLI is downloaded and version-checked, or both when no argument
+is supplied. Unsupported arguments fail before installation. Missing `jq` is still
+installed; download, installation, or version-check failures fail the setup.
 
 Copilot installs to `$HOME/.local/bin` and OpenCode to `$HOME/.opencode/bin`.
-The installer adds both to its `PATH` and to `GITHUB_PATH` for subsequent Actions
-steps, without relying on shell startup files. For local use, add those directories
-to your calling shell before invoking `scripts/ai.sh`:
+The installer adds the installed CLI directories to its `PATH` and to `GITHUB_PATH`
+for subsequent Actions steps, without relying on shell startup files. For local
+use, add the corresponding directories to your calling shell before invoking
+`scripts/ai.sh` (both shown here):
 
 ```sh
 export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 ```
 
-Use `--harness opencode` to run the same prompt through OpenCode. Both harnesses
-read named profiles from [`.github/model-config.json`](../../.github/model-config.json).
+To run the same prompt through OpenCode, change the installation argument to
+`opencode` and the invocation to `--harness opencode`. Both harnesses read named
+profiles from [`.github/model-config.json`](../../.github/model-config.json).
 `--profile NAME` defaults to `default`; select `route`, `triage`, `implement`,
 `review`, or any other configured name explicitly:
 
@@ -89,9 +99,10 @@ to combine tool installation and harness invocation through these same scripts:
 - `prompt` and `gh-token` are required; `profile` defaults to `default`.
   Prompts are passed as data, not shell code. Use Actions expressions for invocation
   values, not shell variable expansion in the input.
-- `harness` defaults to `copilot`; set `harness: opencode` under `with:` to use
-  OpenCode. Other values fail invocation through `scripts/ai.sh`. Existing Factory
-  callers omit this input and continue to use Copilot.
+- `harness` defaults to `copilot`; the action installs and invokes only that CLI.
+  Set `harness: opencode` under `with:` to install and invoke only OpenCode.
+  Other values fail setup before installation. Existing Factory callers omit this
+  input and continue to use Copilot, without installing OpenCode.
 - The caller selects `gh-token`: the built-in token for routing,
   `steps.reviewer-token.outputs.token` for PR review, or
   `steps.factory-token.outputs.token` for other App workers. The action exports it as

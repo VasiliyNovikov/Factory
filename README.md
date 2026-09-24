@@ -125,8 +125,9 @@ PR review uses a separate App with `FACTORY_REVIEWER_CLIENT_ID` and
 `FACTORY_REVIEWER_PRIVATE_KEY`; see [App setup](docs/factory/github-app.md#configure-the-apps).
 Its native submitted-review handoff still needs post-merge live verification.
 
-- `scripts/install-tools.sh` installs standalone Copilot CLI and OpenCode via their
-  official scripts (no Node.js/npm setup), plus missing `jq`.
+- `scripts/install-tools.sh copilot` or `opencode` installs only that standalone CLI
+  via its official script (no Node.js/npm setup), plus missing `jq`. Omitting the
+  argument installs both; the shared action installs only its selected harness.
 - `scripts/ai.sh` reads `.github/model-config.json` and invokes the selected CLI.
 - Factory workflows share the [Run AI action](docs/examples/ai-tools.md#shared-factory-action)
   for installation and invocation; checkout, credentials, and result checks stay
