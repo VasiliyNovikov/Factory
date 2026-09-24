@@ -71,7 +71,9 @@
   invocation. Keep checkout, credential selection, prompts, and receipt checks in
   callers; see `docs/examples/ai-tools.md#shared-factory-action` for its contract.
 - `.github/workflows/factory-router.yml` analyzes issue, comment, PR-target, submitted-review,
-  workflow-completion, and default-branch push events with Copilot. Pushes dispatch
+  workflow-completion, and default-branch push events with Copilot. Payload-only
+  skips in the job condition run before checkout or AI setup; remaining routing
+  decisions are AI-owned. Pushes dispatch
   one default-branch maintenance worker per eligible Factory PR; other events
   dispatch at most one worker. Router jobs run independently; worker AI owns
   freshness checks and result verification. `docs/factory/routing-policy.md`

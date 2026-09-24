@@ -62,16 +62,24 @@ Default-branch discovery therefore belongs in coordinators, not in each implemen
 
 ## Skip
 
-- `factory-worker-bot[bot]` comments/reviews.
+The job condition enforces the payload-only skips noted below before checkout
+or AI setup. Other skip decisions remain AI-owned.
+
+- `factory-worker-bot[bot]` comments/reviews (job-filtered for conversation
+  comments only; submitted reviews still reach AI).
 - Approvals.
-- Unrelated labels or events.
+- Unrelated labels or events (job-filtered for non-`triaged` issue-label events).
+- Fork PR lifecycle events and submitted reviews (job-filtered); fork detection
+  for conversation comments remains AI-owned.
 - Successful CI without review findings.
 - Cancelled runs.
 - Router, maintenance, triage, implementation, diagnostics, or
-  [repository review](repository-review.md) completions. Automation must not
-  trigger itself; source-review findings enter through new issues instead.
-- Failed review workers: these are not PR-code CI failures.
-- Skipped reviews: these have no findings.
+  [repository review](repository-review.md) completions (job-filtered).
+  Automation must not trigger itself; source-review findings enter through new
+  issues instead.
+- Failed review-worker completions (job-filtered): these are not PR-code CI
+  failures.
+- Skipped review-worker completions (job-filtered): these have no findings.
 
 The [shared holds and handled-work rules](routing-policy.md#holds-and-handled-work)
 also apply. These event skips do not prevent periodic discovery of an unfinished
@@ -144,4 +152,7 @@ handoff or a needed fresh assessment after a failed/cancelled worker.
   needs [post-deployment verification](pr-review.md#verification-limits).
 - Default-branch fan-out needs post-merge verification; a PR cannot exercise its
   changed default-branch push trigger before deployment.
+- Payload-only comment, label, and completion guards need post-merge verification:
+  a Factory comment must skip the router job without AI setup, while a `triaged`
+  handoff must still dispatch implementation.
 - Static checks do not establish AI adherence or end-to-end event delivery.
