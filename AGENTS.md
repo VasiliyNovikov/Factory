@@ -17,11 +17,13 @@
   features, and minimal workflow glue over custom scripted decision systems.
   Add scripts or orchestration only for a concrete requirement or a demonstrated
   reduction in overall complexity.
-- In AI prompts and guidance, state **what** is required: goals, when to act or
-  skip, constraints, and verifiable outcomes. Let capable models determine
-  **how** using available tools and context. Keep instructions concise; prescribe
-  procedures only where a required contract, safety boundary, or demonstrated
-  failure makes them necessary. Avoid duplicating implementation details in docs.
+- Write AI prompts and guidance as compact contracts: goals, scope, when to
+  act/hold/skip, safety boundaries, and verifiable outcomes. Let capable models
+  choose tools and steps; prescribe procedures only for required contracts,
+  safety boundaries, or demonstrated failures.
+- When review reveals a gap, strengthen the shared rule rather than append a
+  checklist for each scenario. Consolidate overlapping guidance and remove
+  redundant examples or API recipes without weakening required checks.
 - When a prompt references a guidance document, keep detailed requirements in
   that document rather than duplicating them in the prompt. Use the prompt for
   the task and invocation-specific context.
@@ -54,6 +56,7 @@
   - [Issue creation](docs/examples/create-issue.md)
 - Factory workflow guidance and shared App setup live in `docs/factory/`:
   - [Factory GitHub App setup](docs/factory/github-app.md)
+  - [Participant and owner approval](docs/factory/participant-approval.md)
   - [Central event routing and dispatch](docs/factory/factory-router.md)
   - [PR review](docs/factory/pr-review.md)
   - [Issue triage and label handoff](docs/factory/issue-triage.md)
@@ -81,13 +84,20 @@
   `docs/factory/factory-router.md`. Other router triggers use the default branch.
 - Review, triage, and implementation are dispatch-only workers. Factory setup
   checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
+- [Participant approval](docs/factory/participant-approval.md) is AI-owned:
+  external requests require scoped repository-owner approval before substantive
+  work. Router/triage may run to request approval; this is not a pre-Copilot gate.
+  Workers recheck individual requests, preserving configured Factory automation
+  without trusting arbitrary bots or using labels as approval.
 - `.github/workflows/pr-review.yml` reviews non-draft, same-repository PRs and
   verifies that Copilot posted a review unless AI skipped a stale/handled task.
   Reviews use a separate App and reach the router through native submitted-review
   events. See the PR-review guidance for triggering and bot-approval constraints.
 - `.github/workflows/issue-triage.yml` assesses assigned untriaged issues and clarification
-  comments, suggests decomposition when useful, and applies a unique tracking
-  label followed by `triaged` when ready. It does not create issues or PRs.
+  comments, requests owner approval for external issues, suggests decomposition
+  when useful, and applies a unique tracking label followed by `triaged` when
+  approved and ready. Waiting/rejected issues retain their labels. It does not
+  create issues or PRs.
 - `.github/workflows/issue-implementation.yml` implements triaged issues and feedback on
   their Factory PRs, including default-branch merges and conflict resolution, or
   creates native sub-issues for independent delivery using the Factory App. Maintenance handles
