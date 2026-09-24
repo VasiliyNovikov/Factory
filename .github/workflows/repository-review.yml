@@ -35,10 +35,15 @@ jobs:
           permission-pull-requests: read
           permission-issues: write
 
+      - name: Resolve bot identities
+        uses: ./.github/actions/identity
+        with:
+          gh-token: ${{ steps.factory-token.outputs.token }}
+          app-role: factory
+          app-slug: ${{ steps.factory-token.outputs.app-slug }}
+
       - name: Review the full repository with Copilot
         uses: ./.github/actions/ai
-        env:
-          FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
           profile: review

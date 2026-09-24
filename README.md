@@ -28,8 +28,10 @@ Each child enters normal triage and receives its own tracking identity when read
 **Actors:** Agentic blocks use Copilot in CI; human / bot input can come from a
 human or another bot under its own account. Automation denotes CI runs and checks.
 
-**Identities:** Factory = `factory-worker-bot[bot]`;
-Reviewer = `factory-reviewer-bot[bot]`; Actions = `github-actions[bot]`.
+**Identities:** Factory and reviewer are separate App bot accounts identified by
+the configured `FACTORY_USER_ID` and `REVIEWER_USER_ID`, not changeable logins;
+see the [bot identity contract](docs/factory/github-app.md#bot-identity-contract).
+Actions uses the built-in workflow identity.
 Running in Actions does not make App-created content Actions-authored.
 
 ```mermaid

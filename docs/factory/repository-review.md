@@ -34,7 +34,8 @@ one pending invocation. The 30-minute budget includes setup and reporting.
 - Link matching existing work in the summary instead of editing, commenting on,
   reopening, or replacing it. No new actionable findings means no new issues.
 - Create one new issue per distinct actionable finding in `GITHUB_REPOSITORY`,
-  authored by `FACTORY_LOGIN` using the Factory App token. Each body includes:
+  authored by user ID `FACTORY_USER_ID` using the Factory App token under the
+  shared [bot identity contract](github-app.md#bot-identity-contract). Each body includes:
   - Source permalinks with line references at the reviewed commit.
   - Evidence and impact.
   - Bounded proposed scope and verifiable acceptance criteria.

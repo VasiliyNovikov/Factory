@@ -21,7 +21,9 @@ jobs:
   route:
     if: >-
       (github.event_name != 'issue_comment' ||
-        github.event.comment.user.login != 'factory-worker-bot[bot]') &&
+        vars.FACTORY_USER_ID == '' || vars.REVIEWER_USER_ID == '' ||
+        vars.FACTORY_USER_ID == vars.REVIEWER_USER_ID ||
+        format('{0}', github.event.comment.user.id) != vars.FACTORY_USER_ID) &&
       (github.event_name != 'issues' || github.event.action != 'labeled' ||
         github.event.label.name == 'triaged') &&
       (github.event_name != 'push' ||
@@ -51,6 +53,12 @@ jobs:
         with:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
+
+      - name: Resolve bot identities
+        uses: ./.github/actions/identity
+        with:
+          gh-token: ${{ github.token }}
+          app-role: router
 
       - name: Route event with Copilot
         uses: ./.github/actions/ai

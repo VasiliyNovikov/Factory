@@ -60,7 +60,9 @@ own tracking identity only when ready. Triage does not create or link children.
 - Once mutations begin, verify and report partial outcomes rather than skipping.
   After a marked decision, use unmarked comments for failure details.
 - Confirm the Factory-authored decision and any claimed label handoff in fresh
-  GitHub state. Reconcile uncertain outcomes before retrying.
+  GitHub state, matching author user ID `FACTORY_USER_ID` under the shared
+  [bot identity contract](github-app.md#bot-identity-contract).
+  Reconcile uncertain outcomes before retrying.
 - Record the decision, verification evidence and links, and outstanding work in
   `GITHUB_STEP_SUMMARY`. API errors and unverified outcomes are failures, not skips.
 - Budget the 15-minute job including setup, reporting, and verification;
