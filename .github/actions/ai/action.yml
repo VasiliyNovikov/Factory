@@ -1,9 +1,9 @@
 name: Run AI
-description: Install AI tools and invoke the selected harness with a named model profile
+description: Install and invoke the selected AI harness with a named model profile
 
 inputs:
   harness:
-    description: AI harness (copilot or opencode)
+    description: AI harness to install and invoke (copilot or opencode)
     default: copilot
   prompt:
     description: Task and invocation-specific context for the selected harness
@@ -23,9 +23,11 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Install AI tools
+    - name: Install selected AI harness
       shell: bash
-      run: ./scripts/install-tools.sh
+      env:
+        AI_HARNESS: ${{ inputs.harness }}
+      run: ./scripts/install-tools.sh "$AI_HARNESS"
 
     - name: Invoke AI
       id: invoke
