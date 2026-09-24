@@ -1,8 +1,7 @@
 # Create an issue
 
-This issue-creation example was tested successfully and is retained as a reusable
-documentation snippet, not an installed workflow. Keep the setup steps from
-[Install AI tools and run a prompt](ai-tools.md) and replace the job permissions with:
+This tested snippet creates one new `test` issue per run. It is not an installed
+workflow. Keep the [AI setup](ai-tools.md) and use these job permissions:
 
 ```yaml
 permissions:
@@ -25,12 +24,10 @@ Replace the basic prompt step with:
     Actually create the issue, then report its URL. If creation fails, report the error."
 ```
 
-`contents: read` is enough for checkout; `issues: write` allows issue creation.
-The historical workflow also set `persist-credentials: false` on checkout,
-because this test does not push commits. Each run creates a new `test` issue.
+`contents: read` allows checkout; `issues: write` allows creation. The tested
+workflow used `persist-credentials: false` on checkout because it does not push.
 
 ## Verify the result
 
-Copilot can report a tool failure and still exit successfully. A green workflow
-run alone does not prove the issue was created. Check the reported URL with
-`gh issue view <URL>`, or add an explicit CI existence check.
+A successful Copilot exit does not prove creation. Check the reported URL with
+`gh issue view <URL>`, or add a CI existence check.
