@@ -11,7 +11,9 @@ Starting with small things:
 ## Factory workflow
 
 The [Factory router](docs/factory/factory-router.md) analyzes events and dispatches triage,
-review, or implementation on the default branch. Router runs are independent;
+review, or implementation on the default branch. Payload-only skips run in the
+router job condition before checkout or AI setup; other routing decisions remain
+AI-led. Router runs are independent;
 workers own issue/PR concurrency and AI-led freshness checks. Setup checkouts use
 the workflow's exact revision. Submitted reviews directly run the PR-revision
 router, so router/setup changes can execute before merge; see the
