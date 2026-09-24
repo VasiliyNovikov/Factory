@@ -2,8 +2,9 @@
 
 ## Working style
 
-- Make small, focused changes with clear names and structure. Avoid unrelated
-  edits, duplication, and needless abstractions.
+- Prefer small, focused changes without sacrificing correctness, quality, clarity,
+  or maintainability. Use clear names and structure; avoid unrelated edits,
+  duplication, and needless abstractions.
 - Keep tightly coupled work together. Split code, docs, workflows, or tasks only
   when it improves understanding, review, or independent delivery.
 - Give issues and PRs a bounded scope, verifiable acceptance criteria, and explicit
