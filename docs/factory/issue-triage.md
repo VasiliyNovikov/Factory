@@ -13,6 +13,9 @@ implementation**, not just inspected. Do not implement code or create issues or 
   be an open, untriaged issue, not a PR.
 - Assess clarity, relevance, feasibility, and actionable scope using the full
   current discussion, including human/bot answers, repository guidance, and relevant code.
+- When using `gh api --paginate --slurp` for discussion reads, filter the
+  collected pages with external `jq`. Do not combine `--slurp` with `--jq` or
+  `--template`; these options are incompatible.
 - Suggest decomposition in the triage comment when independently actionable
   parts would improve delivery. This is advice, not a separate outcome or a
   reason to withhold an otherwise-ready handoff: implementation chooses a PR
