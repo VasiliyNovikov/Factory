@@ -22,6 +22,8 @@ jobs:
     if: >-
       (github.event_name != 'issue_comment' ||
         github.event.comment.user.login != 'factory-worker-bot[bot]') &&
+      (github.event_name != 'pull_request_review' ||
+        github.event.review.user.login != 'factory-worker-bot[bot]') &&
       (github.event_name != 'issues' || github.event.action != 'labeled' ||
         github.event.label.name == 'triaged') &&
       (github.event_name != 'push' ||

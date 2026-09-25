@@ -15,8 +15,8 @@ review, or implementation on the default branch. Payload-only skips run in the
 router job condition before checkout or AI setup; other routing decisions remain
 AI-led. Router runs are independent;
 workers own issue/PR concurrency and AI-led freshness checks. Setup checkouts use
-the workflow's exact revision. Submitted reviews directly run the PR-revision
-router, so router/setup changes can execute before merge; see the
+the workflow's exact revision. Eligible submitted reviews directly run the
+PR-revision router, so router/setup changes can execute before merge; see the
 [accepted risk](docs/factory/factory-router.md#accepted-risk-router-changes-can-run-before-merge).
 
 Triage applies the unique `factory-issue-<number>` tracking label before `triaged`

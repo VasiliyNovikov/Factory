@@ -75,10 +75,10 @@
   one default-branch maintenance worker per eligible Factory PR; other events
   dispatch at most one worker. Router jobs run independently; worker AI owns
   freshness checks and result verification. `docs/factory/factory-router.md` defines dispatch inputs.
-- Submitted reviews directly run the router from the PR merge revision. Router
-  and setup changes can execute before merge with the router's token permissions;
-  this accepted risk and dispatch compatibility requirements are documented in
-  `docs/factory/factory-router.md`. Other router triggers use the default branch.
+- Eligible submitted reviews directly run the router from the PR merge revision.
+  Router and setup changes can execute before merge with the router's token
+  permissions; this accepted risk and dispatch compatibility requirements are
+  documented in `docs/factory/factory-router.md`. Other router triggers use the default branch.
 - Review, triage, and implementation are dispatch-only workers. Factory setup
   checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
 - `.github/workflows/pr-review.yml` reviews non-draft, same-repository PRs and
