@@ -72,8 +72,7 @@ Default-branch discovery therefore belongs here, not in each implementer.
 The job condition enforces the payload-only skips noted below before checkout
 or AI setup. Other skip decisions remain AI-owned.
 
-- `factory-worker-bot[bot]` comments/reviews (job-filtered for conversation
-  comments only; submitted reviews still reach AI).
+- `factory-worker-bot[bot]` conversation comments and submitted reviews (job-filtered).
 - Approvals.
 - Unrelated labels or events (job-filtered for non-`triaged` issue-label events).
 - Closed targets or fork PRs (job-filtered for fork PR lifecycle events and
@@ -188,7 +187,9 @@ or AI setup. Other skip decisions remain AI-owned.
   needs [post-deployment verification](pr-review.md#verification-limits).
 - Default-branch fan-out needs post-merge verification; a PR cannot exercise its
   changed default-branch push trigger before deployment.
-- Payload-only comment, label, and completion guards need post-merge verification:
-  a Factory comment must skip the router job without AI setup, while a `triaged`
-  handoff must still dispatch implementation.
+- Payload-only comment, submitted-review, label, and completion guards need
+  post-merge verification with live run links: Factory conversation comments and
+  thread-reply reviews must skip the router job without checkout or AI setup,
+  while a `triaged` handoff and actionable reviewer-App findings must still
+  dispatch implementation.
 - Static checks do not establish AI adherence or end-to-end event delivery.
