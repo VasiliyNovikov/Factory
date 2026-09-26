@@ -149,8 +149,9 @@ issues and feedback on their Factory PRs, selected by the [router](factory-route
   checks alone are insufficient.
 - Unclear, partial, blocked, or disputed feedback needs a specific question or
   explanation in its original thread and remains unresolved.
-- Thread replies must direct follow-ups to the main PR conversation or a submitted
-  comment/change-request review: inline replies do not trigger runs.
+- Answer inline feedback in its original thread without requiring participants
+  to repost elsewhere. Standalone inline replies reach the router as empty-body
+  `COMMENTED` submitted reviews.
 - Replies must not duplicate equivalent Factory responses to unchanged feedback/code,
   including on retries and reruns.
 

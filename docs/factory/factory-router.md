@@ -94,8 +94,14 @@ or AI setup. Other skip decisions remain AI-owned.
 
 - Humans and other bots may provide feedback.
 - Main conversation comments and submitted reviews trigger routing.
-- Standalone inline replies and edited comments do not trigger routing.
-  TODO: Support routing for standalone inline replies and edited comments.
+- Standalone inline comments and replies arrive as empty-body `COMMENTED`
+  reviews through the existing `pull_request_review: submitted` trigger.
+  - Assess non-Factory inline comments and replies like other submitted reviews.
+  - Read the review's inline comments and complete relevant thread history
+    before deciding; an empty review body alone is not a reason to skip
+    actionable feedback.
+- Edited comments do not trigger routing.
+  TODO: Support routing for edited comments.
 - Reviewer-App submissions use `pull_request_review: submitted`; PR-review
   `workflow_run` events are excluded to avoid duplicate delivery.
 - Before routing reviewer-App findings, verify:
@@ -191,4 +197,8 @@ or AI setup. Other skip decisions remain AI-owned.
 - Payload-only comment, label, and completion guards need post-merge verification:
   a Factory comment must skip the router job without AI setup, while a `triaged`
   handoff must still dispatch implementation.
+- Standalone inline-reply routing needs post-deployment live verification: link a
+  maintainer's reply on an eligible Factory PR to its router run and reasoned
+  decision. Actionable feedback must dispatch implementation and receive an
+  answer in the original thread; link the worker run and reply.
 - Static checks do not establish AI adherence or end-to-end event delivery.
