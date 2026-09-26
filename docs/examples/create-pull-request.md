@@ -1,18 +1,13 @@
 # Create a pull request
 
-This PR-creation example was tested successfully and is retained as a reusable
-documentation snippet, not an installed workflow.
-Copilot creates a unique branch, commits a small Markdown file, pushes it, and
-opens a PR titled `test` against `master`.
-
-The basic example below uses `GITHUB_TOKEN`.
+This tested snippet creates a unique branch, commits a Markdown file, and opens
+a `test` PR against `master` using `GITHUB_TOKEN`. It is not an installed workflow.
 
 Enable **Settings → Actions → General → Workflow permissions → Allow GitHub
 Actions to create and approve pull requests**. Without this setting, the branch
 push succeeds but PR creation is rejected even with `pull-requests: write`.
 
-Keep the setup steps from [Install AI tools and run a prompt](ai-tools.md) and
-replace the job permissions with:
+Keep the [AI setup](ai-tools.md) and use these job permissions:
 
 ```yaml
 permissions:
@@ -44,19 +39,16 @@ Replace the basic prompt step with:
     Actually create the PR and report its URL; report any failure accurately."
 ```
 
-`contents: write` permits branch pushes; `pull-requests: write` permits PR
-creation; `copilot-requests: write` permits model requests. Checkout persists
-credentials by default so Copilot's `git push` can authenticate.
+The permissions allow branch pushes, PR creation, and model requests.
+Checkout persists credentials for `git push` by default.
 
-The commit author and committer names are `factory[bot]`, but the noreply email
-still links to `github-actions[bot]`. The PR author is `github-actions[bot]`, as
-determined by the token.
+The commit names are `factory[bot]`, but the email links to `github-actions[bot]`.
+The token makes `github-actions[bot]` the PR author.
 
 ## Verify the result
 
-Copilot can report a tool failure and still exit successfully. A green workflow
-run alone does not prove the PR was created. Check the reported URL with
-`gh pr view <URL>`, or add an explicit CI existence check.
+A successful Copilot exit does not prove creation. Check the reported URL with
+`gh pr view <URL>`, or add a CI existence check.
 
 For automatic downstream workflow runs and a separate PR author/reviewer identity,
 follow the [Factory GitHub App setup](../factory/github-app.md).
