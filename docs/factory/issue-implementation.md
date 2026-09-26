@@ -177,7 +177,8 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Verification is AI-owned, with no separate receipt check. A successful CLI exit
   proves neither code correctness nor GitHub outcomes; inspect the summary and
   linked evidence. Setup/CLI failures may leave no summary.
-- Issue-to-PR work and thread resolution ran in CI before router migration.
+- Creating PRs from issues and resolving addressed review threads were tested in
+  real GitHub Actions runs before the central router was added.
   Central implementation dispatch, clarification, duplicate-reply prevention,
   denied resolution, maintenance fan-out, and split/child/recovery paths still
   need live verification. Static checks do not prove AI adherence or GitHub behavior.
