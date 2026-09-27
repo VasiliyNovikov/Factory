@@ -68,8 +68,8 @@ The job condition handles the noted payload-only skips before checkout or AI
 setup. Copilot decides the rest.
 
 - `factory-worker-bot[bot]` comments/reviews (job-filtered for conversation
-  comments only; submitted reviews still reach AI).
-- Approvals.
+  comments; non-approval submitted reviews still reach AI).
+- Approvals (job-filtered for submitted reviews, regardless of author).
 - Unrelated labels or events (job-filtered for non-`triaged` issue-label events).
 - Closed targets or fork PRs (job-filtered for fork PR lifecycle events and
   submitted reviews; the fork check does not cover conversation comments).
@@ -170,9 +170,14 @@ setup. Copilot decides the rest.
   `github.workflow_sha`; manual non-default jobs skip in versions with the guard.
 - Central review dispatch has been verified live. The reviewer-App handoff still
   needs [post-deployment verification](pr-review.md#verification-limits).
-- After merge, verify default-branch fan-out and payload-only comment, label, and
-  completion guards. A Factory comment must skip before AI setup; `triaged` must
-  still dispatch implementation. A PR cannot test its changed default-branch push trigger.
+- After merge, verify default-branch fan-out and payload-only comment, label,
+  approval, and completion guards. A Factory comment must skip before AI setup;
+  `triaged` must still dispatch implementation. An approved submitted review must
+  produce a zero-step skipped router job, regardless of author; otherwise-eligible
+  `COMMENTED` and `CHANGES_REQUESTED` feedback must still dispatch implementation.
+  Approval/non-approval live evidence remains outstanding until observed; record
+  the checked router revision and run links. A PR cannot test its changed
+  default-branch push trigger.
 - Static checks do not establish AI adherence or end-to-end event delivery.
 - Participant approval is AI-owned, not a workflow `if` guard. External events can
   start Copilot; the owner-approval hold and its resumption need live verification.
