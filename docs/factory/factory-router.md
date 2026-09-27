@@ -61,7 +61,7 @@ The job condition handles the noted payload-only skips before checkout or AI
 setup. Copilot decides the rest.
 
 - `factory-worker-bot[bot]` conversation comments and submitted reviews (job-filtered).
-- Approvals.
+- Approvals (job-filtered for submitted reviews, regardless of author).
 - Unrelated labels or events (job-filtered for non-`triaged` issue-label events).
 - Closed targets or fork PRs (job-filtered for fork PR lifecycle events and
   submitted reviews; the fork check does not cover conversation comments).
@@ -158,8 +158,12 @@ setup. Copilot decides the rest.
 - Central review dispatch has been verified live. The reviewer-App handoff still
   needs [post-deployment verification](pr-review.md#verification-limits).
 - After merge, verify default-branch fan-out and payload-only comment,
-  submitted-review, label, and completion guards with live run links. Factory
-  conversation comments and thread-reply reviews must skip before checkout or
-  AI setup; `triaged` handoffs and actionable reviewer-App findings must still
-  dispatch implementation. A PR cannot test its changed default-branch push trigger.
+  submitted-review, label, and completion guards. Factory conversation comments
+  and thread-reply reviews must produce zero-step skipped router jobs without
+  checkout or AI setup, as must approved submitted reviews regardless of author.
+  `triaged` handoffs and otherwise-eligible actionable `COMMENTED` and
+  `CHANGES_REQUESTED` reviews, including reviewer-App findings, must still dispatch
+  implementation. Record the checked router revision and live run links; this
+  evidence remains outstanding until observed. A PR cannot test its changed
+  default-branch push trigger.
 - Static checks do not establish AI adherence or end-to-end event delivery.

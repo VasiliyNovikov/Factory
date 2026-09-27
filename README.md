@@ -38,8 +38,9 @@ flowchart TD
     router -->|No actionable work| skip["Skip with reason"]
 ```
 
-Copilot makes the routing and worker decisions. People and other bots provide
-input under their own accounts. The router runs as `github-actions[bot]`;
+Approved reviews and other payload-only skips bypass router checkout and AI setup.
+Copilot makes the remaining routing and worker decisions. People and other bots
+provide input under their own accounts. The router runs as `github-actions[bot]`;
 Factory work uses `factory-worker-bot[bot]`, and reviews use
 `factory-reviewer-bot[bot]`. Running in Actions does not change an App's authorship.
 
