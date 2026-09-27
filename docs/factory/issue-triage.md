@@ -15,6 +15,9 @@ not just inspected. Do not implement code or create issues or PRs.
   including human/bot answers, guidance, and relevant code.
   Apply [participant approval](participant-approval.md) to the issue and each
   proposed clarification; unapproved external requests are not adopted scope.
+- When using `gh api --paginate --slurp` for discussion reads, filter the
+  collected pages with external `jq`. Do not combine `--slurp` with `--jq` or
+  `--template`; these options are incompatible.
 - Suggest a split when independent delivery would help. This is advice, not a
   separate outcome or reason to delay ready work; implementation owns the choice.
 - Check existing children and dependencies. For child issues, verify the native
