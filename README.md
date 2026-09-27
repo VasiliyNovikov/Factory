@@ -63,7 +63,8 @@ boundary without analysis; later runs look for actionable improvements.
 ## Repository review
 
 [Repository review](docs/factory/repository-review.md) reads the whole source
-snapshot from scratch, without executing or changing it.
+snapshot from scratch and may run focused checks or experiments without changing
+the reviewed source.
 
 Both workflows run daily at **00:00 UTC** or manually on the default branch.
 They check issues and PRs in all states for duplicates, publish only new actionable
