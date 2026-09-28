@@ -44,6 +44,9 @@ provide input under their own accounts. The router runs as `github-actions[bot]`
 Factory work uses `factory-worker-bot[bot]`, and reviews use
 `factory-reviewer-bot[bot]`. Running in Actions does not change an App's authorship.
 
+PR reviewers may run focused checks or experiments without changing the reviewed
+source; [PR-review guidance](docs/factory/pr-review.md) owns execution and token boundaries.
+
 Implementation keeps eligible PRs current with the default branch and resolves
 conflicts, but never merges PRs or closes issues. Each implementation worker
 handles only its assigned issue/PR.
