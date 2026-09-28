@@ -8,8 +8,9 @@ review, the separate target source snapshot to this invocation.
 
 Copilot reviews source, checks duplicates, publishes issues, and verifies results
 using the shared [AI action](../examples/ai-tools.md#shared-factory-action) and
-`review` profile. Scheduled and manual runs share one concurrency group, preserving
-active work and at most one pending run. The 30-minute budget includes setup and reporting.
+`review` profile. Scheduled and manual runs keep the host-only `repository-review`
+concurrency group, preserving active work across deployment and at most one pending
+run. The 30-minute budget includes setup and reporting.
 
 ## Review scope
 

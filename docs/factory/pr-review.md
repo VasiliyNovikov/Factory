@@ -74,7 +74,9 @@ It runs at the PR merge revision, with the [accepted risk](factory-router.md#acc
 - The default-branch worker is dispatch-only, checks out `github.workflow_sha`,
   and uses the `review` [profile](../../.github/model-config.json).
 - Same-target/PR/head jobs preserve active reviews through the receipt check;
-  pending jobs may be superseded. Different heads run independently. Check
+  host-local jobs keep `pr-review-NUMBER-HEAD_SHA` for
+  [rollout compatibility](target-context.md#assignment-and-identity).
+  Pending jobs may be superseded. Different heads run independently. Check
   freshness and outstanding requests before posting.
 - App approvals require Pull requests write and follow repository policies and
   GitHub's self-approval restriction.

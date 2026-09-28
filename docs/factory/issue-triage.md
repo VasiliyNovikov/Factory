@@ -78,8 +78,9 @@ tracking identity when ready. Triage never creates or links children.
   A new issue comment can request reassessment after a blocker is resolved.
 - The default-branch worker is dispatch-only, checks out `github.workflow_sha`,
   and uses the `triage` [profile](../../.github/model-config.json).
-- Target-repository/issue concurrency preserves active runs. Pending jobs may be
-  superseded; reassess the full discussion and current state.
+- Target-repository/issue concurrency preserves active runs. Host-local jobs keep
+  `issue-triage-NUMBER` for [rollout compatibility](target-context.md#assignment-and-identity).
+  Pending jobs may be superseded; reassess the full discussion and current state.
 
 ## Verification limits
 

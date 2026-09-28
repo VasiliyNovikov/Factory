@@ -16,9 +16,15 @@ There is no enrollment, forwarding, or external execution yet.
   any other target before App-token creation, target checkout, or AI setup.
   It also verifies the Factory checkout against `github.workflow_sha`.
 - Qualify issue/PR identities with the target repository in assignments,
-  reporting, API calls, and concurrency. The issue branch remains
+  reporting, and API calls. The issue branch remains
   `factory/issue-NUMBER` **inside that target**; labels and run markers are unchanged.
   Equal numbers in different repositories are not the same work.
+- Concurrency keeps legacy host-local names for omitted or explicit host inputs,
+  so jobs before and after deployment still serialize. Only non-host dispatch
+  targets add `owner/repository-` between the worker prefix and issue/PR identity;
+  the `/` prevents collisions with legacy groups. Non-host execution remains
+  disabled. The host-only scheduled groups stay `repository-review` and
+  `workflow-diagnostics`.
 - `source` event IDs belong to the target. When it includes a run ID, also supply
   `run_repository`: target CI runs belong to the target, while producing Factory
   worker attempts belong to the host. Legacy local assignments without that

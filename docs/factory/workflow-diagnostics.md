@@ -35,8 +35,9 @@ is enabled by this preparatory refactor.
   rules. Wait for their results and consolidate findings. Choose needed evidence
   from jobs, attempts, logs, code, and discussions; handle pagination and API limits.
 
-Scheduled and manual runs share one concurrency group, preserving active work
-and at most one pending run. Failed windows are not replayed automatically:
+Scheduled and manual runs keep the host-only `workflow-diagnostics` concurrency
+group, preserving active work across deployment and at most one pending run.
+Failed windows are not replayed automatically:
 the boundary is the preceding invocation, not the last successful analysis.
 Rerun the original invocation to retry. API failure is not empty history or initialization.
 

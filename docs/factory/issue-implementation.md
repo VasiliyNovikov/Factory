@@ -182,7 +182,9 @@ instructions without substituting them for Factory worker policy.
 
 - The default-branch worker is dispatch-only; manual non-default refs skip.
   Target-repository/issue concurrency covers issue work and PR feedback without
-  cancelling active jobs.
+  cancelling active jobs. Host-local jobs keep
+  `issue-implementation-factory-issue-NUMBER` for
+  [rollout compatibility](target-context.md#assignment-and-identity).
 - Verification is AI-owned, with no separate receipt check. A successful CLI exit
   proves neither code correctness nor GitHub outcomes; inspect the summary and
   linked evidence. Setup/CLI failures may leave no summary.
