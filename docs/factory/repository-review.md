@@ -3,7 +3,8 @@
 [Repository review](../../.github/workflows/repository-review.yml) runs daily at
 **00:00 UTC** (`0 0 * * *`) or through **Actions -> Repository review -> Run workflow**.
 It uses the default branch; manual runs on other refs skip, and schedules may be
-delayed. `github.workflow_sha` pins source, guidance, and setup to this invocation.
+delayed. `github.workflow_sha` pins Factory guidance/setup and, for this local-only
+review, the separate target source snapshot to this invocation.
 
 Copilot reviews source, checks duplicates, publishes issues, and verifies results
 using the shared [AI action](../examples/ai-tools.md#shared-factory-action) and
@@ -12,7 +13,9 @@ active work and at most one pending run. The 30-minute budget includes setup and
 
 ## Review scope
 
-- Review the full checked-out repository snapshot from scratch.
+- Follow the [host/target contract](target-context.md). Review the full
+  `TARGET_ROOT` snapshot for `TARGET_REPOSITORY` from scratch; use `FACTORY_ROOT`
+  only for executing guidance and tooling. Preserve target project instructions.
 - Account for all tracked files: scripts, workflows, configuration, application
   code, and relevant docs. Record the exact commit, coverage, and unread/unreadable areas.
 - Report distinct, evidenced, actionable improvements, not speculation, style
@@ -27,7 +30,7 @@ active work and at most one pending run. The 30-minute budget includes setup and
   resolutions; closed work is not permission to duplicate it.
 - Link existing work in the summary; never edit, comment on, reopen, or replace it.
   No new actionable findings means no new issues.
-- Create one issue per new finding in `GITHUB_REPOSITORY` as `FACTORY_LOGIN`, using
+- Create one issue per new finding in `TARGET_REPOSITORY` as `FACTORY_LOGIN`, using
   the Factory App token. Include:
   - Source permalinks with lines at the reviewed commit.
   - Evidence, impact, bounded scope, and verifiable acceptance criteria.
@@ -45,7 +48,8 @@ active work and at most one pending run. The 30-minute budget includes setup and
 
 Record in `GITHUB_STEP_SUMMARY` and the log:
 
-- Reviewed commit link, coverage, exclusions, and evidence gaps.
+- Target repository and reviewed commit link, separately from the Factory
+  tooling revision; coverage, exclusions, and evidence gaps.
 - Existing findings/PRs and verified new issue links.
 - Outcome: completed with findings, completed with no new findings, or incomplete,
   including publication failures and outstanding work.

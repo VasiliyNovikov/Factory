@@ -57,6 +57,13 @@ checkout and use it for persisted push credentials:
     token: ${{ steps.pr-app-token.outputs.token }}
 ```
 
+Factory workflows first establish the [target context](target-context.md), then
+scope App-token creation explicitly with `owner: TARGET_OWNER` and
+`repositories: TARGET_NAME`. Only the host target is enabled; this does not grant
+or enable external access. The built-in token checks out pinned Factory tooling
+without persisted credentials; implementation persists its App credential only
+in the separate target checkout.
+
 Request only the permissions needed by the job, within the installation's grants:
 
 | Job | App token permissions |
@@ -107,6 +114,7 @@ GH_TOKEN: ${{ steps.pr-app-token.outputs.token }}
 
 Git push authentication is separate: checkout's `token` persists App credentials.
 Neither `GH_TOKEN` alone nor Git author/committer names configure push authentication.
+Push from `TARGET_ROOT`, never from the Factory tooling checkout.
 
 For PR creation, the built-in token only needs:
 
@@ -117,7 +125,8 @@ permissions:
 ```
 
 The [token action](https://github.com/actions/create-github-app-token) defaults to
-this repository and revokes its token at job end. Generate a fresh token per job.
+this repository in the reusable example; installed workers name their validated
+target explicitly. It revokes its token at job end. Generate a fresh token per job.
 
 ## Review identity and approvals
 

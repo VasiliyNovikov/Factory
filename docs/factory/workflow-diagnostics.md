@@ -10,6 +10,12 @@ verifies results. The shared [AI action](../examples/ai-tools.md#shared-factory-
 uses the `default` profile; the prompt supplies the run ID, attempt, and Factory login.
 For source analysis instead of run history, use [repository review](repository-review.md).
 
+The [host/target context](target-context.md) is explicit, but diagnostics remains
+Factory-local: `TARGET_REPOSITORY == FACTORY_REPOSITORY`. Use the target-qualified
+API paths for runs and findings, and preserve the tooling revision in the summary.
+No external run discovery, forwarding analysis, or cross-repository diagnostics
+is enabled by this preparatory refactor.
+
 ## Scope and investigation
 
 - Find evidenced fixes, optimizations, or improvements, including in successful runs.

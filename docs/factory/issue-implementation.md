@@ -6,6 +6,12 @@ Copilot checks current state, implements or splits the work, replies, and verifi
 results. For unclear, blocked, or already-satisfied requests, ask or explain.
 Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 
+Follow the [host/target contract](target-context.md). All issue, PR, branch, native
+child, and default-branch references below belong to `TARGET_REPOSITORY`.
+Use `TARGET_ROOT` for code, Git operations, and project checks; keep the executing
+tooling and policy in `FACTORY_ROOT` unchanged. Read and preserve target project
+instructions without substituting them for Factory worker policy.
+
 ## Assignment and context
 
 - `GITHUB_EVENT_PATH` contains dispatch inputs, not the original webhook.
@@ -35,7 +41,8 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Preserve commits on the latest remote revision. Verify Factory ownership and
   issue linkage before reusing partial work.
 - Explain ownership conflicts or closed/merged PRs; do not reopen or replace them.
-- Base new work on the current remote default branch, not the setup checkout.
+- Base new work on the target's current remote default branch, not the Factory
+  tooling revision or a stale target setup checkout.
 - Never force-push, push to the default branch, merge PRs, or close issues.
 
 ## Choose a PR or sub-issues
@@ -141,7 +148,8 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Otherwise post a new Factory comment in the triggering conversation (`source_pr`
   if supplied, else `issue_number`), even after mutation failure. Include:
   - The outcome.
-  - The producing workflow run attempt link.
+  - The target repository and checked target revisions, separately from
+    `FACTORY_REPOSITORY@FACTORY_SHA`, and the producing host workflow run attempt link.
   - The PR link when available.
   - Child links and incomplete split work, if any.
   - Addressed/outstanding feedback with thread links.
@@ -151,8 +159,8 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
   - Resolved threads.
   - Factory-authored replies/comments on the intended targets.
 - Reconcile responses with fresh state before retrying uncertain mutations.
-- Record the decision, evidence, verification links, and outstanding work in
-  `GITHUB_STEP_SUMMARY`.
+- Append the decision, evidence, verification links, and outstanding work to
+  `GITHUB_STEP_SUMMARY`, preserving the Factory context report.
 - API errors, denied permissions, and unverified outcomes are failures, not skips.
 - Budget the 30-minute job for setup, work, reporting, and verification without
   relaxing required checks.
@@ -163,7 +171,7 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
   Workflows read/write. Workflow-write must already be granted to the installation
   and default-branch worker before pushing workflow changes.
 - The App token is the default `GH_TOKEN` for all repository/issue/PR operations,
-  including permission checks and verification.
+  including permission checks and verification in `TARGET_REPOSITORY`.
 - The built-in `GITHUB_TOKEN` may replace `GH_TOKEN` only for individual read-only
   Actions commands, never globally.
 - `COPILOT_GITHUB_TOKEN` is for model requests.
@@ -173,7 +181,8 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 ## Execution and verification
 
 - The default-branch worker is dispatch-only; manual non-default refs skip.
-  Per-issue concurrency covers issue work and PR feedback without cancelling active jobs.
+  Target-repository/issue concurrency covers issue work and PR feedback without
+  cancelling active jobs.
 - Verification is AI-owned, with no separate receipt check. A successful CLI exit
   proves neither code correctness nor GitHub outcomes; inspect the summary and
   linked evidence. Setup/CLI failures may leave no summary.

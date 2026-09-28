@@ -1,9 +1,12 @@
 name: Issue triage
-run-name: 'Issue triage: ${{ inputs.issue_number }} (router ${{ inputs.router_run_id }})'
+run-name: 'Issue triage: ${{ inputs.target_repository || github.repository }}#${{ inputs.issue_number }} (router ${{ inputs.router_run_id }})'
 
 on:
   workflow_dispatch:
     inputs:
+      target_repository:
+        description: Target owner/repository (defaults to Factory; external targets disabled)
+        type: string
       issue_number:
         description: Issue to triage
         required: true
@@ -21,7 +24,7 @@ jobs:
   triage:
     if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     concurrency:
-      group: issue-triage-${{ inputs.issue_number }}
+      group: issue-triage-${{ inputs.target_repository || github.repository }}-${{ inputs.issue_number }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -33,30 +36,39 @@ jobs:
       TRACKING_LABEL: factory-issue-${{ inputs.issue_number }}
       RESULT_MARKER: factory-triage-run:${{ github.run_id }}:${{ github.run_attempt }}
     steps:
+      - name: Check out Factory workflow revision
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.workflow_sha }}
+          path: factory
+          persist-credentials: false
+
+      - name: Set target context
+        uses: ./factory/.github/actions/target-context
+        with:
+          target-repository: ${{ inputs.target_repository || github.repository }}
+
       - name: Create Factory triage token
         id: factory-token
         uses: actions/create-github-app-token@v3
         with:
           client-id: ${{ vars.FACTORY_CLIENT_ID }}
           private-key: ${{ secrets.FACTORY_PRIVATE_KEY }}
+          owner: ${{ env.TARGET_OWNER }}
+          repositories: ${{ env.TARGET_NAME }}
           permission-contents: read
           permission-issues: write
 
-      - name: Check out workflow revision
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ github.workflow_sha }}
-          persist-credentials: false
-
       - name: Triage issue with Copilot
         id: worker
-        uses: ./.github/actions/ai
+        uses: ./factory/.github/actions/ai
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
           profile: triage
           prompt: >-
-            Triage issue ${{ env.ISSUE_NUMBER }} in repository ${{ github.repository }}.
-            Follow repository guidance and docs/factory/issue-triage.md. The router selected this task;
+            Triage issue ${{ env.ISSUE_NUMBER }} in target ${{ env.TARGET_REPOSITORY }}.
+            Follow AGENTS.md and docs/factory/issue-triage.md in FACTORY_ROOT. The router selected this task;
             use gh to check live eligibility and the full discussion, then assess readiness,
             suggest decomposition when useful, reply, or skip. Do not create issues or PRs
             or implement code; implementation owns any sub-issue creation.
@@ -74,7 +86,7 @@ jobs:
           FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
         run: |
           gh api --paginate --slurp \
-            "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" |
+            "repos/${TARGET_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" |
             jq -e --arg login "$FACTORY_LOGIN" --arg marker "<!-- ${RESULT_MARKER} -->" '
               any(.[][]; .user.login == $login and ((.body // "") | contains($marker)))
             ' >/dev/null

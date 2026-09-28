@@ -3,13 +3,17 @@
 [PR review](../../.github/workflows/pr-review.yml) handles assessments selected by
 the [router](factory-router.md). Review proposed code without changing or executing it.
 
+Follow the [host/target contract](target-context.md). The PR, its code and project
+guidance, and review receipts belong to `TARGET_REPOSITORY`. The executing Factory
+guidance and tooling remain in `FACTORY_ROOT`; no target PR code is checked out.
+
 ## Assignment and boundaries
 
 - `GITHUB_EVENT_PATH` contains dispatch inputs, not the original webhook.
   See the worker YAML and [router contract](factory-router.md#dispatch-and-reporting);
   do not repeat routing analysis.
 - Before reviewing or posting, use `gh` to verify the PR is open, non-draft,
-  from this repository, and at the expected `PR_HEAD_SHA`.
+  from `TARGET_REPOSITORY`, and at the expected target `PR_HEAD_SHA`.
 - Read changes, context, and the current discussion through `gh`. New requests
   or clarification may require reassessment even at a reviewed head.
 - Checkout is the default-branch workflow revision, not the PR tree.
@@ -23,6 +27,7 @@ the [router](factory-router.md). Review proposed code without changing or execut
   [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Submit exactly one review while eligible, with:
   - `commit_id` set to `PR_HEAD_SHA`.
+  - The full target repository name.
   - The full reviewed SHA visible in the body.
   - The exact `REVIEW_MARKER` environment value in the body.
 - Use `COMMENT` for findings, with paths, lines, impact, and suggested fixes;
@@ -50,8 +55,10 @@ the [router](factory-router.md). Review proposed code without changing or execut
 - Retry failed report writes without resubmitting an accepted review.
 - Verify `REVIEWER_LOGIN` authored the review and it meets the outcome contract.
   A successful CLI exit is not proof.
-- Record the review URL, decision, evidence, and outstanding work in
-  `GITHUB_STEP_SUMMARY`. Report failures accurately; API errors are not skips.
+- Record the target-qualified review URL, checked target head, decision,
+  evidence, and outstanding work in `GITHUB_STEP_SUMMARY`, preserving the separate
+  Factory revision report. Run-attempt links belong to the Factory host.
+  Report failures accurately; API errors are not skips.
 - Include setup, reporting, and verification in the 30-minute budget without
   relaxing required checks.
 
@@ -66,9 +73,9 @@ It runs at the PR merge revision, with the [accepted risk](factory-router.md#acc
   never reviewer API calls. Worker YAML owns permissions and [AI setup](../examples/ai-tools.md).
 - The default-branch worker is dispatch-only, checks out `github.workflow_sha`,
   and uses the `review` [profile](../../.github/model-config.json).
-- Same-PR/head jobs preserve active reviews through the receipt check; pending
-  jobs may be superseded. Different heads run independently. Check freshness and
-  outstanding requests before posting.
+- Same-target/PR/head jobs preserve active reviews through the receipt check;
+  pending jobs may be superseded. Different heads run independently. Check
+  freshness and outstanding requests before posting.
 - App approvals require Pull requests write and follow repository policies and
   GitHub's self-approval restriction.
 - User/App-authenticated PR changes trigger routing; `GITHUB_TOKEN`-generated PR
@@ -76,8 +83,9 @@ It runs at the PR merge revision, with the [accepted risk](factory-router.md#acc
 
 ## Verification limits
 
-The read-only receipt check requires a submitted bot comment review or approval
-with the expected commit, visible full SHA, and run marker, unless skipped before
+The read-only receipt check queries the assigned target PR and requires a
+submitted bot comment review or approval with the expected commit, visible full
+SHA, and run marker, unless skipped before
 mutation. It proves neither review quality nor live event delivery.
 
 After deployment, verify reviewer-App authentication, approvals, and native

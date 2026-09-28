@@ -4,6 +4,11 @@
 workers or skip an event. Keep routing simple and AI-led; workers own execution,
 freshness checks, and result verification.
 
+Follow the [host/target contract](target-context.md). Here, event subjects and
+eligible issues/PRs belong to `TARGET_REPOSITORY`; worker workflows and their
+default branch belong to `FACTORY_REPOSITORY`. They are equal in this local-only
+stage, but must not be inferred from the current directory.
+
 ## Route to
 
 ### [PR review](pr-review.md)
@@ -87,7 +92,8 @@ setup. Copilot decides the rest.
   `workflow_run` events, to avoid duplicate delivery.
 - Before routing reviewer-App findings, verify:
   - The review belongs to the event PR, is by `REVIEWER_LOGIN`, and its marker
-    identifies this repository's default-branch `pr-review.yml` attempt.
+    identifies the Factory host's default-branch `pr-review.yml` attempt for this
+    target repository and PR. Legacy assignments without a target mean the host.
   - The body's full reviewed SHA matches that attempt's `PR_HEAD_SHA`, not a later
     API `commit_id` or the worker's default-branch `head_sha`.
   - The assessment succeeded without skipping, including its posted-review check.
@@ -101,16 +107,27 @@ setup. Copilot decides the rest.
 
 ## Dispatch and reporting
 
-- Dispatch on the current default branch: one implementation worker per eligible
-  PR for base pushes, at most one worker for other events.
-- Worker YAML owns the input schema; keep router changes compatible.
+- Dispatch in `FACTORY_REPOSITORY` on its current default branch: one
+  implementation worker per eligible PR for base pushes, at most one worker
+  for other events.
+- Worker YAML on the host's current default revision owns the input schema,
+  not a PR-revision copy. Read that schema before dispatch: set
+  `target_repository=TARGET_REPOSITORY` when supported. During rollout, omit
+  that input only for a legacy worker and a verified host-local target; record
+  this compatibility path. Never send unknown inputs or downgrade external work
+  to a local assignment.
+- Use `gh workflow run --repo "$FACTORY_REPOSITORY"`, not an implicit checkout
+  repository. Existing callers may omit the input for Factory-local work;
+  target-aware workers reject other targets before credentials or AI setup.
 - Supply target IDs and expected PR head. For implementation, pair `source_pr`
   with `head_sha` for PR feedback/maintenance; omit both for issue-only events.
 - Reassess feedback on the latest eligible revision after head drift; do not discard it.
 - CI evidence must match the current head or merge revision.
 - `router_run_id` identifies this router run.
 - `source` is a JSON-encoded object: `event`, `action`, and applicable `issue_number`, `pr_number`,
-  `comment_id`, `review_id`, `run_id`, `run_attempt`.
+  `comment_id`, `review_id`, `run_id`, `run_attempt`, `run_repository`.
+  Follow the [run-provenance rules](target-context.md#assignment-and-identity);
+  preserve compatibility with earlier host-local assignments.
 - Include the verified source assessment's `run_id`/`run_attempt` for reviewer-App findings.
 - Push maintenance includes `event: "push"`, `ref`, and `after` in `source` for
   provenance, not as live revision checks.
@@ -124,7 +141,8 @@ setup. Copilot decides the rest.
   old-revision evidence is not current coverage. Never blindly retry uncertain dispatches.
 - For review feedback, reconcile the verified review ID and source attempt with
   pending/running implementation tasks and earlier dispatches.
-- Record the decision, reason, source, and available worker link in the job summary.
+- Record the decision, reason, target repository and checked target revisions,
+  Factory revision, source, and available host worker link in the job summary.
 - `GITHUB_STEP_SUMMARY` is an existing runner-provided file. Preserve its current
   content when adding the report; do not use a create-only file operation.
 - Partial dispatch, API failures, and uncertain outcomes are not success or skips.
