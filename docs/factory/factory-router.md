@@ -79,6 +79,10 @@ setup. Copilot decides the rest.
 
 ## Feedback and event handling
 
+- Read worker-discovery and PR-review collections with complete pagination.
+  When using `gh api --paginate --slurp`, filter the collected pages with external
+  `jq`. Do not combine `--slurp` with `--jq` or `--template`; these options are
+  incompatible.
 - Humans and other bots may provide feedback.
 - Main conversation comments and submitted reviews trigger routing.
 - Standalone inline replies and edited comments do not trigger routing.
@@ -166,4 +170,8 @@ setup. Copilot decides the rest.
   Approval/non-approval live evidence remains outstanding until observed; record
   the checked router revision and run links. A PR cannot test its changed
   default-branch push trigger.
+- After deploying the paginated-read clarification (#110), link router evidence
+  for both worker discovery and PR reviews, with the checked guidance revision
+  and valid first reads without rejected-command retries. This remains pending
+  until observed; standalone reads do not prove AI adherence.
 - Static checks do not establish AI adherence or end-to-end event delivery.
