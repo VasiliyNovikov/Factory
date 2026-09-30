@@ -108,6 +108,13 @@ and [cursor pagination](https://docs.github.com/en/graphql/guides/using-paginati
   Missing, partial, or failed required provenance is a blocker, not evidence of
   no activity or grounds for a skip.
 
+## GitHub Actions logs
+
+For Actions-log reads in any Factory workflow, follow the
+[shared log guidance](docs/factory/actions-logs.md) from the first needed read.
+The calling workflow's guide still owns source eligibility, token selection,
+permissions, and verification.
+
 ## Test value and verification
 
 - Before adding or requesting a test, name the requirement or credible regression,
