@@ -59,9 +59,16 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
   attempt's `REVIEW_MARKER`.
 - After mutation, verify and report partial outcomes, not skips. Reconcile this
   attempt's uncertain submissions before retrying; do not duplicate reviews.
-- Retry failed report writes without resubmitting an accepted review.
+- Retry failed report writes and correct read-back output formatting without
+  resubmitting an accepted review.
 - Verify `REVIEWER_LOGIN` authored the review and it meets the outcome contract.
   A successful CLI exit is not proof.
+- Compare a fetched review's JSON `.body` directly with the submitted literal
+  Markdown, e.g. `jq -e --rawfile expected review.md '.body == $expected' review.json`
+  for a single review object. `gh --jq` and `jq -r` can append an output newline;
+  byte-comparing that output to the file can falsely fail. Do not trim or normalize
+  either body: real Markdown or whitespace differences, including terminal
+  newlines, must still fail.
 - Record the review URL, decision, evidence, and outstanding work in
   `GITHUB_STEP_SUMMARY`. Report failures accurately; API errors are not skips.
 - Include setup, reporting, and verification in the 30-minute budget without
@@ -141,3 +148,8 @@ Also link a post-deployment PR-review run and its checked workflow revision
 showing a valid first paginated discussion/review read, without retrying an
 incompatible option combination. This remains pending until observed; standalone
 read checks and static inspection do not prove AI adherence.
+
+For body read-back, record the changed guidance revision and a subsequent
+post-deployment PR-review run showing first-pass verification without a
+CLI-added-newline false mismatch. This remains pending until observed; local
+comparison checks and static inspection do not prove AI adherence.
