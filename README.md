@@ -67,10 +67,28 @@ Other events and workers use the default branch. See the
 workflow runs with parallel read-only subagents. Its first invocation records a
 boundary without analysis; later runs look for actionable improvements.
 
+```mermaid
+flowchart TD
+    trigger["Daily 00:00 UTC or manual<br/>Default branch"] --> diagnostics{"Workflow diagnostics"}
+    diagnostics -->|First invocation| boundary["Record boundary only<br/>No analysis or findings"]
+    diagnostics -->|Later invocations| analysis["Analyze same-repository runs<br/>Since previous invocation"]
+    analysis --> duplicates["Check issues and PRs<br/>All states"]
+    duplicates -->|New actionable findings| issues["Create unlabeled issues"]
+    issues --> router["Factory router"] --> triage["Issue triage"]
+```
+
 ## Repository review
 
 [Repository review](docs/factory/repository-review.md) reads the whole source
 snapshot from scratch, without executing or changing it.
+
+```mermaid
+flowchart TD
+    trigger["Daily 00:00 UTC or manual<br/>Default branch"] --> review["Read-only review<br/>Full repository snapshot"]
+    review --> duplicates["Check issues and PRs<br/>All states"]
+    duplicates -->|New actionable findings| issues["Create unlabeled issues"]
+    issues --> router["Factory router"] --> triage["Issue triage"]
+```
 
 Both workflows run daily at **00:00 UTC** or manually on the default branch.
 They check issues and PRs in all states for duplicates, publish only new actionable
