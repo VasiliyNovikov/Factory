@@ -132,8 +132,9 @@ instructions without substituting them for Factory worker policy.
   checks alone are not enough.
 - Keep unclear, partial, blocked, or disputed feedback unresolved, with a specific
   question or explanation in its original thread.
-- Direct follow-ups to the main PR conversation or a submitted comment/change-request
-  review; inline replies do not trigger runs.
+- Answer inline feedback in its original thread without requiring participants
+  to repost elsewhere. Standalone inline replies reach the router as empty-body
+  `COMMENTED` submitted reviews.
 - Do not duplicate equivalent Factory replies to unchanged feedback/code,
   including on retries and reruns.
 
