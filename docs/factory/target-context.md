@@ -24,7 +24,7 @@ There is no enrollment, forwarding, or external execution yet.
   targets add `owner/repository-` between the worker prefix and issue/PR identity;
   the `/` prevents collisions with legacy groups. Non-host execution remains
   disabled. The host-only scheduled groups stay `repository-review` and
-  `workflow-diagnostics`.
+  `workflow-diagnostics`; model evaluation keeps `model-profile-improvement`.
 - `source` event IDs belong to the target. When it includes a run ID, also supply
   `run_repository`: target CI runs belong to the target, while producing Factory
   worker attempts belong to the host. Legacy local assignments without that
@@ -38,7 +38,7 @@ There is no enrollment, forwarding, or external execution yet.
 | Editable target code | `TARGET_ROOT` (`target/`), live target default or owned issue branch | Implementation, project instructions, and project verification |
 | Repository-review source | `TARGET_ROOT`, explicitly checked target snapshot | Full-source review; optional [checks](review-checks.md) use temporary workspaces; currently the same SHA as Factory |
 | PR-review target context | API reads or temporary workspace at the checked target PR head | PR review and optional [local checks](pr-review.md#local-checks) |
-| API-only target context | Explicit repository and checked target revision | Router, triage, and workflow diagnostics; no target checkout |
+| API-only target context | Explicit repository and checked target revision | Router, triage, workflow diagnostics, and model profile improvement; no target checkout |
 
 The shared AI action runs from its own Factory checkout and anchors script/model
 loading there, not in the target working directory. Keep that checkout unchanged
