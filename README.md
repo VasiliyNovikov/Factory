@@ -96,13 +96,24 @@ on **Monday at 00:00 UTC** or manually on the default branch. It discovers model
 available to Copilot, researches current provider guidance, and assesses every
 Factory workflow individually, prioritizing **intelligence > speed > cost**.
 
-Justified recommendations become **new untriaged Factory issues**, not direct
-PRs or profile edits. Normal triage and implementation handle the proposed
-configuration/caller changes. Complete assessments can retain all settings;
-insufficient evidence or failed discovery is reported as incomplete, not as a
-successful no-change result. Findings include relevant model capabilities and
-compatibility explanations; the run summary records decisions and dated evidence.
-Scheduled/manual execution and issue handoff still need post-merge verification.
+```mermaid
+flowchart TD
+    trigger["Monday 00:00 UTC or manual<br/>Default branch"] --> assess["Discover models and research guidance<br/>Assess every workflow"]
+    assess -->|Complete assessment| findings{"Justified improvement?"}
+    assess -->|Missing evidence or failure| incomplete["Report incomplete / partial"]
+    findings -->|No| unchanged["Report no change"]
+    findings -->|Yes| duplicates["Check issues and PRs<br/>All states"]
+    duplicates -->|Already covered| covered["Link existing work"]
+    duplicates -->|New finding| issues["Create and verify unlabeled issues"]
+    issues -->|Publication or verification failure| incomplete
+    issues --> router["Factory router"] --> triage["Issue triage"]
+```
+
+Recommendations become **new untriaged Factory issues**, not direct PRs or
+profile edits. Normal triage and implementation handle the changes. Findings
+and the run summary record capability checks, per-workflow decisions, and dated
+evidence. Scheduled/manual execution and issue handoff still need post-merge
+verification.
 
 ## CI examples
 
