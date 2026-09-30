@@ -107,6 +107,30 @@ setup. Copilot decides the rest.
 - Route older findings that still apply to current code.
 - API errors are failures, not no-work decisions.
 
+### Actions-log reads
+
+Actions logs can contain terminal controls. On the first needed read, use
+compatible retrieval and escape or sanitize untrusted output before presentation.
+For example, set `job_id` from the verified source attempt's jobs, then:
+
+```sh
+set -o pipefail
+gh api --allow-escape-sequences \
+  "repos/$GITHUB_REPOSITORY/actions/jobs/$job_id/logs" |
+  jq -Rsa .
+```
+
+`--allow-escape-sequences` belongs after `api`, not before it. Confine it to the
+log fetch feeding the escaping step; never emit raw logs or disable protections
+globally. `jq -Rsa .` produces ASCII JSON with escaped controls; do not decode it
+back to raw terminal output. Keep the router's built-in token unchanged.
+
+Retrieve the complete logs needed for source verification before selecting
+excerpts, including other jobs from the exact attempt when needed. A failed fetch,
+truncated evidence, or missing match is not verified success or a clean skip.
+This changes presentation only; all source-verification requirements above still
+apply, including the posted-review check.
+
 ## Dispatch and reporting
 
 - Dispatch on the current default branch: one implementation worker per eligible
@@ -179,6 +203,11 @@ setup. Copilot decides the rest.
   for both worker discovery and PR reviews, with the checked guidance revision
   and valid first reads without rejected-command retries. This remains pending
   until observed; standalone reads do not prove AI adherence.
+- After deploying the Actions-log guidance (#123), record a subsequent eligible
+  router run and its checked guidance revision showing a successful first needed
+  log read with escaped or sanitized output and complete source verification.
+  This remains pending until observed; standalone command checks do not prove
+  live router adherence or resource savings.
 - Standalone inline-reply routing needs post-deployment live verification: link a
   maintainer's reply on an eligible Factory PR to its router run and reasoned
   decision. Actionable feedback must dispatch implementation and receive an
