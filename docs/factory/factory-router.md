@@ -63,7 +63,8 @@ setup. Copilot decides the rest.
   for conversation comments remains AI-owned.
 - Successful CI without review findings.
 - Cancelled runs.
-- Router, maintenance, triage, implementation, diagnostics, and [repository review](repository-review.md)
+- Router, maintenance, triage, implementation, diagnostics, [repository review](repository-review.md),
+  and [model profile improvement](model-profile-improvement.md)
   completions (job-filtered). Source-review findings enter through new issues,
   not self-triggered automation.
 - Failed review-worker completions (job-filtered): these are not PR-code CI

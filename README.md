@@ -112,6 +112,32 @@ They check issues and PRs in all states for duplicates, publish only new actiona
 findings as unlabeled Factory issues for triage, and report coverage and gaps in
 the job summary.
 
+## Model profile improvement
+
+[Model profile improvement](docs/factory/model-profile-improvement.md) runs weekly
+on **Monday at 00:00 UTC** or manually on the default branch. It discovers models
+available to Copilot, researches current provider guidance, and assesses every
+Factory workflow individually, prioritizing **intelligence > speed > cost**.
+
+```mermaid
+flowchart TD
+    trigger["Monday 00:00 UTC or manual<br/>Default branch"] --> assess["Discover models and research guidance<br/>Assess every workflow"]
+    assess -->|Complete assessment| findings{"Justified improvement?"}
+    assess -->|Missing evidence or failure| incomplete["Report incomplete / partial"]
+    findings -->|No| unchanged["Report no change"]
+    findings -->|Yes| duplicates["Check issues and PRs<br/>All states"]
+    duplicates -->|Already covered| covered["Link existing work"]
+    duplicates -->|New finding| issues["Create and verify unlabeled issues"]
+    issues -->|Publication or verification failure| incomplete
+    issues --> router["Factory router"] --> triage["Issue triage"]
+```
+
+Recommendations become **new untriaged Factory issues**, not direct PRs or
+profile edits. Normal triage and implementation handle the changes. Findings
+and the run summary record capability checks, per-workflow decisions, and dated
+evidence. Scheduled/manual execution and issue handoff still need post-merge
+verification.
+
 ## CI examples
 
 These are reusable snippets, not installed workflows. Basic examples use the
