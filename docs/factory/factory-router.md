@@ -79,6 +79,8 @@ setup. Copilot decides the rest.
 
 ## Feedback and event handling
 
+- Read worker-discovery and PR-review collections with complete pagination,
+  following the [shared pagination guidance](../../AGENTS.md#github-cli-pagination).
 - Humans and other bots may provide feedback.
 - Main conversation comments and submitted reviews trigger routing.
 - Standalone inline comments and replies arrive as empty-body `COMMENTED`
@@ -172,6 +174,10 @@ setup. Copilot decides the rest.
   Approval/non-approval live evidence remains outstanding until observed; record
   the checked router revision and run links. A PR cannot test its changed
   default-branch push trigger.
+- After deploying the paginated-read clarification (#110), link router evidence
+  for both worker discovery and PR reviews, with the checked guidance revision
+  and valid first reads without rejected-command retries. This remains pending
+  until observed; standalone reads do not prove AI adherence.
 - Standalone inline-reply routing needs post-deployment live verification: link a
   maintainer's reply on an eligible Factory PR to its router run and reasoned
   decision. Actionable feedback must dispatch implementation and receive an
