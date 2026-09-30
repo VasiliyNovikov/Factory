@@ -10,7 +10,7 @@
     "longContext": true
   },
   "route": {
-    "model": "gpt-6-astra",
+    "model": "gpt-6.1-sol",
     "reasoningEffort": "high",
     "longContext": false
   },
