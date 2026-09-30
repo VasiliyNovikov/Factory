@@ -129,10 +129,5 @@ Posting an approval and qualifying for required reviews are different:
 The installation's access and a job's narrower token scope are separate.
 Keep review code inspection read-only and retain all repository review protections.
 
-Factory PRs are normally authored by the worker App, so the reviewer can approve
-them. If someone creates a PR using the reviewer App's identity, the
-self-approval guard requires `COMMENT`, not `APPROVE`. Changing App configuration
-does not change an existing PR's author.
-
 See [approval qualification](pr-review.md#approval-qualification) for the verified
 correction and remaining limits.
