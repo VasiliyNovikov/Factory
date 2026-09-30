@@ -268,15 +268,4 @@ the independent PR-review worker.
 - Verification is AI-owned, with no separate receipt check. A successful CLI exit
   proves neither code correctness nor GitHub outcomes; inspect the summary and
   linked evidence. Setup/CLI failures may leave no summary.
-- Creating PRs from issues and resolving addressed review threads were tested in
-  real GitHub Actions runs before the central router was added.
-  Central implementation dispatch, clarification, duplicate-reply prevention,
-  denied resolution, maintenance fan-out, and split/child/recovery paths still
-  need live verification. Static checks do not prove AI adherence or GitHub behavior.
-- Internal self-review has only pre-deployment invocation evidence (#119), not
-  proof of default-branch worker adherence. After deployment, link implementation
-  runs whose PRs and summaries record `--profile review` from the trusted workflow
-  worktree, reviewed base/candidate SHAs, and findings with their dispositions.
-  Default-branch execution, feedback fixes, maintenance conflict resolutions,
-  no-op exclusions, reviewer error/timeout disclosure, and OpenCode nesting still
-  need live verification.
+- Static checks do not prove AI adherence or GitHub behavior.

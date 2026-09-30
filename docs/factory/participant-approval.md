@@ -38,5 +38,4 @@ resumes readiness assessment, then tracking-label-before-`triaged` handoff.
 Report scope and owner-decision link or blocker from fresh source evidence;
 partial outcomes are not skips.
 
-Live non-collaborator approval/rejection/resumption remains unverified.
 Inspection cannot prove AI adherence, event delivery, or injection resistance.

@@ -76,7 +76,10 @@ Removing environment variables does not isolate credentials.
 
 [Workflow diagnostics](docs/factory/workflow-diagnostics.md) examines same-repository
 workflow runs with parallel read-only subagents. Its first invocation records a
-boundary without analysis; later runs look for actionable improvements.
+boundary without analysis; later runs compare observed execution and GitHub
+outcomes with the contracts used by each assessed run, including successful runs
+and expected skips or handoffs. Results record supported conclusions, discrepancies,
+and coverage gaps; actionable findings follow the existing issue path.
 
 ```mermaid
 flowchart TD
@@ -130,8 +133,7 @@ flowchart TD
 Recommendations become **new untriaged Factory issues**, not direct PRs or
 profile edits. Normal triage and implementation handle the changes. Findings
 and the run summary record capability checks, per-workflow decisions, and dated
-evidence. Scheduled/manual execution and issue handoff still need post-merge
-verification.
+evidence.
 
 ## CI examples
 
@@ -146,7 +148,7 @@ author/reviewer identities.
 
 ## Factory guidance
 
-Worker contracts and live-verification limits live in [docs/factory/](docs/factory/).
+Worker contracts and verification boundaries live in [docs/factory/](docs/factory/).
 Start with [participant approval](docs/factory/participant-approval.md),
 [routing](docs/factory/factory-router.md), [triage](docs/factory/issue-triage.md),
 [implementation](docs/factory/issue-implementation.md), or [PR review](docs/factory/pr-review.md).

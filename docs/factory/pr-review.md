@@ -118,24 +118,8 @@ The read-only receipt check requires a submitted bot comment review or approval
 with the expected commit, visible full SHA, and run marker, unless skipped before
 mutation. It proves neither review quality nor live event delivery.
 
-After deployment, verify reviewer-App authentication, approvals, and native
-handoff. Record successful review/router/worker links and approval, handled,
-ineligible, failed, and skipped no-ops. Same-head redispatch must preserve active
-reviews and deliver findings once. After post-submission failure, timeout, or
-cancellation, only a fresh successful assessment may deliver remaining findings.
+Same-head redispatch must preserve active reviews and deliver findings once.
+After post-submission failure, timeout, or cancellation, only a fresh successful
+assessment may deliver remaining findings.
 
-**Still unverified:** After merge, link a live review that runs a PR-provided
-check at the expected PR head, follows the [shared safeguards](review-checks.md)
-and GitHub-write limits, reports results/gaps, and posts a verified review.
-Changing this guide does not prove the bot follows it; removing environment
-variables does not isolate credentials.
-
-Also link a post-deployment PR-review run and its checked workflow revision
-showing a valid first paginated discussion/review read, without retrying an
-incompatible option combination. This remains pending until observed; standalone
-read checks and static inspection do not prove AI adherence.
-
-For body read-back, record the changed guidance revision and a subsequent
-post-deployment PR-review run showing first-pass verification without a
-CLI-added-newline false mismatch. This remains pending until observed; local
-comparison checks and static inspection do not prove AI adherence.
+Static checks do not prove AI adherence or event delivery.
