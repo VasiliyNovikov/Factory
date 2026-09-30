@@ -24,7 +24,7 @@ eligibility checks, mutation verification, and required receipt checks.
   Retries use the original invocation times.
 - Include older runs updated in the window, looking back 90 days before its start
   for creation dates. Do not shorten the main interval.
-- Analyze all workflows, branches, and outcomes only when
+- Inventory all workflows, branches, and outcomes, including only runs whose
   `head_repository.full_name` matches this repository.
 - Record fork/unknown-origin runs as excluded. Do not fetch their logs, artifacts,
   revisions, or related PR code/diffs.
@@ -39,7 +39,17 @@ Rerun the original invocation to retry. API failure is not empty history or init
 
 ## Expected versus observed outcomes
 
-- For each included run/attempt, identify the workflow, prompt, and owning guidance
+- Budget investigation within the remaining 30-minute job, accounting for setup.
+  Set a shared investigation deadline that reserves time for consolidation,
+  duplicate checks, issue creation and verification, and final reporting.
+  Subagents must return findings and coverage gaps by that deadline; stop further
+  investigation then, even if coverage is incomplete.
+- Keep the full history inventory, but bound detailed assessment. Group work by
+  workflow and established contract revision, reusing shared contract evidence
+  where valid. Prioritize failures/timeouts, distinct skips and handoffs, and first
+  runs after contract changes; sample repetitive successes within the remaining
+  investigation budget.
+- For each assessed run/attempt, identify the workflow, prompt, and owning guidance
   revisions it actually used, plus the target revision when different. Determine
   expected behavior from those contracts, not today's default branch or an assumed
   meaning of `head_sha`. If the applicable contract cannot be established, report
@@ -70,9 +80,13 @@ Rerun the original invocation to retry. API failure is not empty history or init
   creation responses and URLs; leave later labels and triage updates alone.
   The [router](factory-router.md) job condition skips diagnostics completions.
 - Within the 30-minute job, record the window, per-workflow expected-versus-observed
-  conclusions and evidence links, exclusions, existing/new issue links, and evidence
-  gaps or failures in `GITHUB_STEP_SUMMARY` and the log. Distinguish initialization,
-  completed analysis, and incomplete analysis.
+  conclusions and evidence links, selection rationale, per-workflow assessed/total
+  run-attempt counts, exclusions, existing/new issue links, and evidence gaps or
+  failures in `GITHUB_STEP_SUMMARY` and the log. Identify unassessed runs/attempts
+  with links or clearly defined linked groups, and explain why they were not assessed.
+  Distinguish initialization, completed analysis, and incomplete analysis.
+- Unassessed runs/attempts, including those omitted by sampling, mean incomplete
+  analysis. Do not extrapolate a sample's conclusions to the whole window.
 - Missing evidence or API failures are not a clean result.
 
 Coverage and creation checks are AI-owned: no JSON contract, report artifact, or
