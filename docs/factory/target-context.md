@@ -76,8 +76,5 @@ live default branch and revisions before work or mutations; neither that name,
   target evidence and preserve that summary content.
 
 Pre-merge checks can verify configuration, target rejection, checkout separation,
-and receipt contracts. They do not prove AI adherence or event delivery. After
-deployment, record the Factory-local event -> triage -> implementation -> separate
-reviewer -> feedback flow at the deployed Factory and checked target revisions.
-That new-layout live evidence remains pending until those runs are observed.
+and receipt contracts. They do not prove AI adherence or event delivery.
 Participant trust and key isolation remain separate work in #69 and #79.
