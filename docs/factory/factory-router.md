@@ -107,13 +107,6 @@ setup. Copilot decides the rest.
 - Route older findings that still apply to current code.
 - API errors are failures, not no-work decisions.
 
-### Actions-log reads
-
-Use the [shared Actions-log guidance](actions-logs.md) on the first needed read.
-Keep the router's built-in token unchanged and verify the complete source attempt,
-including the posted-review check. Escaped excerpts do not replace the
-[source-verification requirements](#feedback-and-event-handling).
-
 ## Dispatch and reporting
 
 - Dispatch on the current default branch: one implementation worker per eligible

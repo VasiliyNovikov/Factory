@@ -12,8 +12,7 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
   See the worker YAML and [router contract](factory-router.md#dispatch-and-reporting).
 - Stay within the assigned issue; do not repeat repository-wide routing.
 - Read the full current discussion, outstanding feedback, relevant code, and
-  source evidence, including [failed CI logs](actions-logs.md).
-  Pending jobs can be superseded.
+  source evidence, including failed CI logs. Pending jobs can be superseded.
 - Act on feedback that still applies, even from older heads or outdated lines.
 - Tie review-worker findings to the source review's
   [verified reviewed SHA](factory-router.md#feedback-and-event-handling), not a
