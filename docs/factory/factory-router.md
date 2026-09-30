@@ -79,10 +79,8 @@ setup. Copilot decides the rest.
 
 ## Feedback and event handling
 
-- Read worker-discovery and PR-review collections with complete pagination.
-  When using `gh api --paginate --slurp`, filter the collected pages with external
-  `jq`. Do not combine `--slurp` with `--jq` or `--template`; these options are
-  incompatible.
+- Read worker-discovery and PR-review collections with complete pagination,
+  following the [shared pagination guidance](../../AGENTS.md#github-cli-pagination).
 - Humans and other bots may provide feedback.
 - Main conversation comments and submitted reviews trigger routing.
 - Standalone inline replies and edited comments do not trigger routing.
