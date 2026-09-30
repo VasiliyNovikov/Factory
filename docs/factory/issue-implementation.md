@@ -105,9 +105,14 @@ or split-only outcomes. The main worker stays on `implement`; independent
   reserving time for fixes, checks, publication, and reporting, and enforce it:
 
   ```sh
-  timeout --kill-after=30s "$review_timeout" \
+  COPILOT_GITHUB_TOKEN="${GITHUB_TOKEN:?built-in model token is required}" \
+    timeout --kill-after=30s "$review_timeout" \
     ./scripts/ai.sh --harness "$AI_HARNESS" --profile review --prompt "$review_prompt"
   ```
+
+  Bind model access explicitly as the shared action does: the parent CLI may omit
+  `COPILOT_GITHUB_TOKEN` from shell tools, and Copilot otherwise prefers `GH_TOKEN`
+  over `GITHUB_TOKEN`. Leave Factory App `GH_TOKEN` unchanged.
 
 - Read the returned findings and exit status; preserve the output outside the
   checkout. A successful exit without a complete, correctly scoped result is not
