@@ -91,9 +91,10 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 Before publishing a changed candidate, run an internal review with the existing
 `review` [profile](../../.github/model-config.json) for new implementations, feedback
 fixes (including their base merges), and maintenance conflict resolutions. Do not
-add this pass to clean push-only base maintenance, no-op, reply-only, or split-only
-outcomes. Required base maintenance still applies. The main worker stays on
-`implement`; independent [PR review](pr-review.md) after publication is unchanged.
+add this pass to clean default-branch-only maintenance (from a push or
+periodic/manual recovery), no-op, reply-only, or split-only outcomes. Required base
+maintenance still applies. The main worker stays on `implement`; independent
+[PR review](pr-review.md) after publication is unchanged.
 
 - Finish the candidate, including required base merges, and identify immutable
   base/candidate commit SHAs before review. Include the previous published head
