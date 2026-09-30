@@ -87,5 +87,4 @@ The read-only receipt check queries the assigned target issue and requires a
 Factory comment with this run's marker, unless Copilot skipped before mutation.
 Copilot verifies its content and label
 handoff; a green receipt alone proves neither label handoff nor implementation.
-Static checks do not prove AI adherence or event delivery. Split suggestions,
-implementation-created children, and their routing still need live verification.
+Static checks do not prove AI adherence or event delivery.

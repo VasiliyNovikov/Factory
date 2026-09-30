@@ -62,8 +62,8 @@ is not a trigger, so base-update discovery belongs here, not in each implementer
 
 ## Skip
 
-The job condition handles the noted payload-only skips before checkout or AI
-setup. Copilot decides the rest.
+The job condition makes the noted payload-only skips zero-step jobs, before
+checkout or AI setup. Copilot decides the rest.
 
 - `factory-worker-bot[bot]` conversation comments and submitted reviews (job-filtered).
 - Approvals (job-filtered for submitted reviews, regardless of author).
@@ -182,23 +182,5 @@ setup. Copilot decides the rest.
 
 - Other router events and all workers use the default branch. Checkouts use
   `github.workflow_sha`; manual non-default jobs skip in versions with the guard.
-- Central review dispatch has been verified live. The reviewer-App handoff still
-  needs [post-deployment verification](pr-review.md#verification-limits).
-- After merge, verify default-branch fan-out and payload-only comment,
-  submitted-review, label, and completion guards. Factory conversation comments
-  and thread-reply reviews must produce zero-step skipped router jobs without
-  checkout or AI setup, as must approved submitted reviews regardless of author.
-  `triaged` handoffs and otherwise-eligible actionable `COMMENTED` and
-  `CHANGES_REQUESTED` reviews, including reviewer-App findings, must still dispatch
-  implementation. Record the checked router revision and live run links; this
-  evidence remains outstanding until observed. A PR cannot test its changed
-  default-branch push trigger.
-- After deploying the paginated-read clarification (#110), link router evidence
-  for both worker discovery and PR reviews, with the checked guidance revision
-  and valid first reads without rejected-command retries. This remains pending
-  until observed; standalone reads do not prove AI adherence.
-- Standalone inline-reply routing needs post-deployment live verification: link a
-  maintainer's reply on an eligible Factory PR to its router run and reasoned
-  decision. Actionable feedback must dispatch implementation and receive an
-  answer in the original thread; link the worker run and reply.
 - Static checks do not establish AI adherence or end-to-end event delivery.
+  A PR cannot exercise its changed default-branch push trigger.

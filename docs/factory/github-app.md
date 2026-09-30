@@ -136,5 +136,4 @@ target explicitly. It revokes its token at job end. Generate a fresh token per j
 
 Approvals need reviewer Pull requests write and must follow repository policies.
 Use `COMMENT`, not `APPROVE`, when the PR author equals `REVIEWER_LOGIN`; existing
-PR authors do not change. Factory App PR creation is tested; reviewer authentication,
-approvals, and native delivery still need [live verification](pr-review.md#verification-limits).
+PR authors do not change.
