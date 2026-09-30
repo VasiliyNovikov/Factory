@@ -88,6 +88,29 @@ When using `gh api --paginate --slurp`, filter the collected pages with external
 `jq`. Do not combine `--slurp` with gh's `--jq` or `--template`; these options are
 incompatible.
 
+### GraphQL reads
+
+Follow GitHub's [node limit](https://docs.github.com/en/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api#node-limit)
+and [cursor pagination](https://docs.github.com/en/graphql/guides/using-pagination-in-the-graphql-api):
+
+- Before the first request, bound every connection with `first` or `last` from
+  1 to 100 and keep the query's worst-case total at or below 500,000 nodes.
+  Multiply bounds down each nested path, then sum every level and sibling branch.
+  For `reviewThreads -> comments -> userContentEdits`, 100 at each level means
+  `100 + 100*100 + 100*100*100 = 1,010,100` nodes; 20 each means 8,420 before siblings.
+  Use smaller pages or separate collection reads from per-object histories
+  before sending, rather than relying on small actual collections or rejected queries.
+- Exhaust every required connection, including each object's nested comments and
+  histories. For forward reads, request `pageInfo { hasNextPage endCursor }` and
+  advance that connection's own `after` cursor until `hasNextPage` is false.
+  Backward reads use `before`, `hasPreviousPage`, and `startCursor`.
+  Outer pagination, including `gh api --paginate`, does not automatically exhaust
+  nested connections; track their cursors separately for each owning object.
+- Splitting reads must retain required issue/PR bodies, discussion, reviews,
+  inline replies, and edit/deletion histories. The owning guide still defines
+  evidence, freshness, and approval requirements. Missing, partial, or failed
+  required provenance is a blocker, never evidence of no activity or a skip.
+
 ## Test value and verification
 
 - Before adding or requesting a test, name the requirement or credible regression,

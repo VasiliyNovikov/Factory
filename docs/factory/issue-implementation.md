@@ -13,6 +13,8 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Stay within the assigned issue; do not repeat repository-wide routing.
 - Read the full current discussion, outstanding feedback, relevant code, and
   source evidence, including failed CI logs. Pending jobs can be superseded.
+- Follow the [shared pagination guidance](../../AGENTS.md#github-cli-pagination)
+  for node-bounded, complete discussion and provenance reads.
 - Act on feedback that still applies, even from older heads or outdated lines.
 - Tie review-worker findings to the source review's
   [verified reviewed SHA](factory-router.md#feedback-and-event-handling), not a
@@ -237,6 +239,15 @@ the independent PR-review worker.
 - API errors, denied permissions, and unverified outcomes are failures, not skips.
 - Budget the 30-minute job for setup, work, reporting, and verification without
   relaxing required checks.
+
+## Provenance-read verification
+
+After deploying the node-budget guidance (#125), record the checked guidance
+revision and router/implementation run links showing valid first provenance
+queries and complete required pagination, including nested and edit/deletion
+histories, without node-limit rejection/retry. Both paths remain pending until
+observed. Standalone API reads and static checks do not prove worker adherence,
+live event delivery, or measured time savings.
 
 ## Permissions and trust
 
