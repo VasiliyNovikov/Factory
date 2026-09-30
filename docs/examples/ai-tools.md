@@ -70,6 +70,12 @@ Profiles supply `model`, `reasoningEffort`, and Copilot-only `longContext`, with
 schema validation. Unknown profiles fail, with no fallback. PR and repository
 review share `review`.
 
+[Model profile improvement](../factory/model-profile-improvement.md) evaluates
+every caller weekly and files evidence-backed, unlabeled issues for triage. Its
+[`copilot-models.py`](../../scripts/copilot-models.py) helper discovers live Copilot
+capabilities and checks candidate profile settings; ordinary invocations remain
+unchanged.
+
 ## Shared Factory action
 
 Factory workflows use [`.github/actions/ai`](../../.github/actions/ai/action.yml)
