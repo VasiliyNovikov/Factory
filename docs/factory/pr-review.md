@@ -91,8 +91,7 @@ It runs at the PR merge revision, with the [accepted risk](factory-router.md#acc
 
 ## Accepted risk: PR code runs in the reviewer job
 
-The [maintainer's execution decision](https://github.com/VasiliyNovikov/Factory/pull/97#discussion_r4139671406)
-permits PR-code checks in this credentialed job. Unlike the implementer, the
+PR-code checks run in this credentialed job. Unlike the implementer, the
 reviewer App can approve Factory PRs. PR code could recover that token to submit
 approvals or alter runner files to bypass the receipt check. These risks are
 accepted; the [shared safeguards](review-checks.md) reduce accidental exposure,
