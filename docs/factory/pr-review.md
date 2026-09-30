@@ -116,5 +116,3 @@ After post-submission failure, timeout, or cancellation, only a fresh successful
 assessment may deliver remaining findings.
 
 Static checks do not prove AI adherence or event delivery.
-[Workflow diagnostics](workflow-diagnostics.md#expected-versus-observed-outcomes)
-assesses observed review execution and handoffs.

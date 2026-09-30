@@ -128,5 +128,3 @@ this repository and revokes its token at job end. Generate a fresh token per job
 Approvals need reviewer Pull requests write and must follow repository policies.
 Use `COMMENT`, not `APPROVE`, when the PR author equals `REVIEWER_LOGIN`; existing
 PR authors do not change.
-[Workflow diagnostics](workflow-diagnostics.md#expected-versus-observed-outcomes)
-assesses observed authentication, review outcomes, and native delivery.

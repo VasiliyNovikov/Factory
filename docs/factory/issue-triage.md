@@ -79,5 +79,3 @@ The read-only receipt check requires a Factory comment with this run's marker,
 unless Copilot skipped before mutation. Copilot verifies its content and label
 handoff; a green receipt alone proves neither label handoff nor implementation.
 Static checks do not prove AI adherence or event delivery.
-[Workflow diagnostics](workflow-diagnostics.md#expected-versus-observed-outcomes)
-assesses observed decisions and handoffs, including child-issue routing.

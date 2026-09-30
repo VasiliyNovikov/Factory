@@ -62,8 +62,6 @@ Verification is AI-owned, with no report artifact or receipt-check job. Setup/CL
 errors fail their steps, but a successful CLI exit proves neither complete review
 nor correct publication. Early failures may leave no summary. Static checks do
 not prove AI adherence or issue creation/triage.
-[Workflow diagnostics](workflow-diagnostics.md#expected-versus-observed-outcomes)
-assesses observed execution and publication.
 
 ## Permissions and trust
 

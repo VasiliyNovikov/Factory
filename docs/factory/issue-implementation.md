@@ -259,5 +259,3 @@ the independent PR-review worker.
   proves neither code correctness nor GitHub outcomes; inspect the summary and
   linked evidence. Setup/CLI failures may leave no summary.
 - Static checks do not prove AI adherence or GitHub behavior.
-  [Workflow diagnostics](workflow-diagnostics.md#expected-versus-observed-outcomes)
-  assesses observed implementation, self-review, maintenance, and split outcomes.
