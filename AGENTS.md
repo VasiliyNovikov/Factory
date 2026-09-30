@@ -96,8 +96,8 @@ and [cursor pagination](https://docs.github.com/en/graphql/guides/using-paginati
 - Keep every query, including the first, within 500,000 worst-case nodes across
   all nested and sibling connections, with `first`/`last` bounds of 1-100.
 - Read all required bodies, discussions, reviews, inline replies, and edit/deletion
-  histories. Verify every connection reaches its terminal page using its own
-  cursor, including each object's nested connections. `gh api graphql --paginate`
+  histories. Verify every required connection reaches its terminal page using its
+  own cursor, including each object's nested connections. `gh api graphql --paginate`
   [follows only the first `pageInfo`](https://github.com/cli/cli/blob/v2.101.0/pkg/cmd/api/pagination.go);
   a successful command does not prove complete pagination.
 - Preserve the owning guide's evidence, freshness, and approval requirements.
