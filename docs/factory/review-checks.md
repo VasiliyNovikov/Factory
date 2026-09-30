@@ -23,10 +23,3 @@ set what may run. All use these safeguards:
 
 Removing variables prevents accidental inheritance, not same-runner access to
 credentials or runner files. These are behavioral rules, not a sandbox.
-
-## Verification limits
-
-For bare-clone history inspection, link a later live PR review and its checked
-guidance revision showing the expected reviewed head was read without
-implicit-access failures or retries. This remains pending until observed; a
-focused Git check proves command behavior, not AI adherence.
