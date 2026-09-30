@@ -263,3 +263,10 @@ the independent PR-review worker.
   Central implementation dispatch, clarification, duplicate-reply prevention,
   denied resolution, maintenance fan-out, and split/child/recovery paths still
   need live verification. Static checks do not prove AI adherence or GitHub behavior.
+- Internal self-review has only pre-deployment invocation evidence (#119), not
+  proof of default-branch worker adherence. After deployment, link implementation
+  runs whose PRs and summaries record `--profile review` from the trusted workflow
+  worktree, reviewed base/candidate SHAs, and findings with their dispositions.
+  Default-branch execution, feedback fixes, maintenance conflict resolutions,
+  no-op exclusions, reviewer error/timeout disclosure, and OpenCode nesting still
+  need live verification.
