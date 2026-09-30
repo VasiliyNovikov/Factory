@@ -186,11 +186,6 @@ including the posted-review check. Escaped excerpts do not replace the
   for both worker discovery and PR reviews, with the checked guidance revision
   and valid first reads without rejected-command retries. This remains pending
   until observed; standalone reads do not prove AI adherence.
-- After deploying the Actions-log guidance (#123), record a subsequent eligible
-  router run and its checked guidance revision showing a successful first needed
-  log read with escaped or sanitized output and complete source verification.
-  This remains pending until observed; standalone command checks do not prove
-  live router adherence or resource savings.
 - Standalone inline-reply routing needs post-deployment live verification: link a
   maintainer's reply on an eligible Factory PR to its router run and reasoned
   decision. Actionable feedback must dispatch implementation and receive an
