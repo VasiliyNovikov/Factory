@@ -72,9 +72,8 @@ review, and model profile improvement share `review`.
 
 [Model profile improvement](../factory/model-profile-improvement.md) evaluates
 every caller weekly and files evidence-backed, unlabeled issues for triage. Its
-[`copilot-models.py`](../../scripts/copilot-models.py) helper discovers live Copilot
-capabilities and checks candidate profile settings; ordinary invocations remain
-unchanged.
+evaluator owns live model discovery and compatibility checks; ordinary
+invocations remain unchanged.
 
 ## Shared Factory action
 

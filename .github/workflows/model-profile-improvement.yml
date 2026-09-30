@@ -2,7 +2,7 @@ name: Model profile improvement
 
 on:
   schedule:
-    - cron: '0 6 * * 1'
+    - cron: '0 0 * * 1'
   workflow_dispatch:
 
 jobs:
@@ -39,7 +39,6 @@ jobs:
         uses: ./.github/actions/ai
         env:
           FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
-          MODEL_CATALOG_PATH: ${{ runner.temp }}/copilot-models.json
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
           profile: review
@@ -55,12 +54,3 @@ jobs:
             dated evidence, and limitations in GITHUB_STEP_SUMMARY.
             Report failures and partial outcomes accurately, not as no-change results.
             Budget the 30-minute job including setup, reporting, and verification.
-
-      - name: Preserve discovered model capabilities
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: copilot-models-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/copilot-models.json
-          if-no-files-found: warn
-          retention-days: 14

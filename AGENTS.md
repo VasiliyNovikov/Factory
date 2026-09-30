@@ -55,9 +55,7 @@
 
 This is an agentic software factory scaffold, with no application code or
 toolchain yet. [README.md](README.md) tracks completed CI milestones. There are no
-configured build/lint commands; automated workflow tests are deferred. The
-Copilot discovery helper has focused standard-library tests:
-`python3 -B -m unittest discover -s tests -v`.
+configured build/test/lint commands; automated workflow tests are deferred.
 
 Use the owning guide for each workflow's behavior, permissions, and verification:
 

@@ -92,7 +92,7 @@ the job summary.
 ## Model profile improvement
 
 [Model profile improvement](docs/factory/model-profile-improvement.md) runs weekly
-on **Monday at 06:00 UTC** or manually on the default branch. It discovers models
+on **Monday at 00:00 UTC** or manually on the default branch. It discovers models
 available to Copilot, researches current provider guidance, and assesses every
 Factory workflow individually, prioritizing **intelligence > speed > cost**.
 
@@ -100,9 +100,9 @@ Justified recommendations become **new untriaged Factory issues**, not direct
 PRs or profile edits. Normal triage and implementation handle the proposed
 configuration/caller changes. Complete assessments can retain all settings;
 insufficient evidence or failed discovery is reported as incomplete, not as a
-successful no-change result. The run summary records decisions and dated evidence,
-and an artifact preserves discovered model capabilities. Scheduled/manual execution
-and issue handoff still need post-merge verification.
+successful no-change result. Findings include relevant model capabilities and
+compatibility explanations; the run summary records decisions and dated evidence.
+Scheduled/manual execution and issue handoff still need post-merge verification.
 
 ## CI examples
 
