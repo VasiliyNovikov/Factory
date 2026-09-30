@@ -167,4 +167,4 @@ checkout or AI setup. Copilot decides the rest.
 - Static checks do not establish AI adherence or end-to-end event delivery.
   A PR cannot exercise its changed default-branch push trigger.
 - [Workflow diagnostics](workflow-diagnostics.md#expected-versus-observed-outcomes)
-  assesses observed routing, skips, and handoffs against the contracts used by each run.
+  assesses observed routing, skips, and handoffs against each assessed run's contracts.

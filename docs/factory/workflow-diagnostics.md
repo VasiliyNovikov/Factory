@@ -29,8 +29,10 @@ eligibility checks, mutation verification, and required receipt checks.
 - Record fork/unknown-origin runs as excluded. Do not fetch their logs, artifacts,
   revisions, or related PR code/diffs.
 - Use parallel read-only subagents per workflow, with the same scope and token
-  rules. Wait for their results and consolidate findings. Choose needed evidence
-  from jobs, attempts, logs, code, and discussions; handle pagination and API limits.
+  rules. Wait only until the shared investigation deadline, then consolidate
+  available findings and report missing subagent results as coverage gaps. Choose
+  needed evidence from jobs, attempts, logs, code, and discussions; handle pagination
+  and API limits.
 
 Scheduled and manual runs share one concurrency group, preserving active work
 and at most one pending run. Failed windows are not replayed automatically:
