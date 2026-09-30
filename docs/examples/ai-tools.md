@@ -68,7 +68,11 @@ For OpenCode, install `opencode` and invoke `--harness opencode`. Both CLIs use
 
 Profiles supply `model`, `reasoningEffort`, and Copilot-only `longContext`, without
 schema validation. Unknown profiles fail, with no fallback. PR review, repository
-review, and model profile improvement share `review`.
+review, model profile improvement, and
+[implementation self-review](../factory/issue-implementation.md#internal-self-review)
+share `review`. Implementation stays on `implement` and invokes the same runner
+with `--profile review` for its internal pre-publication pass; it does not install
+another CLI or replace independent PR review.
 
 [Model profile improvement](../factory/model-profile-improvement.md) evaluates
 every caller weekly and files evidence-backed, unlabeled issues for triage. Its
