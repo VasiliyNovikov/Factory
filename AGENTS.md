@@ -68,6 +68,7 @@ Use the owning guide for each workflow's behavior, permissions, and verification
 | Code, feedback, base merges, and sub-issues | [Issue implementation](docs/factory/issue-implementation.md) |
 | Run-history analysis | [Workflow diagnostics](docs/factory/workflow-diagnostics.md) |
 | Full source analysis | [Repository review](docs/factory/repository-review.md) |
+| Model selection and improvement findings | [Model profile improvement](docs/factory/model-profile-improvement.md) |
 
 Factory checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
 Eligible submitted reviews are the router exception: they run PR-merge-revision
