@@ -120,8 +120,3 @@ Also link a post-deployment PR-review run and its checked workflow revision
 showing a valid first paginated discussion/review read, without retrying an
 incompatible option combination. This remains pending until observed; standalone
 read checks and static inspection do not prove AI adherence.
-
-For bare-clone history inspection, also link a later live PR review and its
-checked guidance revision showing the expected reviewed head was read without
-implicit-access failures or retries. This remains pending until observed; a
-focused Git check proves command behavior, not AI adherence.
