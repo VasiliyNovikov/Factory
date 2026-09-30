@@ -99,6 +99,13 @@ When using `gh api --paginate --slurp`, filter the collected pages with external
 `jq`. Do not combine `--slurp` with gh's `--jq` or `--template`; these options are
 incompatible.
 
+## GitHub Actions logs
+
+For Actions-log reads in any Factory workflow, follow the
+[shared log guidance](docs/factory/actions-logs.md) from the first needed read.
+The calling workflow's guide still owns source eligibility, token selection,
+permissions, and verification.
+
 ## Test value and verification
 
 - Before adding or requesting a test, name the requirement or credible regression,
