@@ -81,8 +81,8 @@ rate limits, reliability, or job deadlines.
   in the summary; never edit, comment on, reopen, or replace existing work.
   Closed work is not permission to duplicate it. A previously rejected choice
   needs materially new evidence and a clear explanation of the difference.
-- Create one unlabeled Factory issue per cohesive, independently actionable
-  improvement in `GITHUB_REPOSITORY`. Keep coupled shared-profile/caller changes
+- Create one unlabeled issue as `FACTORY_LOGIN` per cohesive, independently
+  actionable improvement in `GITHUB_REPOSITORY`. Keep coupled shared-profile/caller changes
   together instead of filing one issue per workflow. Include bounded scope,
   context, before/after settings, affected workflows, source permalinks at the
   evaluated SHA, and dated primary-source evidence. Give per-workflow rationale,
@@ -132,8 +132,9 @@ Before publication, recheck the current default revision. If it advanced, reread
 affected configuration, callers, and guidance; reassess applicability and checks
 before filing anything. Do not claim coverage of an unread revision.
 
-Verify each created issue's repository, Factory author, body, and URL in fresh API
-reads. Verify it was created without labels; leave subsequent triage updates alone.
+Verify each created issue's repository, author matching `FACTORY_LOGIN`, body, and
+URL in fresh API reads. Verify it was created without labels; leave subsequent
+triage updates alone.
 Reconcile uncertain creation with fresh, paginated issue reads before retrying;
 search indexing alone cannot prove nothing was created. Never retry blindly or
 treat API errors as empty results.

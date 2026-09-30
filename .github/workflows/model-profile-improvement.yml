@@ -58,7 +58,7 @@ jobs:
 
       - name: Preserve discovered model capabilities
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: copilot-models-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/copilot-models.json
