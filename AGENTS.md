@@ -104,8 +104,11 @@ and [cursor pagination](https://docs.github.com/en/graphql/guides/using-paginati
   histories. For forward reads, request `pageInfo { hasNextPage endCursor }` and
   advance that connection's own `after` cursor until `hasNextPage` is false.
   Backward reads use `before`, `hasPreviousPage`, and `startCursor`.
-  Outer pagination, including `gh api --paginate`, does not automatically exhaust
-  nested connections; track their cursors separately for each owning object.
+  Use `gh api graphql --paginate` with one connection per query, fetching nested
+  connections separately: it [selects the first `pageInfo`](https://github.com/cli/cli/blob/v2.101.0/pkg/cmd/api/pagination.go),
+  which may not belong to the outer connection. For combined queries, manage each
+  connection's cursors explicitly per owning object. Verify terminal pages;
+  a successful command alone does not establish completeness.
 - Splitting reads must retain required issue/PR bodies, discussion, reviews,
   inline replies, and edit/deletion histories. The owning guide still defines
   evidence, freshness, and approval requirements. Missing, partial, or failed
