@@ -1,8 +1,9 @@
 # Local checks during reviews
 
 [PR review](pr-review.md#local-checks) and
-[repository review](repository-review.md#review-scope) set what may run. Both use
-these safeguards:
+[repository review](repository-review.md#review-scope), plus
+[implementation self-review](issue-implementation.md#internal-reviewer-contract),
+set what may run. All use these safeguards:
 
 - Inspect each check and its invoked code first. Reject credential access,
   destructive actions, and external mutations. Unsafe or inconclusive checks
