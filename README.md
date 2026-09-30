@@ -76,8 +76,6 @@ dispatch, not comments, labels, code changes, or new issues/PRs. It reconciles
 active/handled work across sweeps and ordinary routing, respects human/approval
 holds and child-owned scope, and reports coverage, dispatch evidence, and partial
 failures in the job summary. Dispatch acceptance is not completed recovery.
-Scheduled delivery, overlap handling, and retry recovery still need post-merge
-live verification.
 
 ## Workflow diagnostics
 

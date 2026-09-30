@@ -109,7 +109,4 @@ policy and entry-point wiring, not a wording-only test suite:
 | Page/API failure after examining only some targets | Report incomplete coverage and actual accepted work, not a clean no-work result. |
 
 Static/contract checks and these manual decisions do not prove AI adherence, race
-freedom, or live GitHub recovery. After merge, verify scheduled/manual runs with
-worker links and results, ordinary-routing overlap, active/handled/held no-ops,
-unchanged failed-recovery holds, and interrupted-batch recovery. No live schedule
-is exercised by a PR alone.
+freedom, or live GitHub recovery. No live schedule is exercised by a PR alone.
