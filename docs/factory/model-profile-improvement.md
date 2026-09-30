@@ -5,7 +5,7 @@ profile changes. Prioritize **intelligence > speed > cost**; unlimited tokens do
 not remove availability, context, rate, reliability, or deadline constraints.
 
 The [workflow](../../.github/workflows/model-profile-improvement.yml) runs Mondays
-at **00:00 UTC** (`0 0 * * 1`) or manually on the default branch; other manual refs
+at **00:07 UTC** (`7 0 * * 1`) or manually on the default branch; other manual refs
 skip, and schedules may be delayed. `github.workflow_sha` pins setup and guidance.
 Runs share one concurrency group without cancelling active work. Budget the
 30 minutes for setup, assessment, publication, and verification.
