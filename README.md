@@ -53,7 +53,7 @@ handles only its assigned issue/PR.
 See [implementation guidance](docs/factory/issue-implementation.md) for eligibility,
 ownership, split recovery, and verification.
 
-**Before-merge risk:** submitted reviews run the router from the PR merge revision.
+**Before-merge risk:** eligible submitted reviews run the PR-merge-revision router.
 Router/setup changes can therefore execute before merge with the router's token.
 Other events and workers use the default branch. See the
 [accepted risk](docs/factory/factory-router.md#accepted-risk-router-changes-can-run-before-merge).
