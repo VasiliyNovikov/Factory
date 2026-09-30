@@ -127,7 +127,9 @@ this repository and revokes its token at job end. Generate a fresh token per job
 Posting an approval and qualifying for required reviews are different:
 [required approving reviewers need repository write access](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-a-pull-request-before-merging).
 The installation's access and a job's narrower token scope are separate.
-Keep review code inspection read-only and retain all repository review protections.
+Keep reviewed source unchanged, follow the
+[review execution rules](pr-review.md#local-checks), and retain all repository
+review protections.
 
 See [approval qualification](pr-review.md#approval-qualification) for the verified
 correction and remaining limits.
