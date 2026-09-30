@@ -19,26 +19,13 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
 
 ## Local checks
 
-- Use reviewer-written experiments or fully inspected copied/adapted snippets
-  and synthetic-input probes to verify concrete review questions.
-- Do not execute PR-provided files, test suites, dependency installations, or
-  hooks in this credentialed job. Probes must not import PR modules or load
-  project configuration/plugins. Full PR-code execution needs a separately
-  designed isolated execution job; it is not enabled by this guidance.
-- Fetch source at the exact `PR_HEAD_SHA` for inspection. Run probes with
-  already-installed tools in a separate temporary directory outside the fetched
-  tree. Preserve the default-branch checkout, its guidance, and reviewed source;
-  clean up temporary work.
-- Remove `GH_TOKEN`, `GITHUB_TOKEN`, and `COPILOT_GITHUB_TOKEN` from every check
-  subprocess using `env -u`. Also remove runner command-file variables
-  (`GITHUB_OUTPUT`, `GITHUB_ENV`, `GITHUB_PATH`, `GITHUB_STATE`, and
-  `GITHUB_STEP_SUMMARY`). Never pass credentials or command-file paths through
-  arguments or files. Keep the coordinator's environment unchanged for authorized
-  GitHub operations and reporting.
-- Inspect the entire probe and its invoked code before execution. Reject
-  credential reads, destructive actions, and external mutations. Checks needing
-  GitHub authentication, unsafe checks, and inconclusive results are evidence
-  gaps, not reasons to supply a token or expand execution scope.
+- Use installed tools for reviewer-written experiments, fully inspected
+  copied/adapted snippets, or synthetic probes that answer concrete review questions.
+  Do not run PR-provided files, tests, or dependency installs/hooks, or load PR
+  modules or project configuration/plugins. Full PR execution needs a separately
+  designed isolated job.
+- Inspect source at exactly `PR_HEAD_SHA`; run probes outside the fetched tree
+  under the [shared check safeguards](review-checks.md).
 
 ## Review outcome
 
@@ -95,9 +82,7 @@ It runs at the PR merge revision, with the [accepted risk](factory-router.md#acc
   mutation targets. Delegated analysis has the same boundaries.
 - Unlike the implementer, the reviewer App can approve Factory PRs. PR-controlled
   execution is excluded because it could use that token to approve PRs or alter
-  `GITHUB_OUTPUT` to bypass the receipt check. Removing environment variables
-  prevents accidental inheritance, not same-runner access to credentials or
-  runner files. These are behavioral rules, not a sandbox.
+  `GITHUB_OUTPUT` to bypass the receipt check.
 - The default-branch worker is dispatch-only, checks out `github.workflow_sha`,
   and uses the `review` [profile](../../.github/model-config.json).
 - Same-PR/head jobs preserve active reviews through the receipt check; pending
@@ -120,8 +105,8 @@ ineligible, failed, and skipped no-ops. Same-head redispatch must preserve activ
 reviews and deliver findings once. After post-submission failure, timeout, or
 cancellation, only a fresh successful assessment may deliver remaining findings.
 
-Also link a post-deployment review demonstrating permitted snippet experiments
-at its verified PR head, stripped check environments, source preservation,
-unchanged token/mutation boundaries, results and evidence gaps, and a verified
-submitted review. This remains pending until observed; static checks alone do
-not establish AI adherence or credential isolation.
+**Still unverified:** After merge, link a live review that runs an allowed
+experiment at the expected PR head, follows the [shared safeguards](review-checks.md)
+and GitHub-write limits, reports results/gaps, and posts a verified review.
+Changing this guide does not prove the bot follows it; removing environment
+variables does not isolate credentials.
