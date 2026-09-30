@@ -53,16 +53,22 @@ external human/bot requests need scoped
 approval before normal triage; approval neither marks an issue ready nor adopts
 unrelated feedback. This is an AI-owned hold, not a pre-Copilot gate or spending limit.
 
+PR reviewers may run PR code, tests, and focused experiments under the
+[PR-review execution rules](docs/factory/pr-review.md#local-checks).
+
 Implementation keeps eligible PRs current with the default branch and resolves
 conflicts, but never merges PRs or closes issues. Each implementation worker
 handles only its assigned issue/PR.
 See [implementation guidance](docs/factory/issue-implementation.md) for eligibility,
 ownership, split recovery, and verification.
 
-**Before-merge risk:** submitted reviews run the router from the PR merge revision.
+**Before-merge risk:** eligible submitted reviews run the PR-merge-revision router.
 Router/setup changes can therefore execute before merge with the router's token.
 Other events and workers use the default branch. See the
 [accepted risk](docs/factory/factory-router.md#accepted-risk-router-changes-can-run-before-merge).
+PR checks also run in a credentialed reviewer job, with the
+[accepted risk of approval-token access or receipt-check bypass](docs/factory/pr-review.md#accepted-risk-pr-code-runs-in-the-reviewer-job).
+Removing environment variables does not isolate credentials.
 
 ## Workflow diagnostics
 
@@ -83,11 +89,12 @@ flowchart TD
 ## Repository review
 
 [Repository review](docs/factory/repository-review.md) reads the whole source
-snapshot from scratch, without executing or changing it.
+snapshot from scratch and may run focused checks or experiments without changing
+the reviewed source.
 
 ```mermaid
 flowchart TD
-    trigger["Daily 00:00 UTC or manual<br/>Default branch"] --> review["Read-only review<br/>Full repository snapshot"]
+    trigger["Daily 00:00 UTC or manual<br/>Default branch"] --> review["Review with optional checks<br/>Full repository snapshot"]
     review --> duplicates["Check issues and PRs<br/>All states"]
     duplicates -->|New actionable findings| issues["Create unlabeled issues"]
     issues --> router["Factory router"] --> triage["Issue triage"]
