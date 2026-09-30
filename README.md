@@ -49,7 +49,8 @@ PR reviewers may run PR code, tests, and focused experiments under the
 
 Implementation keeps eligible PRs current with the default branch and resolves
 conflicts, but never merges PRs or closes issues. Each implementation worker
-handles only its assigned issue/PR.
+handles only its assigned issue/PR and self-reviews changed candidates with the
+`review` profile before publication. Independent PR review remains unchanged.
 See [implementation guidance](docs/factory/issue-implementation.md) for eligibility,
 ownership, split recovery, and verification.
 
