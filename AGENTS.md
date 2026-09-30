@@ -73,8 +73,8 @@ Use the owning guide for each workflow's behavior, permissions, and verification
 Factory tooling checkouts use `github.workflow_sha`; target code and project
 guidance stay separate. Only the Factory-local target is enabled. Manual jobs skip
 non-default refs.
-Submitted reviews are the router exception: they run PR-merge-revision code before
-merge, with the [documented risk](docs/factory/factory-router.md#accepted-risk-router-changes-can-run-before-merge).
+Eligible submitted reviews are the router exception: they run PR-merge-revision
+code before merge, with the [documented risk](docs/factory/factory-router.md#accepted-risk-router-changes-can-run-before-merge).
 
 Workflows share [`.github/actions/ai`](docs/examples/ai-tools.md#shared-factory-action)
 from the pinned Factory checkout for installation and invocation. Checkout,

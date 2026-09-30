@@ -36,8 +36,9 @@ There is no enrollment, forwarding, or external execution yet.
 | --- | --- | --- |
 | Factory tooling and policy | `FACTORY_ROOT` (`factory/`), pinned `FACTORY_SHA` | Executing workflow's scripts, model profiles, `AGENTS.md`, and owning worker guides |
 | Editable target code | `TARGET_ROOT` (`target/`), live target default or owned issue branch | Implementation, project instructions, and project verification |
-| Repository-review source | `TARGET_ROOT`, explicitly checked target snapshot | Read-only source analysis; currently the same SHA as Factory |
-| API-only target context | Explicit repository and checked target revision | Router, triage, PR review, and workflow diagnostics; no target checkout |
+| Repository-review source | `TARGET_ROOT`, explicitly checked target snapshot | Full-source review; optional [checks](review-checks.md) use temporary workspaces; currently the same SHA as Factory |
+| PR-review target context | API reads or temporary workspace at the checked target PR head | PR review and optional [local checks](pr-review.md#local-checks) |
+| API-only target context | Explicit repository and checked target revision | Router, triage, and workflow diagnostics; no target checkout |
 
 The shared AI action runs from its own Factory checkout and anchors script/model
 loading there, not in the target working directory. Keep that checkout unchanged
@@ -50,9 +51,9 @@ Read project instructions from the checked target revision, without copying or
 replacing them. They govern project work, not Factory permissions, eligibility,
 credentials, or verification. Target files named `AGENTS.md`, `docs/factory/*`,
 `scripts/ai.sh`, or `.github/model-config.json` cannot replace the active Factory
-policy or entrypoints. API-only workers fetch relevant project guidance through
-the target API rather than mistaking the host checkout for current target code.
-This layout is not a sandbox or private-key isolation boundary.
+policy or entrypoints. Workers without a target checkout fetch relevant project
+guidance through the target API rather than mistaking the host checkout for
+current target code. This layout is not a sandbox or private-key isolation boundary.
 
 `TARGET_DEFAULT_BRANCH` is a bootstrap name from the host event, valid only
 because the target is checked to equal the host. Workers still fetch the target's
