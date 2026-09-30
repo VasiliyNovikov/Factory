@@ -111,19 +111,25 @@ setup. Copilot decides the rest.
 
 Actions logs can contain terminal controls. On the first needed read, use
 compatible retrieval and escape or sanitize untrusted output before presentation.
-For example, set `job_id` from the verified source attempt's jobs, then:
+Set `job_id` from the verified source attempt's jobs. Save the complete escaped
+log locally and show only the needed excerpts, for example head/marker fields:
 
 ```sh
 set -o pipefail
+log_file="$RUNNER_TEMP/router-job-$job_id.jsonl"
 gh api --allow-escape-sequences \
   "repos/$GITHUB_REPOSITORY/actions/jobs/$job_id/logs" |
-  jq -Rsa .
+  jq -Ra . > "$log_file" &&
+  jq -ace 'select(test("PR_HEAD_SHA|REVIEW_MARKER"))' "$log_file"
 ```
 
 `--allow-escape-sequences` belongs after `api`, not before it. Confine it to the
 log fetch feeding the escaping step; never emit raw logs or disable protections
-globally. `jq -Rsa .` produces ASCII JSON with escaped controls; do not decode it
-back to raw terminal output. Keep the router's built-in token unchanged.
+globally. `jq -Ra .` saves one ASCII JSON string per log line; keep excerpts
+JSON-escaped too. The selector is only an example, not complete verification.
+Read other needed excerpts from the saved file without refetching, keeping each
+display within tool-output limits, and delete the file after verification.
+Keep the router's built-in token unchanged.
 
 Retrieve the complete logs needed for source verification before selecting
 excerpts, including other jobs from the exact attempt when needed. A failed fetch,
