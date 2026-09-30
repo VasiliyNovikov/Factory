@@ -61,10 +61,9 @@ and report partial publication.
 Verification is AI-owned, with no report artifact or receipt-check job. Setup/CLI
 errors fail their steps, but a successful CLI exit proves neither complete review
 nor correct publication. Early failures may leave no summary. Static checks do
-not prove AI adherence or issue creation/triage. Keep live verification pending
-until a subsequent run is linked showing focused execution with stripped check
-environments within the token and mutation boundaries, full-source coverage,
-and normal findings/reporting.
+not prove AI adherence or issue creation/triage.
+[Workflow diagnostics](workflow-diagnostics.md#expected-versus-observed-outcomes)
+assesses observed execution and publication.
 
 ## Permissions and trust
 

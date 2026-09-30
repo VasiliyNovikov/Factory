@@ -84,9 +84,8 @@ Append the outcome and evidence to `GITHUB_STEP_SUMMARY` and report in the log:
 
 Verification is AI-owned; a successful CLI exit is not proof of completion.
 Research and capability checks prove neither comparative quality nor model-request success.
-Discovery was exercised during implementation; scheduled/manual execution,
-research, issue creation/triage, duplicate recovery, and no-change/failure reporting
-still need post-merge evidence, not static checks.
+[Workflow diagnostics](workflow-diagnostics.md#expected-versus-observed-outcomes)
+assesses observed execution, publication, and handoffs.
 
 ## Permissions and trust
 

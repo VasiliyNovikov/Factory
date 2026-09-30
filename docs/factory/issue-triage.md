@@ -78,5 +78,6 @@ tracking identity when ready. Triage never creates or links children.
 The read-only receipt check requires a Factory comment with this run's marker,
 unless Copilot skipped before mutation. Copilot verifies its content and label
 handoff; a green receipt alone proves neither label handoff nor implementation.
-Static checks do not prove AI adherence or event delivery. Split suggestions,
-implementation-created children, and their routing still need live verification.
+Static checks do not prove AI adherence or event delivery.
+[Workflow diagnostics](workflow-diagnostics.md#expected-versus-observed-outcomes)
+assesses observed decisions and handoffs, including child-issue routing.
