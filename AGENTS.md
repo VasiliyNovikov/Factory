@@ -44,8 +44,12 @@
 
 - Use concise, plain language in docs, issue/PR bodies, comments, and reviews.
   Keep documentation aligned with the code and workflows.
-- Lead with the outcome or request. Include only useful scope, evidence,
-  decisions, blockers, or next steps; avoid repeated context and process narration.
+- Lead with the outcome or request. Start AI-written PR descriptions, issue
+  bodies, triage assessments, and other longer comments, reviews, or reports with
+  a `## TL;DR` section: one or two short, plain-language sentences before supporting
+  detail. Already-brief replies do not need a separate summary.
+- Include only useful scope, evidence, decisions, blockers, or next steps; avoid
+  repeated context and process narration.
 - Be brief by default, but retain required links, markers, checked revisions,
   verification results, and failure details. Concision must not hide uncertainty.
 - Use descriptive headings and focused bullets when they help scanning. Group
