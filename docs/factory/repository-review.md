@@ -1,7 +1,7 @@
 # Review the whole repository
 
 [Repository review](../../.github/workflows/repository-review.yml) runs daily at
-**00:00 UTC** (`0 0 * * *`) or through **Actions -> Repository review -> Run workflow**.
+**00:07 UTC** (`7 0 * * *`) or through **Actions -> Repository review -> Run workflow**.
 It uses the default branch; manual runs on other refs skip, and schedules may be
 delayed. `github.workflow_sha` pins Factory guidance/setup and, for this local-only
 review, the separate target source snapshot to this invocation.

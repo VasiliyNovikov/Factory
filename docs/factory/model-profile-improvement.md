@@ -5,7 +5,7 @@ profile changes. Prioritize **intelligence > speed > cost**; unlimited tokens do
 not remove availability, context, rate, reliability, or deadline constraints.
 
 The [workflow](../../.github/workflows/model-profile-improvement.yml) runs Mondays
-at **00:00 UTC** (`0 0 * * 1`) or manually on the default branch; other manual refs
+at **00:07 UTC** (`7 0 * * 1`) or manually on the default branch; other manual refs
 skip, and schedules may be delayed. The [host/target contract](target-context.md)
 pins tooling and policy to `FACTORY_SHA` in `FACTORY_ROOT`; this worker stays
 host-local, with `TARGET_REPOSITORY` equal to `FACTORY_REPOSITORY`.

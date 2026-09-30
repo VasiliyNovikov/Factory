@@ -77,7 +77,7 @@ boundary without analysis; later runs look for actionable improvements.
 
 ```mermaid
 flowchart TD
-    trigger["Daily 00:00 UTC or manual<br/>Default branch"] --> diagnostics{"Workflow diagnostics"}
+    trigger["Daily 00:07 UTC or manual<br/>Default branch"] --> diagnostics{"Workflow diagnostics"}
     diagnostics -->|First invocation| boundary["Record boundary only<br/>No analysis or findings"]
     diagnostics -->|Later invocations| analysis["Analyze same-repository runs<br/>Since previous invocation"]
     analysis --> duplicates["Check issues and PRs<br/>All states"]
@@ -93,13 +93,13 @@ the reviewed source.
 
 ```mermaid
 flowchart TD
-    trigger["Daily 00:00 UTC or manual<br/>Default branch"] --> review["Review with optional checks<br/>Full repository snapshot"]
+    trigger["Daily 00:07 UTC or manual<br/>Default branch"] --> review["Review with optional checks<br/>Full repository snapshot"]
     review --> duplicates["Check issues and PRs<br/>All states"]
     duplicates -->|New actionable findings| issues["Create unlabeled issues"]
     issues --> router["Factory router"] --> triage["Issue triage"]
 ```
 
-Both workflows run daily at **00:00 UTC** or manually on the default branch.
+Both workflows run daily at **00:07 UTC** or manually on the default branch.
 They check issues and PRs in all states for duplicates, publish only new actionable
 findings as unlabeled Factory issues for triage, and report coverage and gaps in
 the job summary.
@@ -107,13 +107,13 @@ the job summary.
 ## Model profile improvement
 
 [Model profile improvement](docs/factory/model-profile-improvement.md) runs weekly
-on **Monday at 00:00 UTC** or manually on the default branch. It discovers models
+on **Monday at 00:07 UTC** or manually on the default branch. It discovers models
 available to Copilot, researches current provider guidance, and assesses every
 Factory workflow individually, prioritizing **intelligence > speed > cost**.
 
 ```mermaid
 flowchart TD
-    trigger["Monday 00:00 UTC or manual<br/>Default branch"] --> assess["Discover models and research guidance<br/>Assess every workflow"]
+    trigger["Monday 00:07 UTC or manual<br/>Default branch"] --> assess["Discover models and research guidance<br/>Assess every workflow"]
     assess -->|Complete assessment| findings{"Justified improvement?"}
     assess -->|Missing evidence or failure| incomplete["Report incomplete / partial"]
     findings -->|No| unchanged["Report no change"]

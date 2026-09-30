@@ -2,7 +2,7 @@ name: Model profile improvement
 
 on:
   schedule:
-    - cron: '0 0 * * 1'
+    - cron: '7 0 * * 1'
   workflow_dispatch:
 
 jobs:
