@@ -29,6 +29,16 @@
   per scenario. Consolidate overlaps without weakening required checks.
 - Design for capable models and future improvements, without weakening
   permissions, safety checks, or result verification.
+- When changing prompts or agent instructions (including workflow prompts, this
+  file, and Factory guides), research current official recommendations for the
+  affected models/providers rather than relying on memory. For shared Factory
+  guidance, cover OpenAI and Anthropic plus other applicable providers. Assess the
+  change against that research, distinguishing general advice from model-specific
+  recommendations. In the PR or change report, link sources and summarize relevant
+  conclusions and justified deviations; report unavailable research or unresolved
+  conflicts without claiming verification. Provider advice never overrides
+  repository permissions, token boundaries, trust rules, decision markers, or
+  verification contracts.
 
 ## Writing docs and comments
 
