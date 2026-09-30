@@ -10,6 +10,9 @@ verifies results. The shared [AI action](../examples/ai-tools.md#shared-factory-
 uses the `default` profile; the prompt supplies the run ID, attempt, and Factory login.
 For source analysis instead of run history, use [repository review](repository-review.md).
 
+This retrospective assessment complements, not replaces, workers' immediate
+eligibility checks, mutation verification, and required receipt checks.
+
 ## Scope and investigation
 
 - Find evidenced fixes, optimizations, or improvements, including in successful runs.
@@ -21,18 +24,52 @@ For source analysis instead of run history, use [repository review](repository-r
   Retries use the original invocation times.
 - Include older runs updated in the window, looking back 90 days before its start
   for creation dates. Do not shorten the main interval.
-- Analyze all workflows, branches, and outcomes only when
+- Inventory all workflows, branches, and outcomes, including only runs whose
   `head_repository.full_name` matches this repository.
 - Record fork/unknown-origin runs as excluded. Do not fetch their logs, artifacts,
   revisions, or related PR code/diffs.
 - Use parallel read-only subagents per workflow, with the same scope and token
-  rules. Wait for their results and consolidate findings. Choose needed evidence
-  from jobs, attempts, logs, code, and discussions; handle pagination and API limits.
+  rules. Wait only until the shared investigation deadline, then consolidate
+  available findings and report missing subagent results as coverage gaps. Choose
+  needed evidence from jobs, attempts, logs, code, and discussions; handle pagination
+  and API limits.
 
 Scheduled and manual runs share one concurrency group, preserving active work
 and at most one pending run. Failed windows are not replayed automatically:
 the boundary is the preceding invocation, not the last successful analysis.
 Rerun the original invocation to retry. API failure is not empty history or initialization.
+
+## Expected versus observed outcomes
+
+- Budget investigation within the remaining 30-minute job, accounting for setup.
+  Set a shared investigation deadline that reserves time for consolidation,
+  duplicate checks, issue creation and verification, and final reporting.
+  Subagents must return findings and coverage gaps by that deadline; stop further
+  investigation then, even if coverage is incomplete.
+- Keep the full history inventory, but bound detailed assessment. Group work by
+  workflow and established contract revision, reusing shared contract evidence
+  where valid. Prioritize failures/timeouts, distinct skips and handoffs, and first
+  runs after contract changes; sample repetitive successes within the remaining
+  investigation budget.
+- For each assessed run/attempt, identify the workflow, prompt, and owning guidance
+  revisions it actually used, plus the target revision when different. Determine
+  expected behavior from those contracts, not today's default branch or an assumed
+  meaning of `head_sha`. If the applicable contract cannot be established, report
+  the evidence gap.
+- Compare observed execution and relevant GitHub outcomes with those expectations,
+  including successful runs, expected skips, and handoffs. Use jobs, logs, available
+  summaries, and read-only GitHub evidence to assess required steps and receipts,
+  actions taken or correctly avoided, and downstream results. Dispatch acceptance
+  is not completed work; distinguish later state changes from the run's effects.
+- Support conclusions with run-attempt, contract/target revision, and outcome links.
+  Separate supported expected behavior, concrete discrepancies, unavailable evidence,
+  and unexercised paths. A green exit or receipt proves only what it checks; missing
+  evidence proves neither correct behavior nor a defect. Unexercised paths limit
+  coverage, rather than automatically warranting findings.
+- Keep retrospective evidence and gaps in run reporting, not accumulating
+  deferred-verification checklists in source docs. Investigate actionable
+  discrepancies through the existing findings path below, within the same history,
+  origin, read-only-analysis, and publication boundaries.
 
 ## Findings and reporting
 
@@ -44,16 +81,21 @@ Rerun the original invocation to retry. API failure is not empty history or init
 - Create issues **without labels** for normal [triage](issue-triage.md). Verify
   creation responses and URLs; leave later labels and triage updates alone.
   The [router](factory-router.md) job condition skips diagnostics completions.
-- Within the 30-minute job, record the window, per-workflow results, exclusions,
-  existing/new issue links, and evidence gaps or failures in `GITHUB_STEP_SUMMARY`
-  and the log. Distinguish initialization, completed analysis, and incomplete analysis.
+- Within the 30-minute job, record the window, per-workflow expected-versus-observed
+  conclusions and evidence links, selection rationale, per-workflow assessed/total
+  run-attempt counts, exclusions, existing/new issue links, and evidence gaps or
+  failures in `GITHUB_STEP_SUMMARY` and the log. Identify unassessed runs/attempts
+  with links or clearly defined linked groups, and explain why they were not assessed.
+  Distinguish initialization, completed analysis, and incomplete analysis.
+- Unassessed runs/attempts, including those omitted by sampling, mean incomplete
+  analysis. Do not extrapolate a sample's conclusions to the whole window.
 - Missing evidence or API failures are not a clean result.
 
 Coverage and creation checks are AI-owned: no JSON contract, report artifact, or
 separate verification job. Setup/CLI errors fail their steps, but a successful
 CLI exit proves neither complete analysis nor correct issue creation. Inspect
-the summary and logs; early failures may leave no summary. Automated workflow
-tests remain deferred.
+the summary and logs; early failures may leave no summary. There are no automated
+workflow tests.
 
 ## Permissions
 
