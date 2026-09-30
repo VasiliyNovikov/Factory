@@ -44,9 +44,8 @@ provide input under their own accounts. The router runs as `github-actions[bot]`
 Factory work uses `factory-worker-bot[bot]`, and reviews use
 `factory-reviewer-bot[bot]`. Running in Actions does not change an App's authorship.
 
-PR reviewers may run reviewer-written or fully inspected snippet experiments,
-not PR-provided programs, test suites, or dependency hooks.
-[PR-review guidance](docs/factory/pr-review.md) owns execution and token boundaries.
+PR reviewers may run PR code, tests, and focused experiments under the
+[PR-review execution rules](docs/factory/pr-review.md#local-checks).
 
 Implementation keeps eligible PRs current with the default branch and resolves
 conflicts, but never merges PRs or closes issues. Each implementation worker
@@ -58,6 +57,9 @@ ownership, split recovery, and verification.
 Router/setup changes can therefore execute before merge with the router's token.
 Other events and workers use the default branch. See the
 [accepted risk](docs/factory/factory-router.md#accepted-risk-router-changes-can-run-before-merge).
+PR checks also run in a credentialed reviewer job, with the
+[accepted risk of approval-token access or receipt-check bypass](docs/factory/pr-review.md#accepted-risk-pr-code-runs-in-the-reviewer-job).
+Removing environment variables does not isolate credentials.
 
 ## Workflow diagnostics
 

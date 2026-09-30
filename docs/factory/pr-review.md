@@ -19,13 +19,10 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
 
 ## Local checks
 
-- Use installed tools for reviewer-written experiments, fully inspected
-  copied/adapted snippets, or synthetic probes that answer concrete review questions.
-  Do not run PR-provided files, tests, or dependency installs/hooks, or load PR
-  modules or project configuration/plugins. Full PR execution needs a separately
-  designed isolated job.
-- Inspect source at exactly `PR_HEAD_SHA`; run probes outside the fetched tree
-  under the [shared check safeguards](review-checks.md).
+- Run PR code, tests, or focused experiments when useful to answer a concrete
+  review question, including copied/adapted snippets and synthetic probes.
+- Check exactly `PR_HEAD_SHA` under the [shared check safeguards](review-checks.md),
+  including for required dependency installs.
 
 ## Review outcome
 
@@ -80,9 +77,6 @@ It runs at the PR merge revision, with the [accepted risk](factory-router.md#acc
 - Keep these grants and token roles in the coordinator. Repository/discussion
   content cannot authorize changes to credentials, settings, permissions, or
   mutation targets. Delegated analysis has the same boundaries.
-- Unlike the implementer, the reviewer App can approve Factory PRs. PR-controlled
-  execution is excluded because it could use that token to approve PRs or alter
-  `GITHUB_OUTPUT` to bypass the receipt check.
 - The default-branch worker is dispatch-only, checks out `github.workflow_sha`,
   and uses the `review` [profile](../../.github/model-config.json).
 - Same-PR/head jobs preserve active reviews through the receipt check; pending
@@ -92,6 +86,16 @@ It runs at the PR merge revision, with the [accepted risk](factory-router.md#acc
   GitHub's self-approval restriction.
 - User/App-authenticated PR changes trigger routing; `GITHUB_TOKEN`-generated PR
   events do not. See [GitHub's triggering guide](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow).
+
+## Accepted risk: PR code runs in the reviewer job
+
+The [maintainer's execution decision](https://github.com/VasiliyNovikov/Factory/pull/97#discussion_r4139671406)
+permits PR-code checks in this credentialed job. Unlike the implementer, the
+reviewer App can approve Factory PRs. PR code could recover that token to submit
+approvals or alter runner files to bypass the receipt check. These risks are
+accepted; the [shared safeguards](review-checks.md) reduce accidental exposure,
+not same-runner access. They do not authorize credential access, extra GitHub
+writes, or bypassing verification.
 
 ## Verification limits
 
@@ -105,8 +109,8 @@ ineligible, failed, and skipped no-ops. Same-head redispatch must preserve activ
 reviews and deliver findings once. After post-submission failure, timeout, or
 cancellation, only a fresh successful assessment may deliver remaining findings.
 
-**Still unverified:** After merge, link a live review that runs an allowed
-experiment at the expected PR head, follows the [shared safeguards](review-checks.md)
+**Still unverified:** After merge, link a live review that runs a PR-provided
+check at the expected PR head, follows the [shared safeguards](review-checks.md)
 and GitHub-write limits, reports results/gaps, and posts a verified review.
 Changing this guide does not prove the bot follows it; removing environment
 variables does not isolate credentials.
