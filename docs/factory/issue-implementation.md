@@ -88,26 +88,35 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 ## Internal self-review
 
 Before publishing a changed candidate, run an internal review with the existing
-`review` [profile](../../.github/model-config.json). This covers new implementations,
-feedback fixes, and default-branch merges. Do not invoke it for no-op, reply-only,
-or split-only outcomes. The main worker stays on `implement`; independent
-[PR review](pr-review.md) after publication is unchanged.
+`review` [profile](../../.github/model-config.json) for new implementations, feedback
+fixes (including their base merges), and maintenance conflict resolutions. Do not
+add this pass to clean push-only base maintenance, no-op, reply-only, or split-only
+outcomes. Required base maintenance still applies. The main worker stays on
+`implement`; independent [PR review](pr-review.md) after publication is unchanged.
 
 - Finish the candidate, including required base merges, and identify immutable
   base/candidate commit SHAs before review. Include the previous published head
   when applicable, issue requirements, outstanding feedback, and validation
   results. Review the actual local candidate diff, not the old remote PR alone;
   keep it unchanged while the reviewer runs.
-- Invoke the installed harness through `scripts/ai.sh --profile review`, not a
-  hard-coded model or a default-profile subagent. Set `review_prompt` to the
-  [internal reviewer contract](#internal-reviewer-contract) plus the run-specific
-  context above. Choose `review_timeout` from the remaining 30-minute job budget,
-  reserving time for fixes, checks, publication, and reporting, and enforce it:
+- Use `git worktree add --detach` to create a temporary `review_checkout` under
+  `RUNNER_TEMP` at `GITHUB_WORKFLOW_SHA`. Run the installed harness there through
+  `scripts/ai.sh --profile review`, keeping the runner, model configuration, and
+  guidance at the trusted workflow revision, not their candidate versions. Do not
+  hard-code a model or use a default-profile subagent.
+- Set `review_prompt` to the trusted
+  [internal reviewer contract](#internal-reviewer-contract) plus the context above
+  and the original candidate checkout path. The temporary checkout supplies tools
+  and guidance, not the review target. Choose `review_timeout` from the remaining
+  30-minute job budget, reserving time for fixes, checks, publication, and reporting:
 
   ```sh
-  COPILOT_GITHUB_TOKEN="${GITHUB_TOKEN:?built-in model token is required}" \
-    timeout --kill-after=30s "$review_timeout" \
-    ./scripts/ai.sh --harness "$AI_HARNESS" --profile review --prompt "$review_prompt"
+  (
+    cd -- "$review_checkout" &&
+      COPILOT_GITHUB_TOKEN="${GITHUB_TOKEN:?built-in model token is required}" \
+      timeout --kill-after=30s "$review_timeout" \
+      ./scripts/ai.sh --harness "$AI_HARNESS" --profile review --prompt "$review_prompt"
+  )
   ```
 
   Bind model access explicitly as the shared action does: the parent CLI may omit
@@ -115,19 +124,23 @@ or split-only outcomes. The main worker stays on `implement`; independent
   over `GITHUB_TOKEN`. Leave Factory App `GH_TOKEN` unchanged.
 
 - Read the returned findings and exit status; preserve the output outside the
-  checkout. A successful exit without a complete, correctly scoped result is not
-  a clean review. The implementer owns fixes and reruns relevant validation.
+  checkouts and remove the temporary worktree on success or failure. A successful
+  exit without a complete, correctly scoped result is not a clean review.
+  The implementer owns fixes and reruns relevant validation.
   Obtain review of subsequent changes so the final candidate is covered; reuse
   unchanged coverage rather than repeating the entire review unnecessarily.
 - Recheck eligibility and remote head/base before publication as usual. After
   drift, reconcile changes and refresh affected review coverage and checks.
-  Reviewer errors, timeouts, incomplete coverage, or unresolved actionable
-  findings block publication of that candidate. Report the specific blocker and
-  any partial outcomes, never a skip or a clean review.
+  Fix confirmed actionable findings before publication; if blocked, report the
+  specific finding and partial outcomes. Reviewer errors, timeouts, and incomplete
+  coverage alone do not block otherwise verified work: disclose the incomplete
+  internal review in publication and reporting, preserving independent PR review.
+  Never call these failures a skip or a clean review, or bypass required checks.
 - In the PR and run summary, record the selected profile and resolved model
-  settings, reviewed base/candidate SHAs, findings and their disposition, and
-  validation limits. Distinguish a live invocation from static wiring evidence;
-  do not claim a measured speedup without comparative evidence.
+  settings, trusted workflow revision, reviewed base/candidate SHAs, findings and
+  their disposition, and validation limits. Distinguish a live invocation from
+  static wiring evidence; do not claim a measured speedup without comparative
+  evidence.
 
 ### Internal reviewer contract
 
