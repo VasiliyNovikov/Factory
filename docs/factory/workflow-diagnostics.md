@@ -27,7 +27,8 @@ For source analysis instead of run history, use [repository review](repository-r
   revisions, or related PR code/diffs.
 - Use parallel read-only subagents per workflow, with the same scope and token
   rules. Wait for their results and consolidate findings. Choose needed evidence
-  from jobs, attempts, logs, code, and discussions; handle pagination and API limits.
+  from jobs, attempts, [logs](actions-logs.md), code, and discussions; handle
+  pagination and API limits.
 
 Scheduled and manual runs share one concurrency group, preserving active work
 and at most one pending run. Failed windows are not replayed automatically:

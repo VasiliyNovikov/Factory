@@ -12,6 +12,7 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
   from this repository, and at the expected `PR_HEAD_SHA`.
 - Read changes, context, and the current discussion through `gh`. New requests
   or clarification may require reassessment even at a reviewed head.
+- Use the [shared Actions-log guidance](actions-logs.md) for any permitted log reads.
 - Paginate discussion and review reads completely, following the
   [shared pagination guidance](../../AGENTS.md#github-cli-pagination).
 - Checkout is the default-branch workflow revision, not the PR tree.
