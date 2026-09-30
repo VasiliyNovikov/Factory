@@ -71,6 +71,8 @@ boundary without analysis; later runs compare observed execution and GitHub
 outcomes with the contracts used by each assessed run, including successful runs
 and expected skips or handoffs. Results record supported conclusions, discrepancies,
 and coverage gaps; actionable findings follow the existing issue path.
+Diagnostics also assesses time-budget utilization and recommends evidence-backed
+timeout changes through that findings path.
 
 ```mermaid
 flowchart TD

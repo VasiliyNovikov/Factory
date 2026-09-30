@@ -71,6 +71,38 @@ Rerun the original invocation to retry. API failure is not empty history or init
   discrepancies through the existing findings path below, within the same history,
   origin, read-only-analysis, and publication boundaries.
 
+## Time-budget utilization
+
+Assess budget sizing within the same history window, eligibility rules, and
+investigation deadline. Roughly **50% average utilization** is a headroom goal,
+not a per-run cutoff or a reason to slow down work.
+
+- Group comparable attempts by workflow/job, workload, and executed contract.
+  Establish each job's applicable `timeout-minutes` from its executed workflow
+  revision and run context, including defaults or expressions. Do not substitute
+  today's configuration when the historical budget is unknown.
+- Measure elapsed job execution, including setup, verification, reporting, and
+  completion work, but excluding queueing. Compare it with that job's timeout,
+  not whole-workflow wall time with a single job's budget.
+- For each assessed group, report sample size, average utilization
+  (`elapsed job time / applicable timeout`), runtime spread, and near-limit and
+  timeout counts with run-attempt links. State the basis for calling runs
+  near-limit; averages alone can hide insufficient headroom.
+- Separate skips, cancellations, early/setup failures, and unfinished or
+  unknown-duration attempts from substantive execution samples; do not use them
+  to justify reductions. Report timeouts separately as lower bounds on the time
+  needed, not completed-work runtimes.
+- Identify persistent substantial underuse or recurring near-limit/timeouts.
+  Distinguish job-budget pressure from tighter step limits, hangs, and fixable
+  failures. Recommend a lower or higher timeout only with evidence that accounts
+  for runtime variability and required setup, verification, and reporting.
+  Sparse, mixed, or missing evidence is a limitation, not proof of a sizing problem.
+- Route actionable recommendations through the duplicate-checked, unlabeled
+  findings-issue path below. Include the proposed timeout value, rationale,
+  linked run-attempt evidence, and the workflow timeout plus prompt/guide budget
+  references that implementation must keep aligned. Diagnostics must not edit
+  workflows or settings.
+
 ## Findings and reporting
 
 - Before creating issues, check issues and PRs in all states, including earlier
@@ -82,11 +114,12 @@ Rerun the original invocation to retry. API failure is not empty history or init
   creation responses and URLs; leave later labels and triage updates alone.
   The [router](factory-router.md) job condition skips diagnostics completions.
 - Within the 30-minute job, record the window, per-workflow expected-versus-observed
-  conclusions and evidence links, selection rationale, per-workflow assessed/total
-  run-attempt counts, exclusions, existing/new issue links, and evidence gaps or
-  failures in `GITHUB_STEP_SUMMARY` and the log. Identify unassessed runs/attempts
-  with links or clearly defined linked groups, and explain why they were not assessed.
-  Distinguish initialization, completed analysis, and incomplete analysis.
+  conclusions and evidence links, budget-utilization results and sizing decisions,
+  selection rationale, per-workflow assessed/total run-attempt counts, exclusions,
+  existing/new issue links, and evidence gaps or failures in `GITHUB_STEP_SUMMARY`
+  and the log. Identify unassessed runs/attempts with links or clearly defined
+  linked groups, and explain why they were not assessed. Distinguish initialization,
+  completed analysis, and incomplete analysis.
 - Unassessed runs/attempts, including those omitted by sampling, mean incomplete
   analysis. Do not extrapolate a sample's conclusions to the whole window.
 - Missing evidence or API failures are not a clean result.
