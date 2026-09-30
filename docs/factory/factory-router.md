@@ -82,8 +82,14 @@ setup. Copilot decides the rest.
   following the [shared pagination guidance](../../AGENTS.md#github-cli-pagination).
 - Humans and other bots may provide feedback.
 - Main conversation comments and submitted reviews trigger routing.
-- Standalone inline replies and edited comments do not trigger routing.
-  TODO: Support routing for standalone inline replies and edited comments.
+- Standalone inline comments and replies arrive as empty-body `COMMENTED`
+  reviews through the existing `pull_request_review: submitted` trigger.
+  - Assess non-Factory inline comments and replies like other submitted reviews.
+  - Read the review's inline comments and complete relevant thread history
+    before deciding; an empty review body alone is not a reason to skip
+    actionable feedback.
+- Edited comments do not trigger routing.
+  TODO: Support routing for edited comments.
 - Reviewer-App submissions use `pull_request_review: submitted`, not PR-review
   `workflow_run` events, to avoid duplicate delivery.
 - Before routing reviewer-App findings, verify:
@@ -172,4 +178,8 @@ setup. Copilot decides the rest.
   for both worker discovery and PR reviews, with the checked guidance revision
   and valid first reads without rejected-command retries. This remains pending
   until observed; standalone reads do not prove AI adherence.
+- Standalone inline-reply routing needs post-deployment live verification: link a
+  maintainer's reply on an eligible Factory PR to its router run and reasoned
+  decision. Actionable feedback must dispatch implementation and receive an
+  answer in the original thread; link the worker run and reply.
 - Static checks do not establish AI adherence or end-to-end event delivery.
