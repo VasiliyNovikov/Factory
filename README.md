@@ -63,9 +63,9 @@ Removing environment variables does not isolate credentials.
 
 ## Periodic recovery
 
-[Factory maintenance](docs/factory/factory-maintenance.md) runs hourly at minute
-17 UTC or manually on the default branch. It discovers missed or interrupted
-triage handoffs, implementation, reviews, feedback, and default-branch updates,
+[Factory maintenance](docs/factory/factory-maintenance.md) runs every six hours at
+00:00, 06:00, 12:00, and 18:00 UTC, or manually on the default branch. It discovers
+missed or interrupted triage handoffs, implementation, reviews, feedback, and default-branch updates,
 then dispatches the existing workers using the router's
 [shared policy](docs/factory/routing-policy.md).
 

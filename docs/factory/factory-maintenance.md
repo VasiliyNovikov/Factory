@@ -6,9 +6,9 @@ It dispatches existing workers, not repairs, findings issues, or another router.
 
 ## Invocation and scope
 
-- Run hourly at **17 minutes past the hour (UTC)**, or through **Actions -> Factory
-  maintenance -> Run workflow** on the default branch. GitHub may delay scheduled
-  runs; this is not a recovery-time guarantee.
+- Run every six hours at **00:00, 06:00, 12:00, and 18:00 UTC** (`0 */6 * * *`),
+  or through **Actions -> Factory maintenance -> Run workflow** on the default
+  branch. GitHub may delay scheduled runs; this is not a recovery-time guarantee.
 - Both entry points are default-branch-only. Checkout uses `github.workflow_sha`,
   the shared AI action uses the existing `route` profile, and active sweeps are
   serialized without cancellation.
