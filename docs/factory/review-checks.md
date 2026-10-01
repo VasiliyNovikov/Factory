@@ -21,19 +21,20 @@ set what may run. All use these safeguards:
   access, publication, and reporting in the coordinator. Do not source the
   check shell or strip the coordinator's environment globally.
 
-For example, after inspecting the checks, run them from the source workspace:
+For example, this prints a test message from a check shell:
 
 ```sh
 (
   exec env -u GH_TOKEN -u GITHUB_TOKEN -u COPILOT_GITHUB_TOKEN \
     -u GITHUB_OUTPUT -u GITHUB_ENV -u GITHUB_PATH -u GITHUB_STATE \
     -u GITHUB_STEP_SUMMARY \
-    bash -euo pipefail -c 'bash -n scripts/ai.sh; shellcheck scripts/ai.sh'
+    bash -euo pipefail -c 'printf "%s\n" "test"'
 )
 ```
 
-Adapt the example to the review; the commands are illustrative, but all eight
-exclusions are required. The subshell keeps `exec` from replacing the coordinator.
+The `printf` command is only a placeholder. Replace it with the inspected checks
+for the review and run from the source workspace; all eight exclusions remain
+required. The subshell keeps `exec` from replacing the coordinator.
 For compound commands, pipelines, and installation steps, strip variables from
 the entire shell, not just the first command or pipeline stage.
 
