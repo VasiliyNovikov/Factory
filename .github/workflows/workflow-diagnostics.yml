@@ -19,8 +19,6 @@ jobs:
       actions: read
       contents: read
       copilot-requests: write
-    env:
-      COPILOT_HOME: ${{ runner.temp }}/workflow-diagnostics-copilot-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - name: Check out invocation revision
         uses: actions/checkout@v6
@@ -30,8 +28,9 @@ jobs:
 
       - name: Bind assessment subagents to the coordinator profile
         run: |
-          mkdir -p "$COPILOT_HOME"
-          cat > "$COPILOT_HOME/config.json" <<'JSON'
+          copilot_home="$RUNNER_TEMP/workflow-diagnostics-copilot-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir -p "$copilot_home"
+          cat > "$copilot_home/settings.json" <<'JSON'
           {
             "subagents": {
               "agents": {
@@ -44,6 +43,7 @@ jobs:
             }
           }
           JSON
+          printf 'COPILOT_HOME=%s\n' "$copilot_home" >> "$GITHUB_ENV"
 
       - name: Create Factory diagnostics token
         id: factory-token
