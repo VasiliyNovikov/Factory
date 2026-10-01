@@ -19,12 +19,31 @@ jobs:
       actions: read
       contents: read
       copilot-requests: write
+    env:
+      COPILOT_HOME: ${{ runner.temp }}/workflow-diagnostics-copilot-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - name: Check out invocation revision
         uses: actions/checkout@v6
         with:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
+
+      - name: Bind assessment subagents to the coordinator profile
+        run: |
+          mkdir -p "$COPILOT_HOME"
+          cat > "$COPILOT_HOME/config.json" <<'JSON'
+          {
+            "subagents": {
+              "agents": {
+                "explore": {
+                  "model": "inherit",
+                  "effortLevel": "inherit",
+                  "contextTier": "inherit"
+                }
+              }
+            }
+          }
+          JSON
 
       - name: Create Factory diagnostics token
         id: factory-token
@@ -40,6 +59,7 @@ jobs:
         uses: ./.github/actions/ai
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
+          profile: default
           prompt: >-
             Diagnose ${{ github.repository }}'s workflow runs and create issues for actionable findings.
             Follow repository guidance and docs/factory/workflow-diagnostics.md.

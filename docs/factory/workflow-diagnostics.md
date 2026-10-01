@@ -28,16 +28,36 @@ eligibility checks, mutation verification, and required receipt checks.
   `head_repository.full_name` matches this repository.
 - Record fork/unknown-origin runs as excluded. Do not fetch their logs, artifacts,
   revisions, or related PR code/diffs.
-- Use parallel read-only subagents per workflow, with the same scope and token
-  rules. Wait only until the shared investigation deadline, then consolidate
-  available findings and report missing subagent results as coverage gaps. Choose
-  needed evidence from jobs, attempts, logs, code, and discussions; handle pagination
-  and API limits.
+- Use parallel read-only `explore` subagents per workflow, with the same scope and
+  token rules and the [model binding](#assessment-model-binding) below. Wait only
+  until the shared investigation deadline, then consolidate available findings
+  and report missing subagent results as coverage gaps. Choose needed evidence
+  from jobs, attempts, logs, code, and discussions; handle pagination and API limits.
 
 Scheduled and manual runs share one concurrency group, preserving active work
 and at most one pending run. Failed windows are not replayed automatically:
 the boundary is the preceding invocation, not the last successful analysis.
 Rerun the original invocation to retry. API failure is not empty history or initialization.
+
+## Assessment model binding
+
+The diagnostics caller explicitly selects `default` from
+[model configuration](../../.github/model-config.json) at `github.workflow_sha`.
+Its run-scoped `COPILOT_HOME` sets `subagents.agents.explore`'s `model`,
+`effortLevel`, and `contextTier` to `inherit`, so assessment subagents use the
+coordinator's effective model, reasoning effort, and context tier instead of the
+CLI's lightweight built-in defaults. Other workflows and shared AI wiring are
+unchanged.
+
+Use this configured agent for every per-workflow assessment. Do not override its
+settings in delegation calls or fall back to an unbound agent. Verify the
+coordinator and subagent settings against the trusted profile, scoped CLI
+configuration, and available runtime metadata; distinguish configured values,
+observed execution, and model self-report. CLI events under
+`$COPILOT_HOME/session-state`, such as `session.start` and `subagent.configured`,
+provide runtime settings evidence; model self-report alone does not. A mismatched
+or unverified binding is a coverage gap, not complete assessment. Do not change
+configuration or exceed the shared deadline to recover coverage.
 
 ## Expected versus observed outcomes
 
@@ -87,6 +107,11 @@ Rerun the original invocation to retry. API failure is not empty history or init
   failures in `GITHUB_STEP_SUMMARY` and the log. Identify unassessed runs/attempts
   with links or clearly defined linked groups, and explain why they were not assessed.
   Distinguish initialization, completed analysis, and incomplete analysis.
+- Record the trusted workflow revision, installed CLI version, and resolved
+  coordinator and assessment-subagent model, reasoning effort, and context tier.
+  Identify subagent assignments and the evidence for their settings, including
+  mismatches or unverified settings as coverage gaps. Initialization reports no
+  subagents launched rather than claiming verified subagent execution.
 - Unassessed runs/attempts, including those omitted by sampling, mean incomplete
   analysis. Do not extrapolate a sample's conclusions to the whole window.
 - Missing evidence or API failures are not a clean result.
