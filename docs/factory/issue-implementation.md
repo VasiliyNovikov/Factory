@@ -28,8 +28,9 @@ For the initial identity check, use `git var GIT_AUTHOR_IDENT` and
 Unset `git config user.name` or `git config user.email` is valid here and must
 not abort the following read-only eligibility checks.
 
-Validate both effective name/email pairs against the caller's Factory identity:
-`FACTORY_LOGIN` and the bot's ID-prefixed noreply address from identity setup.
+Validate both effective names against `FACTORY_LOGIN` and both effective emails
+against `<bot-user-id>+<FACTORY_LOGIN>@users.noreply.github.com`, using the
+Factory bot's numeric GitHub user ID as the caller does.
 Command success or nonempty output alone is insufficient. Missing or mismatched
 author or committer identity is an explicit failure; report it without replacing
 the identity, adding duplicate Git configuration, or suppressing errors.
