@@ -71,8 +71,9 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
   newlines, must still fail.
 - Record the review URL, decision, evidence, and outstanding work in
   `GITHUB_STEP_SUMMARY`. Report failures accurately; API errors are not skips.
-- Include setup, reporting, and verification in the 30-minute budget without
-  relaxing required checks.
+- Complete work, reporting, and verification within the shared
+  [invocation budget](../examples/ai-tools.md#invocation-budget), without relaxing
+  required checks.
 
 App submissions trigger the router, which [verifies the source assessment](factory-router.md#feedback-and-event-handling).
 It runs at the PR merge revision, with the [accepted risk](factory-router.md#accepted-risk-router-changes-can-run-before-merge).

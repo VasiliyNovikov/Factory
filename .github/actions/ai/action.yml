@@ -11,6 +11,9 @@ inputs:
   profile:
     description: Model profile from .github/model-config.json
     default: default
+  budget:
+    description: AI invocation budget in whole minutes (1-360), excluding installation
+    required: true
   gh-token:
     description: Caller-selected token for repository, issue, and PR operations
     required: true
@@ -39,6 +42,31 @@ runs:
         AI_HARNESS: ${{ inputs.harness }}
         AI_PROFILE: ${{ inputs.profile }}
         AI_PROMPT: ${{ inputs.prompt }}
+        AI_BUDGET_MINUTES: ${{ inputs.budget }}
       run: |
         : "${GH_TOKEN:?gh-token is required}"
-        ./scripts/ai.sh --harness "$AI_HARNESS" --profile "$AI_PROFILE" --prompt "$AI_PROMPT"
+        if [[ ! "$AI_BUDGET_MINUTES" =~ ^[1-9][0-9]{0,2}$ ]] ||
+          (( AI_BUDGET_MINUTES > 360 )); then
+          echo "::error::budget must be a whole number of minutes from 1 to 360"
+          exit 1
+        fi
+        started_at=$(date -u +%FT%TZ)
+        AI_DEADLINE_UTC=$(date -u -d "$started_at $AI_BUDGET_MINUTES minutes" +%FT%TZ)
+        export AI_DEADLINE_UTC
+        printf 'AI invocation: started=%s budget_minutes=%s deadline=%s\n' \
+          "$started_at" "$AI_BUDGET_MINUTES" "$AI_DEADLINE_UTC"
+        AI_PROMPT+=$'\n\n'"Invocation budget: $AI_BUDGET_MINUTES minutes; deadline: $AI_DEADLINE_UTC. "
+        AI_PROMPT+="Complete work, reporting, and verification before this deadline. "
+        AI_PROMPT+="Give subtasks the remaining time and an earlier deadline, not a fresh budget. "
+        AI_PROMPT+="AI_BUDGET_MINUTES and AI_DEADLINE_UTC are available in the environment. A timeout is a failure, not a skip."
+        if timeout --verbose --kill-after=30s "${AI_BUDGET_MINUTES}m" \
+          ./scripts/ai.sh --harness "$AI_HARNESS" --profile "$AI_PROFILE" --prompt "$AI_PROMPT"; then
+          status=0
+        else
+          status=$?
+        fi
+        printf 'AI invocation finished: completed=%s exit_status=%s\n' "$(date -u +%FT%TZ)" "$status"
+        if (( status != 0 )); then
+          printf '::error::AI invocation failed with exit %s; inspect the invocation and termination logs\n' "$status"
+        fi
+        exit "$status"

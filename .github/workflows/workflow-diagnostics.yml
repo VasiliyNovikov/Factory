@@ -14,7 +14,6 @@ jobs:
       group: workflow-diagnostics
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     permissions:
       actions: read
       contents: read
@@ -40,6 +39,7 @@ jobs:
         uses: ./.github/actions/ai
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
+          budget: 30
           prompt: >-
             Diagnose ${{ github.repository }}'s workflow runs and create issues for actionable findings.
             Follow repository guidance and docs/factory/workflow-diagnostics.md.

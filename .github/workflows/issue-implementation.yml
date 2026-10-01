@@ -30,7 +30,6 @@ jobs:
       group: issue-implementation-factory-issue-${{ inputs.issue_number }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     permissions:
       actions: read
       contents: read
@@ -74,6 +73,7 @@ jobs:
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
           profile: implement
+          budget: 30
           prompt: >-
             Handle the implementation assignment in GITHUB_EVENT_PATH for ${{ github.repository }}.
             Follow repository guidance and docs/factory/issue-implementation.md. The router selected this
@@ -83,4 +83,3 @@ jobs:
             using the configured review profile before publication. Verify code and GitHub outcomes,
             report non-skipped results in the triggering conversation, and summarize the decision and evidence
             in GITHUB_STEP_SUMMARY. Report failures and partial outcomes accurately, not as skips.
-            Budget the 30-minute job including setup, required reporting, and verification.

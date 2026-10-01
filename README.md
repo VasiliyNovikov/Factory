@@ -44,6 +44,10 @@ provide input under their own accounts. The router runs as `github-actions[bot]`
 Factory work uses `factory-worker-bot[bot]`, and reviews use
 `factory-reviewer-bot[bot]`. Running in Actions does not change an App's authorship.
 
+Each shared AI action call sets its own [invocation budget](docs/examples/ai-tools.md#invocation-budget).
+The harness and its subtasks share that deadline; setup and receipt checks run
+outside it, under GitHub's default job limit.
+
 PR reviewers may run PR code, tests, and focused experiments under the
 [PR-review execution rules](docs/factory/pr-review.md#local-checks).
 
