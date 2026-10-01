@@ -47,10 +47,10 @@ def run(command, **kwargs):
 direct = run(probe_command, check=True)
 assert direct.stdout == expected
 pipeline = run(
-    ["bash", "-c", 'set -euo pipefail; "$@" | "$@"', "probe", *probe_command],
+    ["bash", "-c", 'set -euo pipefail; "$@" | { "$@"; cat; }', "probe", *probe_command],
     check=True,
 )
-assert pipeline.stdout == expected
+assert pipeline.stdout == expected * 2
 
 with tempfile.TemporaryDirectory(prefix="review-check-") as directory:
     workspace = Path(directory)
