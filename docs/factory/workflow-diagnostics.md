@@ -88,10 +88,15 @@ not a per-run cutoff or a reason to slow down work.
   (`elapsed job time / applicable timeout`), runtime spread, and near-limit and
   timeout counts with run-attempt links. State the basis for calling runs
   near-limit; averages alone can hide insufficient headroom.
-- Separate skips, cancellations, early/setup failures, and unfinished or
-  unknown-duration attempts from substantive execution samples; do not use them
-  to justify reductions. Report timeouts separately as lower bounds on the time
-  needed, not completed-work runtimes.
+- Separate skips, failed/cancelled work, unfinished attempts, and unknown timings
+  from attempts verified to have completed their expected substantive work.
+  Base reductions only on the latter; setup or mid-run failures do not show the
+  time needed to finish, and a green exit alone does not prove completion.
+- Identify timeouts from job/step evidence, not conclusion alone: job timeouts
+  can appear as `cancelled`. Look for maximum-execution-time annotations or
+  eligible logs, following the [shared log guidance](actions-logs.md) when needed.
+  Distinguish other cancellations and report timeouts separately as lower bounds
+  on required time, not completed-work runtimes.
 - Identify persistent substantial underuse or recurring near-limit/timeouts.
   Distinguish job-budget pressure from tighter step limits, hangs, and fixable
   failures. Recommend a lower or higher timeout only with evidence that accounts
