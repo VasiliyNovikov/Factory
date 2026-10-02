@@ -14,6 +14,8 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Stay within the assigned issue; do not repeat repository-wide routing.
 - Read the full current discussion, outstanding feedback, relevant code, and
   source evidence, including failed CI logs. Pending jobs can be superseded.
+- Follow the [shared pagination guidance](../../AGENTS.md#github-cli-pagination)
+  for node-bounded, complete discussion and provenance reads.
 - Act on feedback that still applies, even from older heads or outdated lines.
 - Tie review-worker findings to the source review's
   [verified reviewed SHA](routing-policy.md#feedback-verification), not a
@@ -170,6 +172,7 @@ the independent PR-review worker.
   regressions, unmet requirements, and necessary coverage gaps. Follow the
   [test-value policy](../../AGENTS.md#test-value-and-verification); avoid speculative
   or style-only findings. Optional checks use the [shared safeguards](review-checks.md).
+- Always assess [whether the candidate can be simpler](pr-review.md#simplicity).
 - Return findings to the implementer in the CLI response: reviewed SHAs and
   scope, actionable findings with paths/lines and impact, checks performed, and
   coverage gaps or blockers. Explicitly distinguish a complete review with no

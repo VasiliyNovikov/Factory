@@ -29,9 +29,9 @@ Review proposed code and use focused checks when useful.
 
 ## Review outcome
 
-- Find actionable bugs, regressions, security issues, or missing necessary tests
-  introduced by the PR. Avoid speculative or style-only findings; follow the
-  [test-value policy](../../AGENTS.md#test-value-and-verification).
+- Find actionable bugs, regressions, security issues, unnecessary complexity, or
+  missing necessary tests introduced by the PR. Avoid speculative or style-only
+  findings; follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Submit exactly one review while eligible, with:
   - `commit_id` set to `PR_HEAD_SHA`.
   - The full reviewed SHA visible in the body.
@@ -43,6 +43,19 @@ Review proposed code and use focused checks when useful.
 - Report executed checks/experiments, checked revisions, inputs, observed results,
   and limitations in the review. Distinguish static inspection from runtime evidence.
 - Never approve incomplete work. Report incomplete reviews and API failures accurately.
+
+### Simplicity
+
+Always ask: can this implementation be simpler while meeting the same requirements?
+Apply the [shared simplicity principles](../../AGENTS.md#working-style): question
+unnecessary abstractions or indirection, duplication, and missed reuse of existing
+logic or tools.
+
+Report a simplification only with a concrete simpler alternative, its practical
+benefit, and how it preserves intended behavior and requirements. Do not trade
+correctness, clarity, maintainability, or safety for fewer lines. An already-simple
+implementation needs no finding; do not manufacture faults, request taste-only
+changes, or expand the work into unrelated refactoring.
 
 ## Skip and report
 
@@ -92,10 +105,28 @@ It runs at the PR merge revision, with the [accepted risk](factory-router.md#acc
 - Same-PR/head jobs preserve active reviews through the receipt check; pending
   jobs may be superseded. Different heads run independently. Check freshness and
   outstanding requests before posting.
-- App approvals require Pull requests write and follow repository policies and
+- The reviewer App's installation supplies repository writer qualification;
+  the job token stays at Contents read and Pull requests write. Follow the
+  [App setup](github-app.md#configure-the-apps), repository review policies, and
   GitHub's self-approval restriction.
 - User/App-authenticated PR changes trigger routing; `GITHUB_TOKEN`-generated PR
   events do not. See [GitHub's triggering guide](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow).
+
+## Approval qualification
+
+- A submitted `APPROVED` review is not proof that it satisfies required reviews.
+  Check the current head's `reviewDecision` and effective rules.
+- `PullRequestReview.authorCanPushToRepository` distinguishes repository writer
+  qualification from permission to post a review. It does not by itself prove
+  that approval-count, last-push, code-owner, or other review requirements are met.
+- A missing installation grant needs an owner-approved correction, not weaker
+  rules, a bypass, or a speculative increase in the review job's token scope.
+
+Live checks compared current-head approvals, GitHub's review decision, effective
+rules, and the review jobs' token permissions. After the owner-reported installation
+grant, the reviewer App's approvals counted without expanding the Contents-read
+job token or weakening protections. Private App settings were not independently
+inspected; these results do not establish qualification under every review policy.
 
 ## Accepted risk: PR code runs in the reviewer job
 
@@ -110,7 +141,8 @@ writes, or bypassing verification.
 
 The read-only receipt check requires a submitted bot comment review or approval
 with the expected commit, visible full SHA, and run marker, unless skipped before
-mutation. It proves neither review quality nor live event delivery.
+mutation. It proves neither review quality, required-review qualification, nor
+live event delivery.
 
 Same-head redispatch must preserve active reviews and deliver findings once.
 After post-submission failure, timeout, or cancellation, only a fresh successful

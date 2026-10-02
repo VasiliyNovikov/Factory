@@ -77,7 +77,7 @@ handoff or a needed fresh assessment after a failed/cancelled worker.
 
 ## Feedback and event handling
 
-- Read worker-discovery and PR-review collections with complete pagination,
+- Read worker-discovery, PR-review, and required provenance collections completely,
   following the [shared pagination guidance](../../AGENTS.md#github-cli-pagination).
 - Humans and other bots may provide feedback.
 - Main conversation comments and submitted reviews trigger routing.
