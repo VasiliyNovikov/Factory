@@ -19,6 +19,8 @@ instructions without substituting them for Factory worker policy.
 - Stay within the assigned issue; do not repeat repository-wide routing.
 - Read the full current discussion, outstanding feedback, relevant code, and
   source evidence, including failed CI logs. Pending jobs can be superseded.
+- Follow the [shared pagination guidance](../../AGENTS.md#github-cli-pagination)
+  for node-bounded, complete discussion and provenance reads.
 - Act on feedback that still applies, even from older heads or outdated lines.
 - Tie review-worker findings to the source review's
   [verified reviewed SHA](factory-router.md#feedback-and-event-handling), not a

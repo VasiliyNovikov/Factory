@@ -19,9 +19,12 @@ needed for `GITHUB_TOKEN`-generated events. Repository/environment policies stil
    | Issues | Read and write | Triage, labels, sub-issues, replies, and diagnostics findings |
    | Workflows | Read and write for issue implementation | Changing `.github/workflows/` files |
 
-   The reviewer needs only Contents read and Pull requests read/write. Metadata
-   read is automatic; leave other permissions unset. Disable webhooks on both
-   Apps; no callback URL or subscriptions are needed.
+   The reviewer App's installation needs Contents read/write for repository
+   writer qualification and Pull requests read/write to submit reviews.
+   Its workflow token stays at Contents read and Pull requests write; see
+   [approval qualification](pr-review.md#approval-qualification).
+   Metadata read is automatic; leave other permissions unset. Disable webhooks
+   on both Apps; no callback URL or subscriptions are needed.
 2. Install each App on this repository.
 3. Save each Client ID as a repository Actions variable, and each generated
    private-key PEM as an Actions secret:
@@ -134,6 +137,12 @@ target explicitly. It revokes its token at job end. Generate a fresh token per j
 
 ## Review identity and approvals
 
-Approvals need reviewer Pull requests write and must follow repository policies.
-Use `COMMENT`, not `APPROVE`, when the PR author equals `REVIEWER_LOGIN`; existing
-PR authors do not change.
+Posting an approval and qualifying for required reviews are different:
+[required approving reviewers need repository write access](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-a-pull-request-before-merging).
+The installation's access and a job's narrower token scope are separate.
+Keep reviewed source unchanged, follow the
+[review execution rules](pr-review.md#local-checks), and retain all repository
+review protections.
+
+See [approval qualification](pr-review.md#approval-qualification) for the verified
+correction and remaining limits.
