@@ -178,7 +178,8 @@ class ReviewPublicationTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         result = self.run_helper("publish", [self.reviews()])
         self.assert_failed(result)
-        self.assertTrue(all(call["method"] == "GET" for call in self.calls))
+        self.assertEqual([call["endpoint"] for call in self.calls],
+                         [self.endpoint + "/reviews"])
 
     def test_uncertain_but_accepted_submission_is_reconciled_without_erasing_error(self):
         result = self.run_helper("publish", [
@@ -210,7 +211,15 @@ class ReviewPublicationTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         result = self.run_helper("publish", [self.reviews()])
         self.assert_failed(result)
-        self.assertTrue(all(call["method"] == "GET" for call in self.calls))
+        self.assertEqual([call["endpoint"] for call in self.calls],
+                         [self.endpoint + "/reviews"])
+
+    def test_prior_unverified_attempt_never_posts_again(self):
+        self.output.write_text("review_attempted=true\n")
+        result = self.run_helper("publish", [self.reviews()])
+        self.assert_failed(result)
+        self.assertEqual([call["endpoint"] for call in self.calls],
+                         [self.endpoint + "/reviews"])
 
     def test_incomplete_eligibility_and_read_failure_are_not_stale(self):
         for response in (
