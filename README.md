@@ -26,7 +26,7 @@ child work in a parent PR. Children enter normal triage with their own identity.
 ```mermaid
 flowchart TD
     issue["New issue"] --> router{"Router"}
-    feedback["Comments, submitted reviews, or current-PR CI failures"] --> router
+    feedback["Created/edited comments, submitted reviews, or current-PR CI failures"] --> router
     base["Default-branch update"] --> router
     router -->|Untriaged issue| triage["Triage"]
     triage -->|Ready: tracking label, then triaged| router

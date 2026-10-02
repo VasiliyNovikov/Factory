@@ -6,7 +6,7 @@ on:
   issues:
     types: [opened, labeled]
   issue_comment:
-    types: [created]
+    types: [created, edited]
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
   # This event executes PR-revision router code before merge. See docs/factory/factory-router.md.
