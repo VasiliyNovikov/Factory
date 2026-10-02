@@ -142,10 +142,28 @@ It runs at the PR merge revision, with the [accepted risk](factory-router.md#acc
 - Same-PR/head jobs preserve active reviews through the receipt check; pending
   jobs may be superseded. Different heads run independently. Check freshness and
   outstanding requests before posting.
-- App approvals require Pull requests write and follow repository policies and
+- The reviewer App's installation supplies repository writer qualification;
+  the job token stays at Contents read and Pull requests write. Follow the
+  [App setup](github-app.md#configure-the-apps), repository review policies, and
   GitHub's self-approval restriction.
 - User/App-authenticated PR changes trigger routing; `GITHUB_TOKEN`-generated PR
   events do not. See [GitHub's triggering guide](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow).
+
+## Approval qualification
+
+- A submitted `APPROVED` review is not proof that it satisfies required reviews.
+  Check the current head's `reviewDecision` and effective rules.
+- `PullRequestReview.authorCanPushToRepository` distinguishes repository writer
+  qualification from permission to post a review. It does not by itself prove
+  that approval-count, last-push, code-owner, or other review requirements are met.
+- A missing installation grant needs an owner-approved correction, not weaker
+  rules, a bypass, or a speculative increase in the review job's token scope.
+
+Live checks compared current-head approvals, GitHub's review decision, effective
+rules, and the review jobs' token permissions. After the owner-reported installation
+grant, the reviewer App's approvals counted without expanding the Contents-read
+job token or weakening protections. Private App settings were not independently
+inspected; these results do not establish qualification under every review policy.
 
 ## Accepted risk: PR code runs in the reviewer job
 
@@ -169,8 +187,8 @@ any submission attempt or publication read failure. It runs after worker failure
 too, unless cancelled. Only a skip without a submission attempt, persistent failure,
 or required receipt bypasses the API receipt. The receipt step itself is skipped
 in that case, not reported as a successful verification. A failed POST still fails
-even if reconciliation finds an accepted review. It proves neither review quality
-nor live event delivery.
+even if reconciliation finds an accepted review. It proves neither review quality,
+required-review qualification, nor live event delivery.
 
 Same-head redispatch must preserve active reviews and deliver findings once.
 After post-submission failure, timeout, or cancellation, only a fresh successful
