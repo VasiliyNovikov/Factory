@@ -43,12 +43,40 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
   and limitations in the review. Distinguish static inspection from runtime evidence.
 - Never approve incomplete work. Report incomplete reviews and API failures accurately.
 
+## Publication
+
+Use [the publication helper](../../scripts/review-publication.sh), not a direct
+review POST. Write a literal JSON request containing the outcome fields above
+and any inline `comments`, then run:
+
+```sh
+./scripts/review-publication.sh publish review.json "$GITHUB_OUTPUT"
+```
+
+The helper reconciles this attempt's reviews and any reviewer-owned pending
+review, then checks live eligibility immediately before submission. A known false
+result stops before POST and can skip. A read error or incomplete eligibility
+response is a failure, not evidence of staleness. A head can still move after a
+valid check; HTTP 422 alone does not establish a broken freshness gate.
+
+`review_attempted=true` is recorded before POST, not only after GitHub accepts it.
+A rejected or uncertain request is reconciled and records `review_failed=true`,
+even when no review persisted or an accepted review is found. Keep these outputs;
+do not overwrite them or classify the attempt as skipped. Do not resubmit after
+a failed request in this attempt. An eligible replacement head or rerun receives
+its own assessment and marker; later success does not erase the earlier failure.
+
+The helper verifies the read-back identity, SHA, event, marker, and exact body.
+An already verified review is reused without another POST; conflicting or pending
+reviews remain failures requiring explanation. Verify inline feedback as usual,
+then report the actual result and any unresolved reconciliation.
+
 ## Skip and report
 
 - Write review bodies and summaries as literal Markdown, without shell
   interpretation. Preserve backticks and exact resolved environment values.
 - Append to the existing `GITHUB_STEP_SUMMARY`; preserve its content.
-- Skip stale or covered assignments only before mutation: write `skipped=true`
+- Skip stale or covered assignments only before any submission attempt: write `skipped=true`
   to `GITHUB_OUTPUT`, explain in `GITHUB_STEP_SUMMARY`, and make no GitHub changes.
 - Prior Factory reviews count as coverage only after verified successful,
   non-skipped source completion, including the posted-review check. If allowed reads
@@ -57,7 +85,7 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
 - For eligible reruns or replacements of unsuccessful reviews, reassess current
   code/discussion, retain applicable findings, and submit a fresh review with this
   attempt's `REVIEW_MARKER`.
-- After mutation, verify and report partial outcomes, not skips. Reconcile this
+- After a submission attempt, verify and report partial outcomes, not skips. Reconcile this
   attempt's uncertain submissions before retrying; do not duplicate reviews.
 - Retry failed report writes and correct read-back output formatting without
   resubmitting an accepted review.
@@ -109,10 +137,19 @@ writes, or bypassing verification.
 
 The read-only receipt check requires a submitted bot comment review or approval
 with the expected commit, visible full SHA, and run marker, unless skipped before
-mutation. It proves neither review quality nor live event delivery.
+any submission attempt. It runs after worker failures too, unless cancelled.
+Only a skip without attempted or failed publication bypasses the API receipt;
+a publication error still fails even if reconciliation finds an accepted review.
+It proves neither review quality nor live event delivery.
 
 Same-head redispatch must preserve active reviews and deliver findings once.
 After post-submission failure, timeout, or cancellation, only a fresh successful
 assessment may deliver remaining findings.
 
-Static checks do not prove AI adherence or event delivery.
+Run focused publication/receipt regression checks with
+`python -m unittest discover -s tests -p 'test_review_publication.py'`.
+They invoke the production helper with a fake `gh` and synthetic output files;
+they do not use GitHub credentials or runner command-file paths. They cover
+observable POST, reconciliation, skip, and failure outcomes, not model adherence,
+GitHub races, or live event delivery. Confirm subsequent live worker/receipt
+outcomes after the changed default-branch workflow is deployed.

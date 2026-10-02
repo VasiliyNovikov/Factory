@@ -19,6 +19,12 @@ outputs:
   skipped:
     description: Whether the AI explicitly skipped before mutation
     value: ${{ steps.invoke.outputs.skipped }}
+  review_attempted:
+    description: Whether review publication was attempted or an existing attempt was found
+    value: ${{ steps.invoke.outputs.review_attempted }}
+  review_failed:
+    description: Whether review publication or reconciliation failed
+    value: ${{ steps.invoke.outputs.review_failed }}
 
 runs:
   using: composite
