@@ -78,10 +78,17 @@ Verify the coordinator and each assessment session's settings against the
 trusted profile and available runtime metadata; distinguish configured values,
 observed execution, and model self-report. For Copilot, `session.start` in
 `${COPILOT_HOME:-$HOME/.copilot}/session-state/<session-id>/events.jsonl` provides
-runtime settings evidence; model self-report alone does not. A mismatched or
-unverified binding, failed session, or incomplete result is a coverage gap, not
-complete assessment. Do not fall back to unbound agents, change configuration,
-or exceed the shared deadline to recover coverage.
+runtime settings evidence; model self-report alone does not. After each assessment
+exits, inspect its complete event history for any `subagent.*` events, including
+`subagent.started` and `subagent.configured`. Treat any such event as a binding
+coverage gap for that assignment, even when `session.start` matches:
+`--profile default` does not bind nested agents, and assessments must work
+without delegation.
+Missing or incomplete event history cannot establish that no delegation occurred.
+A mismatched or unverified binding, an unverified delegation check, a failed
+session, or an incomplete result is a coverage gap, not complete assessment.
+Do not fall back to unbound agents, change configuration, or exceed the shared
+deadline to recover coverage.
 
 ## Expected versus observed outcomes
 
@@ -134,8 +141,11 @@ or exceed the shared deadline to recover coverage.
 - Record the trusted workflow revision, installed CLI version, and resolved
   coordinator and assessment-subprocess model, reasoning effort, and context tier.
   Identify assignments, session IDs, exit statuses, and evidence for their settings,
-  including mismatches or unverified settings as coverage gaps. Initialization
-  reports no assessments launched rather than claiming verified execution.
+  including delegation-check results. Record nested-delegation events and any
+  available nested-agent settings with the assessment session ID; report them,
+  mismatches, and unverified settings or delegation checks as coverage gaps.
+  Initialization reports no assessments launched rather than claiming verified
+  execution.
 - Unassessed runs/attempts, including those omitted by sampling, mean incomplete
   analysis. Do not extrapolate a sample's conclusions to the whole window.
 - Missing evidence or API failures are not a clean result.
