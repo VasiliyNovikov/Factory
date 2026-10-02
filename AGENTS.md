@@ -92,6 +92,22 @@ When using `gh api --paginate --slurp`, filter the collected pages with external
 `jq`. Do not combine `--slurp` with gh's `--jq` or `--template`; these options are
 incompatible.
 
+### GraphQL reads
+
+Follow GitHub's [node limit](https://docs.github.com/en/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api#node-limit)
+and [cursor pagination](https://docs.github.com/en/graphql/guides/using-pagination-in-the-graphql-api).
+
+- Keep every query, including the first, within 500,000 worst-case nodes across
+  all nested and sibling connections, with `first`/`last` bounds of 1-100.
+- Read all required bodies, discussions, reviews, inline replies, and edit/deletion
+  histories. Verify every required connection reaches its terminal page using its
+  own cursor, including each object's nested connections. `gh api graphql --paginate`
+  [follows only the first `pageInfo`](https://github.com/cli/cli/blob/v2.101.0/pkg/cmd/api/pagination.go);
+  a successful command does not prove complete pagination.
+- Preserve the owning guide's evidence, freshness, and approval requirements.
+  Missing, partial, or failed required provenance is a blocker, not evidence of
+  no activity or grounds for a skip.
+
 ## GitHub Actions logs
 
 For Actions-log reads in any Factory workflow, follow the
