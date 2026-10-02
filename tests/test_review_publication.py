@@ -1,12 +1,15 @@
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import tempfile
+import textwrap
 import unittest
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts/review-publication.sh"
+WORKFLOW = Path(__file__).resolve().parents[1] / ".github/workflows/pr-review.yml"
 FAKE_GH = """#!/usr/bin/env python3
 import json
 import os
@@ -52,6 +55,7 @@ class ReviewPublicationTests(unittest.TestCase):
         for name in (
             "GH_TOKEN", "GITHUB_TOKEN", "COPILOT_GITHUB_TOKEN", "GITHUB_OUTPUT",
             "GITHUB_ENV", "GITHUB_PATH", "GITHUB_STATE", "GITHUB_STEP_SUMMARY",
+            "GITHUB_ARTIFACTS", "GITHUB_ARTIFACTS_LIST",
         ):
             self.env.pop(name, None)
         self.env.update(
@@ -108,8 +112,16 @@ class ReviewPublicationTests(unittest.TestCase):
         args = ["bash", str(SCRIPT), mode]
         if mode == "publish":
             args += [str(self.request), str(self.output)]
+        else:
+            # Exercise the literal workflow block without a YAML dependency.
+            step = WORKFLOW.read_text().split("- name: Verify review was posted\n", 1)[1]
+            block = re.search(r"(?m)^( +)run: \|\n((?:\1 +.*\n|\n)+)", step)
+            self.assertIsNotNone(block, "Receipt step must have a literal Bash run block")
+            args = ["bash", "--noprofile", "--norc", "-eo", "pipefail",
+                    "-c", textwrap.dedent(block[2])]
         result = subprocess.run(
-            args, env={**self.env, **environment}, capture_output=True, text=True, check=False,
+            args, cwd=self.directory, env={**self.env, **environment},
+            capture_output=True, text=True, check=False,
         )
         fixture = json.loads(self.fixture.read_text())
         self.assertEqual(fixture["responses"], [], result.stderr)
@@ -143,8 +155,6 @@ class ReviewPublicationTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(self.outputs(), {"skipped": "true"})
                 self.assertTrue(all(call["method"] == "GET" for call in self.calls))
-        result = self.run_helper("verify", [], REVIEW_SKIPPED="true")
-        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_success_and_retry_reuse_exact_review_without_duplicate(self):
         for event in ("APPROVE", "COMMENT"):
@@ -522,6 +532,18 @@ class ReviewPublicationTests(unittest.TestCase):
             with self.subTest(changes=changes):
                 result = self.run_helper("verify", [self.reviews([self.review(**changes)])])
                 self.assertNotEqual(result.returncode, 0)
+
+    def test_receipt_is_independent_of_checkout_helpers(self):
+        scripts = self.directory / "scripts"
+        scripts.mkdir()
+        (scripts / "review-publication.sh").write_text("exit 0\n")
+        result = self.run_helper("verify", [self.reviews()], REVIEW_ATTEMPTED="true")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual([call["endpoint"] for call in self.calls],
+                         [self.endpoint + "/reviews"])
+        result = self.run_helper("verify", [self.reviews([self.review()])],
+                                 REVIEW_ATTEMPTED="true")
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_replacement_head_uses_its_own_marker_and_assessment(self):
         previous = self.review()

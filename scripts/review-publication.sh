@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mode=${1:-}
 output_file=
 
 error() {
@@ -26,24 +25,11 @@ fail() {
   error "$1"
 }
 
-case "$mode" in
-  publish)
-    [[ $# == 3 ]] || fail 'Usage: review-publication.sh publish REQUEST_JSON OUTPUT_FILE'
-    request_file=$2
-    output_file=$3
-    : >> "$output_file"
-    ;;
-  verify)
-    [[ $# == 1 ]] || fail 'Usage: review-publication.sh verify'
-    if [[ "${REVIEW_SKIPPED:-}" == true &&
-          "${REVIEW_ATTEMPTED:-}" != true && "${REVIEW_FAILED:-}" != true &&
-          "${REVIEW_RECEIPT_REQUIRED:-}" != true ]]; then
-      printf 'Skipped before publication; no receipt required.\n'
-      exit 0
-    fi
-    ;;
-  *) fail 'Expected publish or verify' ;;
-esac
+[[ $# == 3 && "${1:-}" == publish ]] \
+  || error 'Usage: review-publication.sh publish REQUEST_JSON OUTPUT_FILE'
+request_file=$2
+output_file=$3
+: >> "$output_file"
 
 [[ -n "${GITHUB_REPOSITORY:-}" ]] || fail 'GITHUB_REPOSITORY is required'
 [[ -n "${PR_NUMBER:-}" ]] || fail 'PR_NUMBER is required'
@@ -56,22 +42,6 @@ load_reviews() {
   reviews=$(gh api --paginate --slurp "$endpoint/reviews") \
     || unverified 'Could not read reviews.'
 }
-
-if [[ "$mode" == verify ]]; then
-  load_reviews
-  jq -e --arg login "$REVIEWER_LOGIN" --arg sha "$PR_HEAD_SHA" --arg marker "$REVIEW_MARKER" '
-    any(.[][];
-      .user.login == $login and
-      .commit_id == $sha and
-      (.state == "COMMENTED" or .state == "APPROVED") and
-      ((.body // "") | contains($sha)) and
-      ((.body // "") | contains($marker)))
-  ' <<< "$reviews" >/dev/null || fail 'Required posted-review receipt is missing.'
-  [[ "${REVIEW_FAILED:-}" != true ]] \
-    || fail 'Review publication failed; a reconciled receipt does not erase the API error.'
-  printf 'Posted-review receipt verified.\n'
-  exit 0
-fi
 
 jq -e --arg sha "$PR_HEAD_SHA" --arg marker "$REVIEW_MARKER" '
   type == "object" and .commit_id == $sha and

@@ -189,10 +189,9 @@ writes, or bypassing verification.
 
 ## Verification limits
 
-The caller loads the receipt helper from the committed `GITHUB_WORKFLOW_SHA`
-into a temporary file, rather than running the worker's possibly changed
-checkout. This protects against accidental checkout drift, not deliberate
-same-runner tampering.
+The receipt query is inline in the caller workflow, independent of the worker's
+checkout and publication helper. It needs no helper loader or duplicate skip
+rule; deliberate same-runner tampering remains an accepted risk.
 
 The read-only receipt check requires a submitted bot comment review or approval
 with the expected commit, visible full SHA, and run marker, unless skipped before
@@ -209,8 +208,9 @@ assessment may deliver remaining findings.
 
 Run focused publication/receipt regression checks with
 `python -m unittest discover -s tests -p 'test_review_publication.py'`.
-They invoke the production helper with a fake `gh` and synthetic output files;
-they do not use GitHub credentials or runner command-file paths. They cover
+They invoke the production publication helper and the workflow's literal receipt
+command with a fake `gh` and synthetic output files; they do not use GitHub
+credentials or runner command-file paths. They cover
 observable POST, reconciliation, skip, and failure outcomes, not model adherence,
 GitHub races, or live event delivery. Confirm subsequent live worker/receipt
 outcomes after the changed default-branch workflow is deployed.

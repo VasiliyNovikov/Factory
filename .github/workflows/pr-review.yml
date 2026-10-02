@@ -81,12 +81,22 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ steps.reviewer-token.outputs.token }}
-          REVIEW_SKIPPED: ${{ steps.worker.outputs.skipped }}
-          REVIEW_ATTEMPTED: ${{ steps.worker.outputs.review_attempted }}
           REVIEW_FAILED: ${{ steps.worker.outputs.review_failed }}
-          REVIEW_RECEIPT_REQUIRED: ${{ steps.worker.outputs.review_receipt_required }}
         run: |
-          receipt_script=$(mktemp "$RUNNER_TEMP/review-publication.XXXXXX")
-          trap 'rm -f -- "$receipt_script"' EXIT
-          git show "${GITHUB_WORKFLOW_SHA:?trusted workflow revision is required}:scripts/review-publication.sh" > "$receipt_script"
-          bash "$receipt_script" verify
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/reviews" |
+            jq -e --arg login "$REVIEWER_LOGIN" --arg sha "$PR_HEAD_SHA" --arg marker "$REVIEW_MARKER" '
+              any(.[][];
+                .user.login == $login and
+                .commit_id == $sha and
+                (.state == "COMMENTED" or .state == "APPROVED") and
+                ((.body // "") | contains($sha)) and
+                ((.body // "") | contains($marker)))
+            ' >/dev/null || {
+              echo 'Error: Required posted-review receipt is missing or could not be read.' >&2
+              exit 1
+            }
+          if [[ "$REVIEW_FAILED" == true ]]; then
+            echo 'Error: Review publication failed; a reconciled receipt does not erase the API error.' >&2
+            exit 1
+          fi
+          echo 'Posted-review receipt verified.'
