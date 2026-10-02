@@ -13,6 +13,8 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Stay within the assigned issue; do not repeat repository-wide routing.
 - Read the full current discussion, outstanding feedback, relevant code, and
   source evidence, including failed CI logs. Pending jobs can be superseded.
+- Follow the [shared pagination guidance](../../AGENTS.md#github-cli-pagination)
+  for node-bounded, complete discussion and provenance reads.
 - Act on feedback that still applies, even from older heads or outdated lines.
 - Apply [participant approval](participant-approval.md) to the original issue
   scope and individual requests throughout the discussion. Only authorized

@@ -89,7 +89,7 @@ checkout or AI setup. Copilot decides the rest.
 
 ## Feedback and event handling
 
-- Read worker-discovery and PR-review collections with complete pagination,
+- Read worker-discovery, PR-review, and required provenance collections completely,
   following the [shared pagination guidance](../../AGENTS.md#github-cli-pagination).
 - Humans and bots may provide context; only requests authorized under
   [participant approval](participant-approval.md) are actionable feedback.
