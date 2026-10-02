@@ -4,6 +4,11 @@ set -euo pipefail
 mode=${1:-}
 output_file=
 
+invalid_request() {
+  printf 'Error: %s\n' "$1" >&2
+  exit 1
+}
+
 fail() {
   if [[ -n "$output_file" ]]; then
     printf 'review_failed=true\n' >> "$output_file"
@@ -62,7 +67,7 @@ jq -e --arg sha "$PR_HEAD_SHA" --arg marker "$REVIEW_MARKER" '
   type == "object" and .commit_id == $sha and
   (.event == "COMMENT" or .event == "APPROVE") and
   (.body | type == "string" and contains($sha) and contains($marker))
-' "$request_file" >/dev/null || fail 'Request must include the expected SHA, marker, body, and review event.'
+' "$request_file" >/dev/null || invalid_request 'Request must include the expected SHA, marker, body, and review event.'
 
 find_related_reviews() {
   load_reviews
@@ -89,7 +94,13 @@ if [[ "$related_reviews" != '[]' ]]; then
   printf 'review_attempted=true\n' >> "$output_file"
   matches_request || fail 'Existing or pending review needs reconciliation; no new review was submitted.'
   report_review
+  if grep -qx 'review_failed=true' "$output_file"; then
+    fail 'Review reconciled, but an earlier API or reconciliation failure remains unresolved.'
+  fi
   exit 0
+fi
+if grep -qx 'review_failed=true' "$output_file"; then
+  fail 'An earlier API or reconciliation failure prevents publication in this attempt.'
 fi
 if grep -qx 'review_attempted=true' "$output_file"; then
   fail 'An earlier submission attempt has no verified review; do not submit again in this attempt.'
@@ -116,7 +127,7 @@ if [[ "$eligible" != true ]]; then
 fi
 if [[ "$(jq -r .event "$request_file")" == APPROVE &&
       "$(jq -r .user.login <<< "$pr")" == "$REVIEWER_LOGIN" ]]; then
-  fail 'The reviewer cannot approve its own PR; use COMMENT.'
+  invalid_request 'The reviewer cannot approve its own PR; use COMMENT.'
 fi
 
 # Record the attempt before POST, even if GitHub rejects it without creating a review.

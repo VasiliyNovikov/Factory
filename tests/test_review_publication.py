@@ -188,8 +188,7 @@ class ReviewPublicationTests(unittest.TestCase):
         self.assert_failed(result)
         self.assertIn(self.review()["html_url"], result.stdout)
         result = self.run_helper("publish", [self.reviews([self.review()])])
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(self.outputs()["review_failed"], "true")
+        self.assert_failed(result)
         result = self.run_helper("verify", [self.reviews([self.review()])],
                                  REVIEW_SKIPPED="true", REVIEW_ATTEMPTED="true",
                                  REVIEW_FAILED="true")
@@ -209,6 +208,9 @@ class ReviewPublicationTests(unittest.TestCase):
         result = self.run_helper("verify", [self.reviews()],
                                  REVIEW_SKIPPED="true", REVIEW_FAILED="true")
         self.assertNotEqual(result.returncode, 0)
+        result = self.run_helper("publish", [self.reviews()])
+        self.assert_failed(result)
+        self.assertTrue(all(call["method"] == "GET" for call in self.calls))
 
     def test_incomplete_eligibility_and_read_failure_are_not_stale(self):
         for response in (
@@ -224,11 +226,25 @@ class ReviewPublicationTests(unittest.TestCase):
 
     def test_invalid_request_and_self_approval_never_post(self):
         self.request.write_text(json.dumps({**self.payload, "commit_id": "b" * 40}))
-        self.assert_failed(self.run_helper("publish", []))
+        result = self.run_helper("publish", [])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.outputs(), {})
         self.request.write_text(json.dumps(self.payload))
         self.pr["user"]["login"] = self.env["REVIEWER_LOGIN"]
-        self.assert_failed(self.run_helper("publish", [self.reviews(), self.live_pr()]))
+        result = self.run_helper("publish", [self.reviews(), self.live_pr()])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.outputs(), {})
         self.assertTrue(all(call["method"] == "GET" for call in self.calls))
+        self.payload["event"] = "COMMENT"
+        self.request.write_text(json.dumps(self.payload))
+        result = self.run_helper("publish", [
+            self.reviews(), self.live_pr(), self.post(), self.reviews([self.review()]),
+        ])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.outputs(), {"review_attempted": "true"})
+        result = self.run_helper("verify", [self.reviews([self.review()])],
+                                 REVIEW_ATTEMPTED="true")
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_pending_or_conflicting_existing_review_prevents_post(self):
         for review in (

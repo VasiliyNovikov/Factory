@@ -66,6 +66,10 @@ do not overwrite them or classify the attempt as skipped. Do not resubmit after
 a failed request in this attempt. An eligible replacement head or rerun receives
 its own assessment and marker; later success does not erase the earlier failure.
 
+Local request-format or self-approval errors can be corrected before any POST;
+they do not mark an API attempt as failed. API or reconciliation failures prevent
+further publication in this attempt, including after a successful read-back.
+
 The helper verifies the read-back identity, SHA, event, marker, and exact body.
 An already verified review is reused without another POST; conflicting or pending
 reviews remain failures requiring explanation. Verify inline feedback as usual,
