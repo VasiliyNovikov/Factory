@@ -84,13 +84,8 @@ handoff or a needed fresh assessment after a failed/cancelled worker.
 - Created or edited issue/PR conversation comments and submitted reviews trigger routing.
 - For conversation-comment edits, read the current text and full discussion;
   apply the same eligibility and authorization rules as for other feedback.
-  - Compare the current request with already-handled feedback and verified outcomes.
-    Route newly actionable changes, even on a previously handled comment ID;
-    skip cosmetic edits or requests already covered.
-  - Before dispatch, reconcile earlier creation/edit dispatches and pending/running
-    workers. Reuse coverage only when it includes the current feedback; a matching
-    comment ID or active run alone does not establish coverage. Avoid equivalent
-    assignments and duplicate replies, retaining workers' freshness and reply checks.
+  Follow the shared [current-feedback coverage and hold rules](routing-policy.md#holds-and-handled-work)
+  and [dispatch reconciliation](routing-policy.md#dispatch-reconciliation-and-retries).
 - Standalone inline comments and replies arrive as empty-body `COMMENTED`
   reviews through the existing `pull_request_review: submitted` trigger.
   - Assess non-Factory inline comments and replies like other submitted reviews.

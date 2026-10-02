@@ -55,6 +55,11 @@ result verification. Keep common decisions here rather than maintaining two poli
   as authorization to bypass it.
 - Changed evidence can make a previously blocked request actionable; elapsed time
   alone cannot. Do not repeatedly dispatch workers to restate unchanged blockers.
+- Compare current conversation-comment feedback with the request covered by earlier
+  creation/edit dispatches, active workers, and verified outcomes. A previously
+  handled comment ID can contain a new request; a matching ID or active run alone
+  does not establish current coverage. Newly actionable changes need routing;
+  cosmetic edits or already-covered requests do not.
 - Factory-authored results are evidence of progress or partial work, not new
   implementation requests. Already-handled feedback and completed work need no
   dispatch; verify outcomes rather than inferring them from a successful CLI exit.
