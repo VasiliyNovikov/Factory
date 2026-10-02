@@ -12,7 +12,8 @@ set what may run. All use these safeguards:
   guidance, and reviewed source, and clean up afterwards.
 - Use `env -u` to remove `GH_TOKEN`, `GITHUB_TOKEN`,
   `COPILOT_GITHUB_TOKEN`, `GITHUB_OUTPUT`, `GITHUB_ENV`, `GITHUB_PATH`,
-  `GITHUB_STATE`, and `GITHUB_STEP_SUMMARY` from every check and its descendants.
+  `GITHUB_STATE`, `GITHUB_STEP_SUMMARY`, `GITHUB_ARTIFACTS`, and
+  `GITHUB_ARTIFACTS_LIST` from every check and its descendants.
   This includes static validators, copied/adapted snippets, synthetic probes,
   and permitted dependency downloads and installs.
   Never pass credentials or command-file paths through arguments or files, or
@@ -27,13 +28,13 @@ For example, this prints a test message from a check shell:
 (
   exec env -u GH_TOKEN -u GITHUB_TOKEN -u COPILOT_GITHUB_TOKEN \
     -u GITHUB_OUTPUT -u GITHUB_ENV -u GITHUB_PATH -u GITHUB_STATE \
-    -u GITHUB_STEP_SUMMARY \
+    -u GITHUB_STEP_SUMMARY -u GITHUB_ARTIFACTS -u GITHUB_ARTIFACTS_LIST \
     bash -euo pipefail -c 'printf "%s\n" "test"'
 )
 ```
 
 The `printf` command is only a placeholder. Replace it with the inspected checks
-for the review and run from the source workspace; all eight exclusions remain
+for the review and run from the source workspace; all ten exclusions remain
 required. The subshell keeps `exec` from replacing the coordinator.
 For compound commands, pipelines, and installation steps, strip variables from
 the entire shell, not just the first command or pipeline stage.
