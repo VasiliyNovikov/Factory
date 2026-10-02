@@ -12,7 +12,7 @@ on:
 jobs:
   ai:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     permissions:
       contents: read
       copilot-requests: write
@@ -44,8 +44,33 @@ standalone binaries:
 | `./scripts/install-tools.sh` | Both |
 
 The installer downloads and version-checks the selected CLIs and installs missing
-`jq`. Unsupported arguments fail before installation; download, install, or
-version-check errors fail setup.
+`jq`. It requires GNU `timeout` (`gtimeout` is also accepted), provided by coreutils
+on GitHub-hosted Linux runners. For local macOS use, install coreutils first.
+Unsupported arguments fail before installation.
+
+Each bootstrap script is saved to a temporary file and executed only after a
+successful, nonempty download. Bootstrap downloads and vendor installer execution
+each get up to three attempts, waiting 5 then 10 seconds between failures:
+
+| Stage | Limit per attempt |
+| --- | --- |
+| Bootstrap download | 20 seconds total, including a 10-second connection limit |
+| Vendor installer (including its network requests) | 60 seconds, then up to 5 seconds before forced termination |
+| CLI version check (no retry) | 10 seconds, then up to 5 seconds before forced termination |
+
+This budgets at most 5 minutes per selected CLI for these commands and backoff,
+excluding initial `jq` provisioning and process overhead; no-argument installation
+budgets twice that for both tools. Allow additional job time for AI work and
+reporting. Retries cover any nonzero download or installer exit, including curl
+exit 35 (connection reset), because vendor installers do not consistently
+distinguish network errors from other failures. Each retry and final exhaustion
+is logged. Empty downloads, exhausted retries, and version-check errors fail setup
+and prevent AI invocation; temporary bootstrap files are removed on exit.
+
+Only setup is retried, never AI invocation or an entire workflow. A manual rerun
+can recover an already-failed setup job, subject to current event eligibility.
+Version-keyed caching or preinstalled runner images could reduce downloads, but
+require separate freshness and maintenance decisions; neither is configured here.
 
 Copilot installs to `$HOME/.local/bin` and OpenCode to `$HOME/.opencode/bin`.
 The installer updates its `PATH` and Actions' `GITHUB_PATH`, not shell startup
