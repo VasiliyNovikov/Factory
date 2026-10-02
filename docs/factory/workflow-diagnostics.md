@@ -53,6 +53,9 @@ COPILOT_GITHUB_TOKEN="${GITHUB_TOKEN:?built-in model token is required}" \
     --prompt "$assessment_prompt"
 ```
 
+Use this path for all diagnostics delegation; the coordinator must not use
+CLI built-in subagents for other work either.
+
 Set `assessment_prompt` to the assigned workflow/run attempts, applicable
 contract and evidence references, shared investigation deadline, and this guide's
 assessment rules. Explicitly require direct read-only analysis: no further
@@ -78,10 +81,12 @@ Verify the coordinator and each assessment session's settings against the
 trusted profile and available runtime metadata; distinguish configured values,
 observed execution, and model self-report. For Copilot, `session.start` in
 `${COPILOT_HOME:-$HOME/.copilot}/session-state/<session-id>/events.jsonl` provides
-runtime settings evidence; model self-report alone does not. After each assessment
-exits, inspect its complete event history for any `subagent.*` events, including
+runtime settings evidence; model self-report alone does not. Inspect each
+assessment's complete event history after it exits, and the coordinator's own
+history before final reporting. Do not delegate further after the coordinator
+check. Look for any `subagent.*` events, including
 `subagent.started` and `subagent.configured`. Treat any such event as a binding
-coverage gap for that assignment, even when `session.start` matches:
+coverage gap for the affected work, even when `session.start` matches:
 `--profile default` does not bind nested agents, and assessments must work
 without delegation.
 Missing or incomplete event history cannot establish that no delegation occurred.
@@ -142,8 +147,9 @@ deadline to recover coverage.
   coordinator and assessment-subprocess model, reasoning effort, and context tier.
   Identify assignments, session IDs, exit statuses, and evidence for their settings,
   including delegation-check results. Record nested-delegation events and any
-  available nested-agent settings with the assessment session ID; report them,
-  mismatches, and unverified settings or delegation checks as coverage gaps.
+  available nested-agent settings with the originating coordinator or assessment
+  session ID and affected work; report them, mismatches, and unverified settings
+  or delegation checks as coverage gaps.
   Initialization reports no assessments launched rather than claiming verified
   execution.
 - Unassessed runs/attempts, including those omitted by sampling, mean incomplete
