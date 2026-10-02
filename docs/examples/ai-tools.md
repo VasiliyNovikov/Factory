@@ -105,7 +105,11 @@ to install and invoke a CLI through these scripts:
   Factory App for other workers. Only invocation receives it as `GH_TOKEN`;
   `GITHUB_TOKEN` and `COPILOT_GITHUB_TOKEN` use the built-in token.
 - `skipped` forwards the invocation's `GITHUB_OUTPUT` value for triage/review
-  receipt checks. Install and invocation errors fail the action, not skip it.
+  receipt checks. `review_attempted` and `review_failed` forward the
+  [PR-review publication state](../factory/pr-review.md#publication), keeping its
+  receipt mandatory after a submission attempt or persistent failure even if
+  the worker claims a skip. Install and invocation errors fail the action, not
+  skip it.
 
 Checkout, App permissions/token creation, Git identity, prompts, and receipt checks
 remain in the owning workflows.

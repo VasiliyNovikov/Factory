@@ -4,17 +4,23 @@ set -euo pipefail
 mode=${1:-}
 output_file=
 
-invalid_request() {
+error() {
   printf 'Error: %s\n' "$1" >&2
   exit 1
+}
+
+unverified() {
+  if [[ -n "$output_file" ]] && grep -qx 'review_attempted=true' "$output_file"; then
+    error "$1 Retry reconciliation only; do not resubmit or skip."
+  fi
+  fail "$1"
 }
 
 fail() {
   if [[ -n "$output_file" ]]; then
     printf 'review_failed=true\n' >> "$output_file"
   fi
-  printf 'Error: %s\n' "$1" >&2
-  exit 1
+  error "$1"
 }
 
 case "$mode" in
@@ -44,7 +50,7 @@ endpoint="repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"
 
 load_reviews() {
   reviews=$(gh api --paginate --slurp "$endpoint/reviews") \
-    || fail 'Could not reconcile reviews; do not retry publication or skip.'
+    || unverified 'Could not read reviews.'
 }
 
 if [[ "$mode" == verify ]]; then
@@ -66,15 +72,16 @@ fi
 jq -e --arg sha "$PR_HEAD_SHA" --arg marker "$REVIEW_MARKER" '
   type == "object" and .commit_id == $sha and
   (.event == "COMMENT" or .event == "APPROVE") and
-  (.body | type == "string" and contains($sha) and contains($marker))
-' "$request_file" >/dev/null || invalid_request 'Request must include the expected SHA, marker, body, and review event.'
+  (.body | type == "string" and contains($sha) and contains($marker)) and
+  ((has("comments") | not) or (.comments | type == "array"))
+' "$request_file" >/dev/null || error 'Request must include the expected SHA, marker, body, review event, and optional comments array.'
 
 find_related_reviews() {
   load_reviews
   related_reviews=$(jq -c --arg login "$REVIEWER_LOGIN" --arg marker "$REVIEW_MARKER" '
     [.[][] | select(.user.login == $login and
       (((.body // "") | contains($marker)) or .state == "PENDING"))]
-  ' <<< "$reviews") || fail 'Invalid review reconciliation response.'
+  ' <<< "$reviews") || unverified 'Invalid review reconciliation response.'
 }
 
 matches_request() {
@@ -103,7 +110,15 @@ if grep -qx 'review_failed=true' "$output_file"; then
   fail 'An earlier API or reconciliation failure prevents publication in this attempt.'
 fi
 if grep -qx 'review_attempted=true' "$output_file"; then
-  fail 'An earlier submission attempt has no verified review; do not submit again in this attempt.'
+  unverified 'An earlier submission attempt has no verified review.'
+fi
+
+if jq -e '(.comments // []) | length > 0' "$request_file" >/dev/null; then
+  files=$(gh api --paginate --slurp "$endpoint/files") \
+    || fail 'Could not read PR files for inline comment validation.'
+  printf '%s\n' "$files" |
+    python3 "$(dirname -- "${BASH_SOURCE[0]}")/validate-review-comments.py" "$request_file" \
+    || error 'Correct the inline comments or move the findings into the review body before publication.'
 fi
 
 pr=$(gh api "$endpoint") || fail 'Could not read live PR eligibility.'
@@ -127,7 +142,7 @@ if [[ "$eligible" != true ]]; then
 fi
 if [[ "$(jq -r .event "$request_file")" == APPROVE &&
       "$(jq -r .user.login <<< "$pr")" == "$REVIEWER_LOGIN" ]]; then
-  invalid_request 'The reviewer cannot approve its own PR; use COMMENT.'
+  error 'The reviewer cannot approve its own PR; use COMMENT.'
 fi
 
 # Record the attempt before POST, even if GitHub rejects it without creating a review.
@@ -146,5 +161,7 @@ if [[ "$post_failed" == true ]]; then
   fi
   fail 'Review API request failed; reconciliation is not a skip or permission to resubmit.'
 fi
+[[ "$related_reviews" != '[]' ]] \
+  || unverified 'Submission returned success but its review is not visible.'
 matches_request || fail 'Submission returned success but its exact review could not be verified.'
 report_review

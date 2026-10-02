@@ -23,7 +23,7 @@ outputs:
     description: Whether review publication was attempted or an existing attempt was found
     value: ${{ steps.invoke.outputs.review_attempted }}
   review_failed:
-    description: Whether review publication or reconciliation failed
+    description: Whether review publication has a persistent failure
     value: ${{ steps.invoke.outputs.review_failed }}
 
 runs:

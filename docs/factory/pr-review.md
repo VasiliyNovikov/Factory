@@ -54,7 +54,8 @@ and any inline `comments`, then run:
 ```
 
 The helper reconciles this attempt's reviews and any reviewer-owned pending
-review, then checks live eligibility immediately before submission. A known false
+review, validates inline locations against paginated PR-file patches, then checks
+live eligibility immediately before submission. A known false
 result stops before POST and can skip. A read error or incomplete eligibility
 response is a failure, not evidence of staleness. A head can still move after a
 valid check; HTTP 422 alone does not establish a broken freshness gate.
@@ -66,9 +67,20 @@ do not overwrite them or classify the attempt as skipped. Do not resubmit after
 a failed request in this attempt. An eligible replacement head or rerun receives
 its own assessment and marker; later success does not erase the earlier failure.
 
-Local request-format or self-approval errors can be corrected before any POST;
-they do not mark an API attempt as failed. API or reconciliation failures prevent
-further publication in this attempt, including after a successful read-back.
+Local request-format, inline-location, or self-approval errors can be corrected
+before any POST; they do not mark an API attempt as failed. Inline comments need
+a path in the diff and valid `line`/`side` coordinates (or a diff `position`);
+multiline ranges also need `start_line`/`start_side` and must run forward within
+one hunk. Use `LEFT` for deletions and `RIGHT` for additions or context. Correct
+invalid locations or move findings into the review body when patches are
+unavailable or incomplete.
+
+After an accepted POST, a failed read or a review not yet visible is an unverified
+outcome, not a permanent publication failure. Retry the helper with the same
+request and output file to reconcile without another POST. A later exact
+read-back can complete publication; the attempted flag keeps the receipt
+mandatory throughout. Failed POSTs, pre-publication API errors, and conflicting
+read-backs remain failed even after a later matching read-back.
 
 The helper verifies the read-back identity, SHA, event, marker, and exact body.
 An already verified review is reused without another POST; conflicting or pending
@@ -143,8 +155,9 @@ The read-only receipt check requires a submitted bot comment review or approval
 with the expected commit, visible full SHA, and run marker, unless skipped before
 any submission attempt. It runs after worker failures too, unless cancelled.
 Only a skip without attempted or failed publication bypasses the API receipt;
-a publication error still fails even if reconciliation finds an accepted review.
-It proves neither review quality nor live event delivery.
+the receipt step itself is skipped in that case, not reported as a successful
+verification. A failed POST still fails even if reconciliation finds an accepted
+review. It proves neither review quality nor live event delivery.
 
 Same-head redispatch must preserve active reviews and deliver findings once.
 After post-submission failure, timeout, or cancellation, only a fresh successful

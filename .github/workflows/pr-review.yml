@@ -73,7 +73,10 @@ jobs:
             Budget the 30-minute job including setup, reporting, and verification.
 
       - name: Verify review was posted
-        if: ${{ !cancelled() }}
+        if: >-
+          ${{ !cancelled() && (steps.worker.outputs.skipped != 'true' ||
+          steps.worker.outputs.review_attempted == 'true' ||
+          steps.worker.outputs.review_failed == 'true') }}
         shell: bash
         env:
           GH_TOKEN: ${{ steps.reviewer-token.outputs.token }}

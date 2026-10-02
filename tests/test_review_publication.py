@@ -93,6 +93,12 @@ class ReviewPublicationTests(unittest.TestCase):
     def live_pr(self, **changes):
         return {"method": "GET", "endpoint": self.endpoint, "body": self.pr, **changes}
 
+    def files(self, *pages, **changes):
+        return {"method": "GET", "endpoint": self.endpoint + "/files",
+                "body": list(pages) or [[{
+                    "filename": "a.txt", "patch": "@@ -0,0 +1 @@\n+new line",
+                }]], **changes}
+
     def post(self, **changes):
         return {"method": "POST", "endpoint": self.endpoint + "/reviews",
                 "body": self.review(), **changes}
@@ -108,7 +114,7 @@ class ReviewPublicationTests(unittest.TestCase):
         fixture = json.loads(self.fixture.read_text())
         self.assertEqual(fixture["responses"], [], result.stderr)
         for call in fixture["calls"]:
-            if call["method"] == "GET" and call["endpoint"].endswith("/reviews"):
+            if call["method"] == "GET" and call["endpoint"].endswith(("/reviews", "/files")):
                 self.assertIn("--paginate", call["args"])
                 self.assertIn("--slurp", call["args"])
         self.calls = fixture["calls"]
@@ -150,8 +156,11 @@ class ReviewPublicationTests(unittest.TestCase):
                         {"path": "a.txt", "line": 1, "side": "RIGHT", "body": "Actionable finding"}
                     ]
                 self.request.write_text(json.dumps(self.payload))
-                result = self.run_helper("publish", [
-                    self.reviews(), self.live_pr(), self.post(),
+                responses = [self.reviews()]
+                if event == "COMMENT":
+                    responses.append(self.files())
+                result = self.run_helper("publish", responses + [
+                    self.live_pr(), self.post(),
                     self.reviews([], [self.review()]),
                 ])
                 self.assertEqual(result.returncode, 0, result.stderr)
@@ -217,9 +226,13 @@ class ReviewPublicationTests(unittest.TestCase):
     def test_prior_unverified_attempt_never_posts_again(self):
         self.output.write_text("review_attempted=true\n")
         result = self.run_helper("publish", [self.reviews()])
-        self.assert_failed(result)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.outputs(), {"review_attempted": "true"})
         self.assertEqual([call["endpoint"] for call in self.calls],
                          [self.endpoint + "/reviews"])
+        result = self.run_helper("publish", [self.reviews([self.review()])])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(all(call["method"] == "GET" for call in self.calls))
 
     def test_incomplete_eligibility_and_read_failure_are_not_stale(self):
         for response in (
@@ -234,10 +247,12 @@ class ReviewPublicationTests(unittest.TestCase):
                 self.assertNotIn("review_attempted", self.outputs())
 
     def test_invalid_request_and_self_approval_never_post(self):
-        self.request.write_text(json.dumps({**self.payload, "commit_id": "b" * 40}))
-        result = self.run_helper("publish", [])
-        self.assertNotEqual(result.returncode, 0)
-        self.assertEqual(self.outputs(), {})
+        for change in ({"commit_id": "b" * 40}, {"comments": None}, {"comments": {}}):
+            with self.subTest(change=change):
+                self.request.write_text(json.dumps({**self.payload, **change}))
+                result = self.run_helper("publish", [])
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(self.outputs(), {})
         self.request.write_text(json.dumps(self.payload))
         self.pr["user"]["login"] = self.env["REVIEWER_LOGIN"]
         result = self.run_helper("publish", [self.reviews(), self.live_pr()])
@@ -267,6 +282,132 @@ class ReviewPublicationTests(unittest.TestCase):
                 self.assert_failed(result)
                 self.assertEqual(self.outputs()["review_attempted"], "true")
 
+    def test_delayed_success_readback_recovers_without_reposting(self):
+        result = self.run_helper("publish", [
+            self.reviews(), self.live_pr(), self.post(), self.reviews(),
+        ])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.outputs(), {"review_attempted": "true"})
+        result = self.run_helper("verify", [self.reviews()],
+                                 REVIEW_SKIPPED="true", REVIEW_ATTEMPTED="true")
+        self.assertNotEqual(result.returncode, 0)
+        result = self.run_helper("publish", [self.reviews([self.review()])])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([call["endpoint"] for call in self.calls],
+                         [self.endpoint + "/reviews"])
+        result = self.run_helper("verify", [self.reviews([self.review()])],
+                                 REVIEW_ATTEMPTED="true")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_conflicting_success_readback_remains_failed(self):
+        result = self.run_helper("publish", [
+            self.reviews(), self.live_pr(), self.post(),
+            self.reviews([self.review(body=self.payload["body"] + "different")]),
+        ])
+        self.assert_failed(result)
+        result = self.run_helper("publish", [self.reviews([self.review()])])
+        self.assert_failed(result)
+        result = self.run_helper("verify", [self.reviews([self.review()])],
+                                 REVIEW_ATTEMPTED="true", REVIEW_FAILED="true")
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_invalid_inline_comments_can_be_corrected_before_post(self):
+        comment = {"path": "a.txt", "line": 1, "side": "RIGHT", "body": "Finding"}
+        for change in (
+            {"path": "not-in-diff.txt"}, {"line": 2}, {"line": True},
+            {"side": "LEFT"}, {"side": "INVALID"}, {"body": " "},
+            {"start_line": 2, "start_side": "RIGHT"},
+            {"start_line": 1, "start_side": "RIGHT"}, {"start_side": "LEFT"},
+            {"position": 1}, {"start_line": 1, "start_side": "INVALID"},
+        ):
+            with self.subTest(change=change):
+                self.output.write_text("")
+                self.payload["comments"] = [{**comment, **change}]
+                self.request.write_text(json.dumps(self.payload))
+                result = self.run_helper("publish", [self.reviews(), self.files()])
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(self.outputs(), {})
+                self.assertEqual([call["endpoint"] for call in self.calls],
+                                 [self.endpoint + "/reviews", self.endpoint + "/files"])
+        self.payload["comments"] = [comment]
+        self.request.write_text(json.dumps(self.payload))
+        result = self.run_helper("publish", [
+            self.reviews(), self.files(), self.live_pr(), self.post(),
+            self.reviews([self.review()]),
+        ])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([call["request"] for call in self.calls if call["method"] == "POST"],
+                         [self.payload])
+
+    def test_inline_ranges_sides_and_positions_use_patch_coordinates(self):
+        patch = (
+            "@@ -10,5 +10,5 @@\n context\n-old\n-older\n+new\n+extra\n tail\n end\n"
+            "@@ -30 +31 @@\n-before\n+after\n\\ No newline at end of file"
+        )
+        comment = {"path": "a.txt", "body": "Finding"}
+        for coordinates in (
+            {"line": 14, "side": "RIGHT", "start_line": 10, "start_side": "RIGHT"},
+            {"line": 12, "side": "LEFT", "start_line": 11, "start_side": "LEFT"},
+            {"line": 12, "side": "RIGHT", "start_line": 11, "start_side": "LEFT"},
+            {"line": 31}, {"position": 10},
+        ):
+            with self.subTest(coordinates=coordinates):
+                self.output.write_text("")
+                self.payload["comments"] = [{**comment, **coordinates}]
+                self.request.write_text(json.dumps(self.payload))
+                result = self.run_helper("publish", [
+                    self.reviews(), self.files([], [{"filename": "a.txt", "patch": patch}]),
+                    self.live_pr(), self.post(), self.reviews([self.review()]),
+                ])
+                self.assertEqual(result.returncode, 0, result.stderr)
+        for coordinates in (
+            {"line": 14, "side": "LEFT"}, {"line": 30, "side": "RIGHT"},
+            {"line": 31, "start_line": 10, "start_side": "RIGHT"},
+            {"line": 10, "start_line": 14, "start_side": "RIGHT"},
+            {"line": 14, "start_line": 9, "start_side": "RIGHT"},
+            {"line": 14, "start_line": 10}, {"position": 8}, {"position": 11},
+        ):
+            with self.subTest(coordinates=coordinates):
+                self.output.write_text("")
+                self.payload["comments"] = [{**comment, **coordinates}]
+                self.request.write_text(json.dumps(self.payload))
+                result = self.run_helper("publish", [
+                    self.reviews(), self.files([{"filename": "a.txt", "patch": patch}]),
+                ])
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(self.outputs(), {})
+
+    def test_unavailable_inline_patch_does_not_post(self):
+        self.payload["comments"] = [{"path": "a.txt", "line": 1, "body": "Finding"}]
+        self.request.write_text(json.dumps(self.payload))
+        for patch in (None, "", "@@ -0,0 +1,2 @@\n+truncated"):
+            with self.subTest(patch=patch):
+                result = self.run_helper("publish", [
+                    self.reviews(), self.files([{"filename": "a.txt", "patch": patch}]),
+                ])
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(self.outputs(), {})
+
+    def test_inline_file_read_failure_is_not_a_skip(self):
+        self.payload["comments"] = [{"path": "a.txt", "line": 1, "body": "Finding"}]
+        self.request.write_text(json.dumps(self.payload))
+        result = self.run_helper("publish", [
+            self.reviews(), self.files(status=1, error="HTTP 502"),
+        ])
+        self.assert_failed(result)
+        self.assertNotIn("review_attempted", self.outputs())
+
+    def test_inline_validation_is_followed_by_live_eligibility(self):
+        self.payload["comments"] = [{"path": "a.txt", "line": 1, "body": "Finding"}]
+        self.request.write_text(json.dumps(self.payload))
+        self.pr["head"]["sha"] = "b" * 40
+        result = self.run_helper("publish", [
+            self.reviews(), self.files(), self.live_pr(),
+        ])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.outputs(), {"skipped": "true"})
+        self.assertTrue(all(call["method"] == "GET" for call in self.calls))
+
     def test_success_response_requires_exact_readback(self):
         for reviews in (
             [], [self.review(body=self.payload["body"].rstrip("\n"))],
@@ -278,15 +419,31 @@ class ReviewPublicationTests(unittest.TestCase):
                 result = self.run_helper("publish", [
                     self.reviews(), self.live_pr(), self.post(), self.reviews(reviews),
                 ])
-                self.assert_failed(result)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(self.outputs()["review_attempted"], "true")
+                self.assertNotIn("skipped", self.outputs())
+                if reviews and reviews[0]["user"]["login"] == self.env["REVIEWER_LOGIN"]:
+                    self.assertEqual(self.outputs()["review_failed"], "true")
 
     def test_post_reconciliation_read_failure_preserves_attempt(self):
         result = self.run_helper("publish", [
             self.reviews(), self.live_pr(), self.post(),
             self.reviews(status=1, error="HTTP 502"),
         ])
-        self.assert_failed(result)
-        self.assertEqual(self.outputs()["review_attempted"], "true")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.outputs(), {"review_attempted": "true"})
+        for response in (self.reviews(status=1, error="HTTP 502"), self.reviews()):
+            result = self.run_helper("publish", [response])
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(self.outputs(), {"review_attempted": "true"})
+            self.assertEqual([call["endpoint"] for call in self.calls],
+                             [self.endpoint + "/reviews"])
+        result = self.run_helper("publish", [self.reviews([self.review()])])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.outputs(), {"review_attempted": "true"})
+        result = self.run_helper("verify", [self.reviews([self.review()])],
+                                 REVIEW_ATTEMPTED="true")
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_receipt_requires_all_existing_contract_fields(self):
         for changes in (
