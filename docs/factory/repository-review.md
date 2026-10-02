@@ -19,6 +19,7 @@ verification, and reporting within the shared
   code, and relevant docs. Record the exact commit, coverage, and unread/unreadable areas.
 - Report distinct, evidenced, actionable improvements, not speculation, style
   churn, or unnecessary refactoring. Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
+- Always assess [whether the implementation can be simpler](pr-review.md#simplicity).
 - Run code, tests, or focused experiments when useful to verify a concrete
   question, including copied/adapted snippets and synthetic-input probes.
   Ordinary queries over fetched evidence remain allowed.
