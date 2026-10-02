@@ -178,6 +178,7 @@ the independent PR-review worker.
   regressions, unmet requirements, and necessary coverage gaps. Follow the
   [test-value policy](../../AGENTS.md#test-value-and-verification); avoid speculative
   or style-only findings. Optional checks use the [shared safeguards](review-checks.md).
+- Always assess [whether the candidate can be simpler](pr-review.md#simplicity).
 - Return findings to the implementer in the CLI response: reviewed SHAs and
   scope, actionable findings with paths/lines and impact, checks performed, and
   coverage gaps or blockers. Explicitly distinguish a complete review with no
