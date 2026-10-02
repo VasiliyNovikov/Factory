@@ -76,12 +76,14 @@ jobs:
         if: >-
           ${{ !cancelled() && (steps.worker.outputs.skipped != 'true' ||
           steps.worker.outputs.review_attempted == 'true' ||
-          steps.worker.outputs.review_failed == 'true') }}
+          steps.worker.outputs.review_failed == 'true' ||
+          steps.worker.outputs.review_receipt_required == 'true') }}
         shell: bash
         env:
           GH_TOKEN: ${{ steps.reviewer-token.outputs.token }}
           REVIEW_SKIPPED: ${{ steps.worker.outputs.skipped }}
           REVIEW_ATTEMPTED: ${{ steps.worker.outputs.review_attempted }}
           REVIEW_FAILED: ${{ steps.worker.outputs.review_failed }}
+          REVIEW_RECEIPT_REQUIRED: ${{ steps.worker.outputs.review_receipt_required }}
         run: |
           ./scripts/review-publication.sh verify

@@ -55,16 +55,22 @@ and any inline `comments`, then run:
 
 The helper reconciles this attempt's reviews and any reviewer-owned pending
 review, validates inline locations against paginated PR-file patches, then checks
-live eligibility immediately before submission. A known false
-result stops before POST and can skip. A read error or incomplete eligibility
-response is a failure, not evidence of staleness. A head can still move after a
-valid check; HTTP 422 alone does not establish a broken freshness gate.
+live eligibility immediately before submission. An initially ineligible PR stops
+before POST and can skip. A head can still move after a valid check; HTTP 422
+alone does not establish a broken freshness gate.
+
+A pre-publication read error or incomplete eligibility response returns failure
+and records `review_receipt_required=true`, not a submission attempt. Retry the
+helper with the same output file after checking the error; healthy reads can
+still lead to publication while eligible. If eligibility becomes false, stop
+without POST and report incomplete publication, not a skip. Until a review is
+verified, the required receipt cannot pass, even if the worker claims a skip.
 
 `review_attempted=true` is recorded before POST, not only after GitHub accepts it.
 A rejected or uncertain request is reconciled and records `review_failed=true`,
-even when no review persisted or an accepted review is found. Keep these outputs;
-do not overwrite them or classify the attempt as skipped. Do not resubmit after
-a failed request in this attempt. An eligible replacement head or rerun receives
+even when no review persisted or an accepted review is found. Keep all publication
+outputs; do not overwrite them or classify the attempt as skipped. Do not resubmit
+after a failed request in this attempt. An eligible replacement head or rerun receives
 its own assessment and marker; later success does not erase the earlier failure.
 
 Local request-format, inline-location, or self-approval errors can be corrected
@@ -79,8 +85,8 @@ After an accepted POST, a failed read or a review not yet visible is an unverifi
 outcome, not a permanent publication failure. Retry the helper with the same
 request and output file to reconcile without another POST. A later exact
 read-back can complete publication; the attempted flag keeps the receipt
-mandatory throughout. Failed POSTs, pre-publication API errors, and conflicting
-read-backs remain failed even after a later matching read-back.
+mandatory throughout. Failed POSTs and conflicting read-backs remain failed
+even after a later matching read-back.
 
 The helper verifies the read-back identity, SHA, event, marker, and exact body.
 An already verified review is reused without another POST; conflicting or pending
@@ -92,8 +98,9 @@ then report the actual result and any unresolved reconciliation.
 - Write review bodies and summaries as literal Markdown, without shell
   interpretation. Preserve backticks and exact resolved environment values.
 - Append to the existing `GITHUB_STEP_SUMMARY`; preserve its content.
-- Skip stale or covered assignments only before any submission attempt: write `skipped=true`
-  to `GITHUB_OUTPUT`, explain in `GITHUB_STEP_SUMMARY`, and make no GitHub changes.
+- Skip stale or covered assignments only before any submission attempt or publication
+  read failure: write `skipped=true` to `GITHUB_OUTPUT`, explain in `GITHUB_STEP_SUMMARY`,
+  and make no GitHub changes.
 - Prior Factory reviews count as coverage only after verified successful,
   non-skipped source completion, including the posted-review check. If allowed reads
   cannot prove this, note the limitation and perform the assessment; do not change
@@ -153,11 +160,12 @@ writes, or bypassing verification.
 
 The read-only receipt check requires a submitted bot comment review or approval
 with the expected commit, visible full SHA, and run marker, unless skipped before
-any submission attempt. It runs after worker failures too, unless cancelled.
-Only a skip without attempted or failed publication bypasses the API receipt;
-the receipt step itself is skipped in that case, not reported as a successful
-verification. A failed POST still fails even if reconciliation finds an accepted
-review. It proves neither review quality nor live event delivery.
+any submission attempt or publication read failure. It runs after worker failures
+too, unless cancelled. Only a skip without a submission attempt, persistent failure,
+or required receipt bypasses the API receipt. The receipt step itself is skipped
+in that case, not reported as a successful verification. A failed POST still fails
+even if reconciliation finds an accepted review. It proves neither review quality
+nor live event delivery.
 
 Same-head redispatch must preserve active reviews and deliver findings once.
 After post-submission failure, timeout, or cancellation, only a fresh successful

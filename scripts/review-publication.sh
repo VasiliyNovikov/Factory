@@ -10,10 +10,13 @@ error() {
 }
 
 unverified() {
-  if [[ -n "$output_file" ]] && grep -qx 'review_attempted=true' "$output_file"; then
-    error "$1 Retry reconciliation only; do not resubmit or skip."
+  if [[ -n "$output_file" ]]; then
+    if grep -qx 'review_attempted=true' "$output_file"; then
+      error "$1 Retry reconciliation only; do not resubmit or skip."
+    fi
+    printf 'review_receipt_required=true\n' >> "$output_file"
   fi
-  fail "$1"
+  error "$1 Retry the read-only checks; do not skip."
 }
 
 fail() {
@@ -33,7 +36,8 @@ case "$mode" in
   verify)
     [[ $# == 1 ]] || fail 'Usage: review-publication.sh verify'
     if [[ "${REVIEW_SKIPPED:-}" == true &&
-          "${REVIEW_ATTEMPTED:-}" != true && "${REVIEW_FAILED:-}" != true ]]; then
+          "${REVIEW_ATTEMPTED:-}" != true && "${REVIEW_FAILED:-}" != true &&
+          "${REVIEW_RECEIPT_REQUIRED:-}" != true ]]; then
       printf 'Skipped before publication; no receipt required.\n'
       exit 0
     fi
@@ -115,13 +119,13 @@ fi
 
 if jq -e '(.comments // []) | length > 0' "$request_file" >/dev/null; then
   files=$(gh api --paginate --slurp "$endpoint/files") \
-    || fail 'Could not read PR files for inline comment validation.'
+    || unverified 'Could not read PR files for inline comment validation.'
   printf '%s\n' "$files" |
     python3 "$(dirname -- "${BASH_SOURCE[0]}")/validate-review-comments.py" "$request_file" \
     || error 'Correct the inline comments or move the findings into the review body before publication.'
 fi
 
-pr=$(gh api "$endpoint") || fail 'Could not read live PR eligibility.'
+pr=$(gh api "$endpoint") || unverified 'Could not read live PR eligibility.'
 eligible=$(jq -er --arg repo "$GITHUB_REPOSITORY" --arg sha "$PR_HEAD_SHA" '
   if ((.state == "open" or .state == "closed") and
       (.draft | type == "boolean") and (.head.sha | type == "string") and
@@ -134,8 +138,11 @@ eligible=$(jq -er --arg repo "$GITHUB_REPOSITORY" --arg sha "$PR_HEAD_SHA" '
         .head.sha == $sha) | tostring
   else error("Incomplete PR eligibility response")
   end
-' <<< "$pr") || fail 'Could not establish live PR eligibility.'
+' <<< "$pr") || unverified 'Could not establish live PR eligibility.'
 if [[ "$eligible" != true ]]; then
+  if grep -qx 'review_receipt_required=true' "$output_file"; then
+    error 'PR is no longer eligible after a read failure; publication remains incomplete, not skipped.'
+  fi
   printf 'skipped=true\n' >> "$output_file"
   printf 'Skipped: PR is no longer open, non-draft, same-repository, and at the assigned head.\n'
   exit 0

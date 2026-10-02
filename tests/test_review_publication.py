@@ -209,19 +209,78 @@ class ReviewPublicationTests(unittest.TestCase):
                                  REVIEW_ATTEMPTED="true")
         self.assertNotEqual(result.returncode, 0)
 
-    def test_initial_read_error_cannot_become_successful_skip(self):
+    def test_prepublication_read_errors_recover_without_skip(self):
+        self.payload["comments"] = [{"path": "a.txt", "line": 1, "body": "Finding"}]
+        self.request.write_text(json.dumps(self.payload))
+        for responses in (
+            [self.reviews(status=1, error="HTTP 502")],
+            [self.reviews(), self.files(status=1, error="HTTP 502")],
+            [self.reviews(), self.files(), self.live_pr(status=1, error="HTTP 502")],
+        ):
+            with self.subTest(endpoint=responses[-1]["endpoint"]):
+                self.output.write_text("")
+                result = self.run_helper("publish", responses)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(self.outputs(), {"review_receipt_required": "true"})
+                self.assertTrue(all(call["method"] == "GET" for call in self.calls))
+                result = self.run_helper("verify", [self.reviews()],
+                                         REVIEW_SKIPPED="true", REVIEW_RECEIPT_REQUIRED="true")
+                self.assertNotEqual(result.returncode, 0)
+                result = self.run_helper("publish", [
+                    self.reviews(), self.files(), self.live_pr(), self.post(),
+                    self.reviews([self.review()]),
+                ])
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(
+                    [call["request"] for call in self.calls if call["method"] == "POST"],
+                    [self.payload],
+                )
+                self.assertEqual(self.outputs(), {
+                    "review_receipt_required": "true", "review_attempted": "true",
+                })
+                result = self.run_helper("publish", [self.reviews([self.review()])])
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual([call["endpoint"] for call in self.calls],
+                                 [self.endpoint + "/reviews"])
+                result = self.run_helper("verify", [self.reviews([self.review()])],
+                                         REVIEW_SKIPPED="true", REVIEW_ATTEMPTED="true",
+                                         REVIEW_RECEIPT_REQUIRED="true")
+                self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_prepublication_read_error_then_stale_remains_incomplete(self):
+        result = self.run_helper("publish", [self.reviews(status=1, error="HTTP 502")])
+        self.assertNotEqual(result.returncode, 0)
+        self.pr["head"]["sha"] = "b" * 40
+        result = self.run_helper("publish", [self.reviews(), self.live_pr()])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.outputs(), {"review_receipt_required": "true"})
+        self.assertTrue(all(call["method"] == "GET" for call in self.calls))
+        result = self.run_helper("verify", [self.reviews()],
+                                 REVIEW_SKIPPED="true", REVIEW_RECEIPT_REQUIRED="true")
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_prepublication_read_recovery_does_not_clear_post_failure(self):
+        result = self.run_helper("publish", [self.reviews(status=1, error="HTTP 502")])
+        self.assertNotEqual(result.returncode, 0)
         result = self.run_helper("publish", [
-            self.reviews(status=1, error="HTTP 403"),
+            self.reviews(), self.live_pr(), self.post(status=1, error="HTTP 422"),
+            self.reviews(),
         ])
         self.assert_failed(result)
-        self.assertNotIn("review_attempted", self.outputs())
-        result = self.run_helper("verify", [self.reviews()],
-                                 REVIEW_SKIPPED="true", REVIEW_FAILED="true")
-        self.assertNotEqual(result.returncode, 0)
-        result = self.run_helper("publish", [self.reviews()])
+        self.assertEqual(self.outputs(), {
+            "review_receipt_required": "true", "review_attempted": "true",
+            "review_failed": "true",
+        })
+        self.assertEqual([call["request"] for call in self.calls if call["method"] == "POST"],
+                         [self.payload])
+        result = self.run_helper("publish", [self.reviews([self.review()])])
         self.assert_failed(result)
         self.assertEqual([call["endpoint"] for call in self.calls],
                          [self.endpoint + "/reviews"])
+        result = self.run_helper("verify", [self.reviews([self.review()])],
+                                 REVIEW_SKIPPED="true", REVIEW_ATTEMPTED="true",
+                                 REVIEW_RECEIPT_REQUIRED="true", REVIEW_FAILED="true")
+        self.assertNotEqual(result.returncode, 0)
 
     def test_prior_unverified_attempt_never_posts_again(self):
         self.output.write_text("review_attempted=true\n")
@@ -243,8 +302,9 @@ class ReviewPublicationTests(unittest.TestCase):
             with self.subTest(response=response):
                 self.output.write_text("")
                 result = self.run_helper("publish", [self.reviews(), response])
-                self.assert_failed(result)
-                self.assertNotIn("review_attempted", self.outputs())
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(self.outputs(), {"review_receipt_required": "true"})
+                self.assertTrue(all(call["method"] == "GET" for call in self.calls))
 
     def test_invalid_request_and_self_approval_never_post(self):
         for change in ({"commit_id": "b" * 40}, {"comments": None}, {"comments": {}}):
@@ -388,14 +448,23 @@ class ReviewPublicationTests(unittest.TestCase):
                 self.assertNotEqual(result.returncode, 0)
                 self.assertEqual(self.outputs(), {})
 
-    def test_inline_file_read_failure_is_not_a_skip(self):
+    def test_inline_file_read_failure_can_recover_with_body_only_review(self):
         self.payload["comments"] = [{"path": "a.txt", "line": 1, "body": "Finding"}]
         self.request.write_text(json.dumps(self.payload))
         result = self.run_helper("publish", [
             self.reviews(), self.files(status=1, error="HTTP 502"),
         ])
-        self.assert_failed(result)
-        self.assertNotIn("review_attempted", self.outputs())
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.outputs(), {"review_receipt_required": "true"})
+        self.payload["body"] += "Finding from a.txt:1\n"
+        del self.payload["comments"]
+        self.request.write_text(json.dumps(self.payload))
+        result = self.run_helper("publish", [
+            self.reviews(), self.live_pr(), self.post(), self.reviews([self.review()]),
+        ])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([call["request"] for call in self.calls if call["method"] == "POST"],
+                         [self.payload])
 
     def test_inline_validation_is_followed_by_live_eligibility(self):
         self.payload["comments"] = [{"path": "a.txt", "line": 1, "body": "Finding"}]
