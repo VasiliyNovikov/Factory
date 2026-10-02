@@ -67,6 +67,8 @@ Use the owning guide for each workflow's behavior, permissions, and verification
 |---|---|
 | App identities and credentials | [GitHub App setup](docs/factory/github-app.md) |
 | Event routing and dispatch | [Factory router](docs/factory/factory-router.md) |
+| Shared worker eligibility and dispatch | [Routing policy](docs/factory/routing-policy.md) |
+| Periodic lifecycle recovery | [Factory maintenance](docs/factory/factory-maintenance.md) |
 | PR assessments | [PR review](docs/factory/pr-review.md) |
 | Readiness and label handoff | [Issue triage](docs/factory/issue-triage.md) |
 | Code, feedback, base merges, and sub-issues | [Issue implementation](docs/factory/issue-implementation.md) |

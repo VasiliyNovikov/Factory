@@ -81,10 +81,11 @@ Actions access. Both create only new unlabeled findings, verified with the App t
 unlabeled findings for triage, never PRs or profile edits. It needs no Actions or
 workflow-write access.
 
-The [router](factory-router.md) needs no App token: it uses built-in Actions write
-for dispatch and Contents/Issues/Pull requests read for analysis. Workers run on
-the default branch with their own permissions. Reviewer-App submissions trigger
-the native router event without an Actions-write grant.
+The [router](factory-router.md) and [maintenance](factory-maintenance.md) need no
+App token: they use built-in Actions write for dispatch and
+Contents/Issues/Pull requests read for analysis. Workers run on the default branch
+with their own permissions. Reviewer-App submissions trigger the native router
+event without an Actions-write grant.
 
 ## Token names and identities
 
@@ -96,8 +97,8 @@ App jobs expose **two credentials through three standard variables**:
 | `COPILOT_GITHUB_TOKEN` | The same built-in token | Explicit authentication for Copilot model requests |
 | `GH_TOKEN` | Generated Factory or reviewer App installation token | Preferred authentication for `gh`, acting as `<app-slug>[bot]` |
 
-`GH_TOKEN` selects the GitHub CLI credential, not its type; the router uses the
-built-in token there.
+`GH_TOKEN` selects the GitHub CLI credential, not its type; routing and maintenance
+use the built-in token there.
 
 The [shared action](../examples/ai-tools.md#shared-factory-action) sets these
 variables only during AI invocation, using the caller's `gh-token` input:
