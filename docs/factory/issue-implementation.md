@@ -16,6 +16,10 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Follow the [shared pagination guidance](../../AGENTS.md#github-cli-pagination)
   for node-bounded, complete discussion and provenance reads.
 - Act on feedback that still applies, even from older heads or outdated lines.
+- Apply [participant approval](participant-approval.md) to the original issue
+  scope and individual requests throughout the discussion. Only authorized
+  requests count as outstanding feedback; a trusted triggering comment does not
+  adopt unrelated external feedback.
 - Tie review-worker findings to the source review's
   [verified reviewed SHA](factory-router.md#feedback-and-event-handling), not a
   later API `commit_id` or the run's default-branch `head_sha`.
@@ -42,6 +46,10 @@ Commit identity does not establish GitHub authentication or permissions.
 
 - Recheck eligibility and remote revisions before edits or GitHub mutations.
   The dispatched `head_sha` alone is not a freshness check.
+- Recheck any required owner approval before implementation, decomposition, or
+  maintenance and their mutations. Missing, ambiguous, or revoked approval needs
+  an owner-decision hold, not a code change. Existing handoff labels and a Factory
+  PR do not replace approval; explain the hold using the normal reporting contract.
 - The original issue must be open, with `triaged` and exactly one tracking label:
   `factory-issue-NUMBER`, matching its number.
 - Each issue owns `factory/issue-NUMBER`. Do not duplicate or overwrite work in
@@ -246,6 +254,8 @@ the independent PR-review worker.
   - The PR link when available.
   - Child links and incomplete split work, if any.
   - Addressed/outstanding feedback with thread links.
+  - Required owner approval with its source link and adopted scope, or the
+    specific outstanding owner decision.
 - Confirm claimed outcomes in fresh remote state:
   - The checked commit and eligible PR metadata for code changes.
   - Native child links and eligible parent for splits.

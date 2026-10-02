@@ -17,7 +17,7 @@
 
 ## AI-led work
 
-- State goals, when to act or skip, constraints, and verifiable outcomes. Let
+- State goals, when to act, hold, or skip, constraints, and verifiable outcomes. Let
   capable models choose how to meet them with the available tools and context.
 - A clear request may already be enough. Do not turn a short prompt into a large
   spec; add only missing context or decisions needed to act and verify the result.
@@ -25,6 +25,8 @@
   link to it and supply only the task and run-specific context.
 - Prescribe procedures only for a required contract, safety boundary, or known
   failure. Remove unnecessary mechanisms, not just rename them.
+- Strengthen shared rules when review reveals a gap, rather than adding a checklist
+  per scenario. Consolidate overlaps without weakening required checks.
 - Design for capable models and future improvements, without weakening
   permissions, safety checks, or result verification.
 - When changing prompts or agent instructions (including workflow prompts, this
@@ -66,6 +68,7 @@ Use the owning guide for each workflow's behavior, permissions, and verification
 | Area | Guidance |
 |---|---|
 | App identities and credentials | [GitHub App setup](docs/factory/github-app.md) |
+| External requests and owner decisions | [Participant approval](docs/factory/participant-approval.md) |
 | Event routing and dispatch | [Factory router](docs/factory/factory-router.md) |
 | PR assessments | [PR review](docs/factory/pr-review.md) |
 | Readiness and label handoff | [Issue triage](docs/factory/issue-triage.md) |
@@ -73,6 +76,10 @@ Use the owning guide for each workflow's behavior, permissions, and verification
 | Run-history analysis | [Workflow diagnostics](docs/factory/workflow-diagnostics.md) |
 | Full source analysis | [Repository review](docs/factory/repository-review.md) |
 | Model selection and improvement findings | [Model profile improvement](docs/factory/model-profile-improvement.md) |
+
+Participant approval is AI-owned: external requests need scoped owner approval
+before substantive work. Router/triage may run to request it; this is not a
+pre-Copilot gate. Workers recheck each request under the shared policy.
 
 Factory checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
 Eligible submitted reviews are the router exception: they run PR-merge-revision

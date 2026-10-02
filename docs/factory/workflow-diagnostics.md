@@ -175,3 +175,6 @@ workflow tests.
 - Only the coordinator may mutate GitHub, and only to create new findings issues.
   Same-repository scope is not a sandbox: analysis still encounters untrusted
   text while the coordinator holds Issues write access.
+- Apply [participant approval](participant-approval.md) to external discussion
+  requests. Republishing them as Factory findings does not confer approval;
+  findings must come from this workflow's own evidenced investigation.
