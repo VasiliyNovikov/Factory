@@ -88,5 +88,5 @@ jobs:
         run: |
           receipt_script=$(mktemp "$RUNNER_TEMP/review-publication.XXXXXX")
           trap 'rm -f -- "$receipt_script"' EXIT
-          git show "${GITHUB_WORKFLOW_SHA}:scripts/review-publication.sh" > "$receipt_script"
+          git show "${GITHUB_WORKFLOW_SHA:?trusted workflow revision is required}:scripts/review-publication.sh" > "$receipt_script"
           bash "$receipt_script" verify
