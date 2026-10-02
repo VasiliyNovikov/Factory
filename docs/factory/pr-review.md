@@ -28,9 +28,9 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
 
 ## Review outcome
 
-- Find actionable bugs, regressions, security issues, or missing necessary tests
-  introduced by the PR. Avoid speculative or style-only findings; follow the
-  [test-value policy](../../AGENTS.md#test-value-and-verification).
+- Find actionable bugs, regressions, security issues, unnecessary complexity, or
+  missing necessary tests introduced by the PR. Avoid speculative or style-only
+  findings; follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Submit exactly one review while eligible, with:
   - `commit_id` set to `PR_HEAD_SHA`.
   - The full reviewed SHA visible in the body.
@@ -42,6 +42,19 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
 - Report executed checks/experiments, checked revisions, inputs, observed results,
   and limitations in the review. Distinguish static inspection from runtime evidence.
 - Never approve incomplete work. Report incomplete reviews and API failures accurately.
+
+### Simplicity
+
+Always ask: can this implementation be simpler while meeting the same requirements?
+Apply the [shared simplicity principles](../../AGENTS.md#working-style): question
+unnecessary abstractions or indirection, duplication, and missed reuse of existing
+logic or tools.
+
+Report a simplification only with a concrete simpler alternative, its practical
+benefit, and how it preserves intended behavior and requirements. Do not trade
+correctness, clarity, maintainability, or safety for fewer lines. An already-simple
+implementation needs no finding; do not manufacture faults, request taste-only
+changes, or expand the work into unrelated refactoring.
 
 ## Publication
 
