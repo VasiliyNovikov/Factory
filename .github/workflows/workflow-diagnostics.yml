@@ -45,10 +45,11 @@ jobs:
           permission-pull-requests: read
           permission-issues: write
 
-      - name: Analyze workflows with parallel Copilot subagents
+      - name: Analyze workflows with parallel Copilot sessions
         uses: ./factory/.github/actions/ai
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
+          profile: default
           prompt: >-
             Diagnose target ${{ env.TARGET_REPOSITORY }}'s workflow runs and create issues for actionable findings.
             Follow AGENTS.md and docs/factory/workflow-diagnostics.md in FACTORY_ROOT.
