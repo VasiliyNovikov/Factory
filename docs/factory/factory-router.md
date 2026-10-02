@@ -63,7 +63,8 @@ is not a trigger, so base-update discovery belongs here, not in each implementer
 The job condition makes the noted payload-only skips zero-step jobs, before
 checkout or AI setup. Copilot decides the rest.
 
-- `factory-worker-bot[bot]` conversation comments and submitted reviews (job-filtered).
+- `factory-worker-bot[bot]` conversation comments (created or edited) and submitted
+  reviews (job-filtered by author, including when someone else edits the comment).
 - Approvals (job-filtered for submitted reviews, regardless of author).
 - Unrelated labels or events (job-filtered for non-`triaged` issue-label events).
 - Closed targets or fork PRs (job-filtered for fork PR lifecycle events and
@@ -85,15 +86,24 @@ checkout or AI setup. Copilot decides the rest.
 - Read worker-discovery, PR-review, and required provenance collections completely,
   following the [shared pagination guidance](../../AGENTS.md#github-cli-pagination).
 - Humans and other bots may provide feedback.
-- Main conversation comments and submitted reviews trigger routing.
+- Created or edited issue/PR conversation comments and submitted reviews trigger routing.
+- For conversation-comment edits, read the current text and full discussion;
+  apply the same eligibility and authorization rules as for other feedback.
+  - Compare the current request with already-handled feedback and verified outcomes.
+    Route newly actionable changes, even on a previously handled comment ID;
+    skip cosmetic edits or requests already covered.
+  - Before dispatch, reconcile earlier creation/edit dispatches and pending/running
+    workers. Reuse coverage only when it includes the current feedback; a matching
+    comment ID or active run alone does not establish coverage. Avoid equivalent
+    assignments and duplicate replies, retaining workers' freshness and reply checks.
 - Standalone inline comments and replies arrive as empty-body `COMMENTED`
   reviews through the existing `pull_request_review: submitted` trigger.
   - Assess non-Factory inline comments and replies like other submitted reviews.
   - Read the review's inline comments and complete relevant thread history
     before deciding; an empty review body alone is not a reason to skip
     actionable feedback.
-- Edited comments do not trigger routing.
-  TODO: Support routing for edited comments.
+- Edits to inline review comments, review bodies, and issue/PR bodies remain
+  unsupported as routing triggers.
 - Reviewer-App submissions use `pull_request_review: submitted`, not PR-review
   `workflow_run` events, to avoid duplicate delivery.
 - Before routing reviewer-App findings, verify:
@@ -122,6 +132,8 @@ checkout or AI setup. Copilot decides the rest.
 - `router_run_id` identifies this router run.
 - `source` is a JSON-encoded object: `event`, `action`, and applicable `issue_number`, `pr_number`,
   `comment_id`, `review_id`, `run_id`, `run_attempt`.
+- Conversation-comment edits use `event: "issue_comment"`, `action: "edited"`,
+  and the original `comment_id`, without new worker inputs.
 - Include the verified source assessment's `run_id`/`run_attempt` for reviewer-App findings.
 - Push maintenance includes `event: "push"`, `ref`, and `after` in `source` for
   provenance, not as live revision checks.
@@ -168,4 +180,7 @@ checkout or AI setup. Copilot decides the rest.
 - Other router events and all workers use the default branch. Checkouts use
   `github.workflow_sha`; manual non-default jobs skip in versions with the guard.
 - Static checks do not establish AI adherence or end-to-end event delivery.
-  A PR cannot exercise its changed default-branch push trigger.
+  A PR cannot exercise its changed default-branch push or
+  [`issue_comment`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issue_comment)
+  triggers. After merge, link an edited test-issue comment to its router run and
+  verified worker dispatch or reasoned skip.
