@@ -26,25 +26,6 @@ jobs:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
 
-      - name: Bind assessment subagents to the coordinator profile
-        run: |
-          copilot_home="$RUNNER_TEMP/workflow-diagnostics-copilot-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          mkdir -p "$copilot_home"
-          cat > "$copilot_home/settings.json" <<'JSON'
-          {
-            "subagents": {
-              "agents": {
-                "explore": {
-                  "model": "inherit",
-                  "effortLevel": "inherit",
-                  "contextTier": "inherit"
-                }
-              }
-            }
-          }
-          JSON
-          printf 'COPILOT_HOME=%s\n' "$copilot_home" >> "$GITHUB_ENV"
-
       - name: Create Factory diagnostics token
         id: factory-token
         uses: actions/create-github-app-token@v3
@@ -55,7 +36,7 @@ jobs:
           permission-pull-requests: read
           permission-issues: write
 
-      - name: Analyze workflows with parallel Copilot subagents
+      - name: Analyze workflows with parallel Copilot sessions
         uses: ./.github/actions/ai
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
