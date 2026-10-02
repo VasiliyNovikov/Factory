@@ -158,6 +158,11 @@ writes, or bypassing verification.
 
 ## Verification limits
 
+The caller loads the receipt helper from the committed `GITHUB_WORKFLOW_SHA`
+into a temporary file, rather than running the worker's possibly changed
+checkout. This protects against accidental checkout drift, not deliberate
+same-runner tampering.
+
 The read-only receipt check requires a submitted bot comment review or approval
 with the expected commit, visible full SHA, and run marker, unless skipped before
 any submission attempt or publication read failure. It runs after worker failures

@@ -86,4 +86,7 @@ jobs:
           REVIEW_FAILED: ${{ steps.worker.outputs.review_failed }}
           REVIEW_RECEIPT_REQUIRED: ${{ steps.worker.outputs.review_receipt_required }}
         run: |
-          ./scripts/review-publication.sh verify
+          receipt_script=$(mktemp "$RUNNER_TEMP/review-publication.XXXXXX")
+          trap 'rm -f -- "$receipt_script"' EXIT
+          git show "${GITHUB_WORKFLOW_SHA}:scripts/review-publication.sh" > "$receipt_script"
+          bash "$receipt_script" verify
