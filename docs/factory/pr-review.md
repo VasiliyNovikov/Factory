@@ -108,12 +108,11 @@ It runs at the PR merge revision, with the [accepted risk](factory-router.md#acc
 - A missing installation grant needs an owner-approved correction, not weaker
   rules, a bypass, or a speculative increase in the review job's token scope.
 
-For [#77](https://github.com/VasiliyNovikov/Factory/issues/77), live checks compared
-current-head approvals, GitHub's review decision, effective rules, and the review
-jobs' token permissions. After the owner-reported installation grant, the reviewer
-App's approvals counted without expanding the Contents-read job token or weakening
-protections. Private App settings were not independently inspected; these results
-do not establish qualification under every review policy.
+Live checks compared current-head approvals, GitHub's review decision, effective
+rules, and the review jobs' token permissions. After the owner-reported installation
+grant, the reviewer App's approvals counted without expanding the Contents-read
+job token or weakening protections. Private App settings were not independently
+inspected; these results do not establish qualification under every review policy.
 
 ## Accepted risk: PR code runs in the reviewer job
 
