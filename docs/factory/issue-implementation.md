@@ -20,6 +20,23 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
   later API `commit_id` or the run's default-branch `head_sha`.
 - CI evidence must match the current PR head or merge revision.
 
+## Commit identity
+
+The caller supplies `FACTORY_LOGIN`, `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`,
+`GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` through the environment.
+For the initial identity check, use `git var GIT_AUTHOR_IDENT` and
+`git var GIT_COMMITTER_IDENT`, which inspect Git's effective identity.
+Unset `git config user.name` or `git config user.email` is valid here and must
+not abort the following read-only eligibility checks.
+
+Validate both effective names against `FACTORY_LOGIN` and both effective emails
+against `<bot-user-id>+<FACTORY_LOGIN>@users.noreply.github.com`, using the
+Factory bot's numeric GitHub user ID as the caller does.
+Command success or nonempty output alone is insufficient. Missing or mismatched
+author or committer identity is an explicit failure; report it without replacing
+the identity, adding duplicate Git configuration, or suppressing errors.
+Commit identity does not establish GitHub authentication or permissions.
+
 ## Eligibility and ownership
 
 - Recheck eligibility and remote revisions before edits or GitHub mutations.
@@ -77,8 +94,8 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 ## Implement or reply
 
 - Address the request and applicable outstanding feedback with focused, verified
-  changes. Use the provided Factory commit identity; avoid speculative edits and
-  empty commits.
+  changes. Use the [verified Factory commit identity](#commit-identity); avoid
+  speculative edits and empty commits.
 - Create or update one PR labeled `triaged` and `factory-issue-NUMBER`, with
   `Fixes #NUMBER`, a change summary, and actual verification results.
 - Answer ordinary comments and review summaries in their main conversation;
