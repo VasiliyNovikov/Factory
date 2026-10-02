@@ -70,8 +70,8 @@ Removing environment variables does not isolate credentials.
 ## Workflow diagnostics
 
 [Workflow diagnostics](docs/factory/workflow-diagnostics.md) examines same-repository
-workflow runs with parallel read-only subagents. Its first invocation records a
-boundary without analysis; later runs compare observed execution and GitHub
+workflow runs with parallel read-only assessment sessions. Its first invocation
+records a boundary without analysis; later runs compare observed execution and GitHub
 outcomes with the contracts used by each assessed run, including successful runs
 and expected skips or handoffs. Results record supported conclusions, discrepancies,
 and coverage gaps; actionable findings follow the existing issue path.

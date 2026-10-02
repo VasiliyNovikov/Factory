@@ -35,10 +35,11 @@ jobs:
           permission-pull-requests: read
           permission-issues: write
 
-      - name: Analyze workflows with parallel Copilot subagents
+      - name: Analyze workflows with parallel Copilot sessions
         uses: ./.github/actions/ai
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
+          profile: default
           budget: 30
           prompt: >-
             Diagnose ${{ github.repository }}'s workflow runs and create issues for actionable findings.
