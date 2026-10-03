@@ -180,8 +180,7 @@ class ReviewPublicationTests(unittest.TestCase):
                 result = self.run_helper("publish", [self.reviews([], [self.review()])])
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertTrue(all(call["method"] == "GET" for call in self.calls))
-                result = self.run_helper("verify", [self.reviews([], [self.review()])],
-                                         REVIEW_ATTEMPTED="true")
+                result = self.run_helper("verify", [self.reviews([], [self.review()])])
                 self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_rejection_remains_failure_even_if_worker_claims_skip(self):
@@ -192,8 +191,7 @@ class ReviewPublicationTests(unittest.TestCase):
         ])
         self.assert_failed(result)
         self.assertEqual(self.outputs()["review_attempted"], "true")
-        result = self.run_helper("verify", [self.reviews()], REVIEW_SKIPPED="true",
-                                 REVIEW_ATTEMPTED="true", REVIEW_FAILED="true")
+        result = self.run_helper("verify", [self.reviews()], REVIEW_FAILED="true")
         self.assertNotEqual(result.returncode, 0)
         result = self.run_helper("publish", [self.reviews()])
         self.assert_failed(result)
@@ -210,14 +208,26 @@ class ReviewPublicationTests(unittest.TestCase):
         result = self.run_helper("publish", [self.reviews([self.review()])])
         self.assert_failed(result)
         result = self.run_helper("verify", [self.reviews([self.review()])],
-                                 REVIEW_SKIPPED="true", REVIEW_ATTEMPTED="true",
                                  REVIEW_FAILED="true")
         self.assertNotEqual(result.returncode, 0)
 
-    def test_attempt_flag_alone_prevents_missing_receipt_skip(self):
-        result = self.run_helper("verify", [self.reviews()], REVIEW_SKIPPED="true",
-                                 REVIEW_ATTEMPTED="true")
+    def test_missing_receipt_fails(self):
+        result = self.run_helper("verify", [self.reviews()])
         self.assertNotEqual(result.returncode, 0)
+
+    def test_receipt_condition_preserves_failure_overrides(self):
+        step = WORKFLOW.read_text().split("- name: Verify review was posted\n", 1)[1]
+        condition = step.split("if:", 1)[1].split("shell:", 1)[0].strip()
+        condition = condition.removeprefix(">-").strip()
+        gate = re.fullmatch(r"\$\{\{\s*!cancelled\(\)\s*&&\s*\((.*?)\)\s*\}\}",
+                            condition, re.DOTALL)
+        self.assertIsNotNone(gate, "Receipt must run unless cancelled, subject to its skip gate")
+        self.assertEqual({" ".join(term.split()) for term in gate[1].split("||")}, {
+            "steps.worker.outputs.skipped != 'true'",
+            "steps.worker.outputs.review_attempted == 'true'",
+            "steps.worker.outputs.review_failed == 'true'",
+            "steps.worker.outputs.review_receipt_required == 'true'",
+        })
 
     def test_prepublication_read_errors_recover_without_skip(self):
         self.payload["comments"] = [{"path": "a.txt", "line": 1, "body": "Finding"}]
@@ -233,8 +243,7 @@ class ReviewPublicationTests(unittest.TestCase):
                 self.assertNotEqual(result.returncode, 0)
                 self.assertEqual(self.outputs(), {"review_receipt_required": "true"})
                 self.assertTrue(all(call["method"] == "GET" for call in self.calls))
-                result = self.run_helper("verify", [self.reviews()],
-                                         REVIEW_SKIPPED="true", REVIEW_RECEIPT_REQUIRED="true")
+                result = self.run_helper("verify", [self.reviews()])
                 self.assertNotEqual(result.returncode, 0)
                 result = self.run_helper("publish", [
                     self.reviews(), self.files(), self.live_pr(), self.post(),
@@ -252,9 +261,7 @@ class ReviewPublicationTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual([call["endpoint"] for call in self.calls],
                                  [self.endpoint + "/reviews"])
-                result = self.run_helper("verify", [self.reviews([self.review()])],
-                                         REVIEW_SKIPPED="true", REVIEW_ATTEMPTED="true",
-                                         REVIEW_RECEIPT_REQUIRED="true")
+                result = self.run_helper("verify", [self.reviews([self.review()])])
                 self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_prepublication_read_error_then_stale_remains_incomplete(self):
@@ -265,8 +272,7 @@ class ReviewPublicationTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(self.outputs(), {"review_receipt_required": "true"})
         self.assertTrue(all(call["method"] == "GET" for call in self.calls))
-        result = self.run_helper("verify", [self.reviews()],
-                                 REVIEW_SKIPPED="true", REVIEW_RECEIPT_REQUIRED="true")
+        result = self.run_helper("verify", [self.reviews()])
         self.assertNotEqual(result.returncode, 0)
 
     def test_prepublication_read_recovery_does_not_clear_post_failure(self):
@@ -288,8 +294,7 @@ class ReviewPublicationTests(unittest.TestCase):
         self.assertEqual([call["endpoint"] for call in self.calls],
                          [self.endpoint + "/reviews"])
         result = self.run_helper("verify", [self.reviews([self.review()])],
-                                 REVIEW_SKIPPED="true", REVIEW_ATTEMPTED="true",
-                                 REVIEW_RECEIPT_REQUIRED="true", REVIEW_FAILED="true")
+                                 REVIEW_FAILED="true")
         self.assertNotEqual(result.returncode, 0)
 
     def test_prior_unverified_attempt_never_posts_again(self):
@@ -336,8 +341,7 @@ class ReviewPublicationTests(unittest.TestCase):
         ])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.outputs(), {"review_attempted": "true"})
-        result = self.run_helper("verify", [self.reviews([self.review()])],
-                                 REVIEW_ATTEMPTED="true")
+        result = self.run_helper("verify", [self.reviews([self.review()])])
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_pending_or_conflicting_existing_review_prevents_post(self):
@@ -358,15 +362,13 @@ class ReviewPublicationTests(unittest.TestCase):
         ])
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(self.outputs(), {"review_attempted": "true"})
-        result = self.run_helper("verify", [self.reviews()],
-                                 REVIEW_SKIPPED="true", REVIEW_ATTEMPTED="true")
+        result = self.run_helper("verify", [self.reviews()])
         self.assertNotEqual(result.returncode, 0)
         result = self.run_helper("publish", [self.reviews([self.review()])])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual([call["endpoint"] for call in self.calls],
                          [self.endpoint + "/reviews"])
-        result = self.run_helper("verify", [self.reviews([self.review()])],
-                                 REVIEW_ATTEMPTED="true")
+        result = self.run_helper("verify", [self.reviews([self.review()])])
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_conflicting_success_readback_remains_failed(self):
@@ -378,7 +380,7 @@ class ReviewPublicationTests(unittest.TestCase):
         result = self.run_helper("publish", [self.reviews([self.review()])])
         self.assert_failed(result)
         result = self.run_helper("verify", [self.reviews([self.review()])],
-                                 REVIEW_ATTEMPTED="true", REVIEW_FAILED="true")
+                                 REVIEW_FAILED="true")
         self.assertNotEqual(result.returncode, 0)
 
     def test_invalid_inline_comments_can_be_corrected_before_post(self):
@@ -520,8 +522,7 @@ class ReviewPublicationTests(unittest.TestCase):
         result = self.run_helper("publish", [self.reviews([self.review()])])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.outputs(), {"review_attempted": "true"})
-        result = self.run_helper("verify", [self.reviews([self.review()])],
-                                 REVIEW_ATTEMPTED="true")
+        result = self.run_helper("verify", [self.reviews([self.review()])])
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_receipt_requires_all_existing_contract_fields(self):
@@ -537,12 +538,11 @@ class ReviewPublicationTests(unittest.TestCase):
         scripts = self.directory / "scripts"
         scripts.mkdir()
         (scripts / "review-publication.sh").write_text("exit 0\n")
-        result = self.run_helper("verify", [self.reviews()], REVIEW_ATTEMPTED="true")
+        result = self.run_helper("verify", [self.reviews()])
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual([call["endpoint"] for call in self.calls],
                          [self.endpoint + "/reviews"])
-        result = self.run_helper("verify", [self.reviews([self.review()])],
-                                 REVIEW_ATTEMPTED="true")
+        result = self.run_helper("verify", [self.reviews([self.review()])])
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_replacement_head_uses_its_own_marker_and_assessment(self):

@@ -190,8 +190,8 @@ writes, or bypassing verification.
 ## Verification limits
 
 The receipt query is inline in the caller workflow, independent of the worker's
-checkout and publication helper. It needs no helper loader or duplicate skip
-rule; deliberate same-runner tampering remains an accepted risk.
+checkout and publication helper. Deliberate same-runner tampering remains an
+accepted risk.
 
 The read-only receipt check requires a submitted bot comment review or approval
 with the expected commit, visible full SHA, and run marker, unless skipped before
