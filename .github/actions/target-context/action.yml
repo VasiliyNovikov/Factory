@@ -1,0 +1,51 @@
+name: Set Factory target context
+description: Validate the local-only target and separate Factory tooling from target work
+
+inputs:
+  target-repository:
+    description: Target owner/repository; only the Factory host is enabled
+    default: ${{ github.repository }}
+
+runs:
+  using: composite
+  steps:
+    - name: Validate target and record Factory context
+      shell: bash
+      env:
+        REQUESTED_TARGET: ${{ inputs.target-repository }}
+        FACTORY_REPOSITORY: ${{ github.repository }}
+        EXPECTED_FACTORY_SHA: ${{ github.workflow_sha }}
+        FACTORY_ACTION_PATH: ${{ github.action_path }}
+        TARGET_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+      run: |
+        set -euo pipefail
+        if [[ "$REQUESTED_TARGET" != "$FACTORY_REPOSITORY" ]]; then
+          printf '::error::Only the Factory host is enabled as a target: %s\n' "$FACTORY_REPOSITORY"
+          printf '\nTarget rejected: only %s is enabled; no target work was started.\n' \
+            "$FACTORY_REPOSITORY" >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+        fi
+
+        factory_root=$(cd "$FACTORY_ACTION_PATH/../../.." && pwd)
+        factory_sha=$(git -C "$factory_root" rev-parse HEAD)
+        if [[ "$factory_sha" != "$EXPECTED_FACTORY_SHA" ]]; then
+          printf '::error::Factory checkout does not match the executing workflow revision.\n'
+          printf '\nFactory context failed: tooling checkout does not match the workflow revision.\n' \
+            >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+        fi
+
+        {
+          printf 'FACTORY_REPOSITORY=%s\n' "$FACTORY_REPOSITORY"
+          printf 'FACTORY_SHA=%s\n' "$factory_sha"
+          printf 'FACTORY_ROOT=%s\n' "$factory_root"
+          printf 'TARGET_REPOSITORY=%s\n' "$REQUESTED_TARGET"
+          printf 'TARGET_OWNER=%s\n' "${REQUESTED_TARGET%%/*}"
+          printf 'TARGET_NAME=%s\n' "${REQUESTED_TARGET#*/}"
+          printf 'TARGET_DEFAULT_BRANCH=%s\n' "$TARGET_DEFAULT_BRANCH"
+          printf 'TARGET_ROOT=%s/target\n' "$GITHUB_WORKSPACE"
+          printf 'GH_REPO=%s\n' "$REQUESTED_TARGET"
+        } >> "$GITHUB_ENV"
+        printf '\nFactory tooling/policy: [%s@%s](https://github.com/%s/commit/%s). Target: [%s](https://github.com/%s). Target revisions are checked by the worker.\n' \
+          "$FACTORY_REPOSITORY" "$factory_sha" "$FACTORY_REPOSITORY" "$factory_sha" \
+          "$REQUESTED_TARGET" "$REQUESTED_TARGET" >> "$GITHUB_STEP_SUMMARY"

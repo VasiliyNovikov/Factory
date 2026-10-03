@@ -13,6 +13,12 @@ The [router](docs/factory/factory-router.md) sends events to Copilot workers for
 triage, implementation, or review. It skips irrelevant events; workers check
 current state and verify their results.
 
+Assignments carry an explicit target repository, defaulting to this Factory host
+for existing callers. **External targets are disabled.** Factory tooling and
+policies stay at the executing workflow revision in a separate checkout from
+editable target code and project guidance. APIs, receipts, ownership, concurrency,
+and reports use the [host/target contract](docs/factory/target-context.md).
+
 Triage adds `factory-issue-<number>` before `triaged` to hand off a ready issue.
 Implementation chooses one focused PR or native sub-issues, without duplicating
 child work in a parent PR. Children enter normal triage with their own identity.

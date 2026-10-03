@@ -65,6 +65,7 @@ Use the owning guide for each workflow's behavior, permissions, and verification
 
 | Area | Guidance |
 |---|---|
+| Factory host, target identity, and checkout separation | [Target context](docs/factory/target-context.md) |
 | App identities and credentials | [GitHub App setup](docs/factory/github-app.md) |
 | Event routing and dispatch | [Factory router](docs/factory/factory-router.md) |
 | PR assessments | [PR review](docs/factory/pr-review.md) |
@@ -74,13 +75,15 @@ Use the owning guide for each workflow's behavior, permissions, and verification
 | Full source analysis | [Repository review](docs/factory/repository-review.md) |
 | Model selection and improvement findings | [Model profile improvement](docs/factory/model-profile-improvement.md) |
 
-Factory checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
+Factory tooling checkouts use `github.workflow_sha`; target code and project
+guidance stay separate. Only the Factory-local target is enabled. Manual jobs skip
+non-default refs.
 Eligible submitted reviews are the router exception: they run PR-merge-revision
 code before merge, with the [documented risk](docs/factory/factory-router.md#accepted-risk-router-changes-can-run-before-merge).
 
 Workflows share [`.github/actions/ai`](docs/examples/ai-tools.md#shared-factory-action)
-for installation and invocation. Checkout, credentials, Git identity, prompts,
-and receipt checks stay in callers.
+from the pinned Factory checkout for installation and invocation. Checkout,
+credentials, Git identity, prompts, and receipt checks stay in callers.
 
 [AI setup](docs/examples/ai-tools.md), [PR creation](docs/examples/create-pull-request.md),
 and [issue creation](docs/examples/create-issue.md) are reusable documentation
