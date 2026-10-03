@@ -83,12 +83,12 @@ changes, or expand the work into unrelated refactoring.
   either body: real Markdown or whitespace differences, including terminal
   newlines, must still fail.
 - Verify every submitted inline comment, not just the review receipt. Fully
-  paginate `GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments`
-  to reconcile the comment set and IDs. This listing may omit modern location
-  fields; use the [canonical comment endpoint](https://docs.github.com/en/rest/pulls/comments#get-a-review-comment-for-a-pull-request),
-  `GET /repos/{owner}/{repo}/pulls/comments/{comment_id}`, for location metadata.
-- Match each canonical comment's ID, `REVIEWER_LOGIN`, `pull_request_review_id`,
-  PR, path, and exact submitted raw `.body` using the JSON comparison above.
+  paginate [`GET /repos/{owner}/{repo}/pulls/{pull_number}/comments`](https://docs.github.com/en/rest/pulls/comments#list-review-comments-on-a-pull-request)
+  and reconcile the submitted comment set and IDs with entries whose
+  `pull_request_review_id` is the review ID. Unlike the per-review listing's
+  legacy schema, these entries include canonical location metadata.
+- Match each comment's `REVIEWER_LOGIN`, PR, path, and exact submitted raw
+  `.body` using the JSON comparison above.
   Verify its original publication at `PR_HEAD_SHA`, requiring
   `original_commit_id == PR_HEAD_SHA` and the full submitted location.
   For line-based comments, compare `original_line` and `side`, plus
