@@ -97,12 +97,9 @@ changes, or expand the work into unrelated refactoring.
   a diff position is not a file line number.
 - After later commits, current `line` / `start_line` can move or become null,
   and `commit_id` can change. This does not invalidate a verified original
-  location. Do not mix current and original coordinates across revisions or
-  substitute historical-location verification for the live PR-head check.
-- Missing listing fields require the canonical read, not an automatic mismatch.
-  Unavailable required canonical metadata or failed reads are explicit evidence
+  location. Do not mix current and original coordinates across revisions.
+- Unavailable required canonical metadata or failed reads are explicit evidence
   gaps; conflicting required metadata is a mismatch. Neither is a verified pass.
-  Correct read-back without resubmitting an accepted review.
 - Record the review URL, decision, evidence, and outstanding work in
   `GITHUB_STEP_SUMMARY`. Report failures accurately; API errors are not skips.
 - Include setup, reporting, and verification in the 30-minute budget without
