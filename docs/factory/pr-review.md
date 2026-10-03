@@ -82,6 +82,27 @@ changes, or expand the work into unrelated refactoring.
   byte-comparing that output to the file can falsely fail. Do not trim or normalize
   either body: real Markdown or whitespace differences, including terminal
   newlines, must still fail.
+- Verify every submitted inline comment, not just the review receipt. Fully
+  paginate `GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments`
+  to reconcile the comment set and IDs. This listing may omit modern location
+  fields; use the [canonical comment endpoint](https://docs.github.com/en/rest/pulls/comments#get-a-review-comment-for-a-pull-request),
+  `GET /repos/{owner}/{repo}/pulls/comments/{comment_id}`, for location metadata.
+- Match each canonical comment's ID, `REVIEWER_LOGIN`, `pull_request_review_id`,
+  PR, path, and exact submitted raw `.body` using the JSON comparison above.
+  Verify its original publication at `PR_HEAD_SHA`, requiring
+  `original_commit_id == PR_HEAD_SHA` and the full submitted location.
+  For line-based comments, compare `original_line` and `side`, plus
+  `original_start_line` and `start_side` for a range. For legacy `position`
+  submissions, compare `original_position` at that same original commit:
+  a diff position is not a file line number.
+- After later commits, current `line` / `start_line` can move or become null,
+  and `commit_id` can change. This does not invalidate a verified original
+  location. Do not mix current and original coordinates across revisions or
+  substitute historical-location verification for the live PR-head check.
+- Missing listing fields require the canonical read, not an automatic mismatch.
+  Unavailable required canonical metadata or failed reads are explicit evidence
+  gaps; conflicting required metadata is a mismatch. Neither is a verified pass.
+  Correct read-back without resubmitting an accepted review.
 - Record the review URL, decision, evidence, and outstanding work in
   `GITHUB_STEP_SUMMARY`. Report failures accurately; API errors are not skips.
 - Include setup, reporting, and verification in the 30-minute budget without
