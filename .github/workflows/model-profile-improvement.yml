@@ -14,7 +14,6 @@ jobs:
       group: model-profile-improvement
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     permissions:
       contents: read
       copilot-requests: write
@@ -42,6 +41,7 @@ jobs:
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
           profile: review
+          budget: 30
           prompt: >-
             Evaluate model profile improvements for every current Factory workflow in
             ${{ github.repository }}, prioritizing intelligence, then speed, then cost.
@@ -53,4 +53,3 @@ jobs:
             record per-workflow decisions,
             dated evidence, and limitations in GITHUB_STEP_SUMMARY.
             Report failures and partial outcomes accurately, not as no-change results.
-            Budget the 30-minute job including setup, reporting, and verification.

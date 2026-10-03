@@ -97,7 +97,8 @@ deadline to recover coverage.
 
 ## Expected versus observed outcomes
 
-- Budget investigation within the remaining 30-minute job, accounting for setup.
+- Budget investigation within the remaining shared
+  [invocation budget](../examples/ai-tools.md#invocation-budget).
   Set a shared investigation deadline that reserves time for consolidation,
   duplicate checks, issue creation and verification, and final reporting.
   Assessment subprocesses must return findings and coverage gaps by that deadline;
@@ -127,6 +128,54 @@ deadline to recover coverage.
   discrepancies through the existing findings path below, within the same history,
   origin, read-only-analysis, and publication boundaries.
 
+## Time-budget utilization
+
+Assess budget sizing within the same history window, eligibility rules, and
+investigation deadline. Roughly **50% average utilization** is a headroom goal,
+not a per-run cutoff or a reason to slow down work.
+
+- Group comparable attempts by workflow/job/invocation, workload, and executed
+  contract. Establish the applicable limit from the executed workflow and action
+  revisions and run context, including defaults or expressions. Current Factory
+  callers set the AI action's `budget`; older revisions may use job or step
+  `timeout-minutes`. Do not substitute today's configuration for unknown history
+  or mix different timeout boundaries in one sizing group.
+- Measure elapsed time at the matching boundary. For AI budgets, use invocation
+  start/completion logs or exact invocation-step timings, including AI-owned
+  checks, publication, and reporting, but not checkout, installation, or later
+  receipt checks. Do not use the outer composite-action duration if it includes
+  installation. For historical job budgets, include setup and completion work,
+  excluding queueing; for step budgets, use that step's elapsed time. Missing
+  boundary evidence is a gap, not permission to compare unlike measurements.
+- For each assessed group, report sample size, average utilization
+  (`elapsed time at the boundary / applicable budget`), runtime spread, and
+  near-limit and timeout counts with run-attempt links. State the basis for calling runs
+  near-limit; averages alone can hide insufficient headroom.
+- Separate skips, failed/cancelled work, unfinished attempts, and unknown timings
+  from attempts verified to have completed their expected substantive work.
+  Base reductions only on the latter; setup or mid-run failures do not show the
+  time needed to finish, and a green exit alone does not prove completion.
+- Identify timeouts from job/step/invocation evidence, not conclusion alone: job
+  timeouts can appear as `cancelled`, while the AI action fails on GNU `timeout`
+  expiry (normally exit 124, or 137 after forced termination). A kill status alone
+  does not establish its cause. Use termination logs, maximum-execution-time
+  annotations, or other eligible evidence, following the
+  [shared log guidance](actions-logs.md) when needed.
+  Distinguish other cancellations and report timeouts separately as lower bounds
+  on required time, not completed-work runtimes.
+- Identify persistent substantial underuse or recurring near-limit/timeouts.
+  Distinguish AI-budget pressure from enclosing job/step limits, hangs, and
+  fixable failures. Recommend a lower or higher budget only with evidence that
+  accounts for variability and all work within its boundary. Check job/runner
+  headroom separately; a mostly unused default job limit is not evidence to
+  reduce the AI budget.
+  Sparse, mixed, or missing evidence is a limitation, not proof of a sizing problem.
+- Route actionable recommendations through the duplicate-checked, unlabeled
+  findings-issue path below. Include the proposed budget value and boundary,
+  rationale, linked run-attempt evidence, and the owning caller input or historical
+  timeout plus relevant shared budget guidance. Diagnostics must not edit
+  workflows or settings.
+
 ## Findings and reporting
 
 - Before creating issues, check issues and PRs in all states, including earlier
@@ -137,12 +186,13 @@ deadline to recover coverage.
 - Create issues **without labels** for normal [triage](issue-triage.md). Verify
   creation responses and URLs; leave later labels and triage updates alone.
   The [router](factory-router.md) job condition skips diagnostics completions.
-- Within the 30-minute job, record the window, per-workflow expected-versus-observed
-  conclusions and evidence links, selection rationale, per-workflow assessed/total
-  run-attempt counts, exclusions, existing/new issue links, and evidence gaps or
-  failures in `GITHUB_STEP_SUMMARY` and the log. Identify unassessed runs/attempts
-  with links or clearly defined linked groups, and explain why they were not assessed.
-  Distinguish initialization, completed analysis, and incomplete analysis.
+- Within the invocation budget, record the window, per-workflow expected-versus-observed
+  conclusions and evidence links, budget-utilization results and sizing decisions,
+  selection rationale, per-workflow assessed/total run-attempt counts, exclusions,
+  existing/new issue links, and evidence gaps or failures in `GITHUB_STEP_SUMMARY`
+  and the log. Identify unassessed runs/attempts with links or clearly defined
+  linked groups, and explain why they were not assessed. Distinguish initialization,
+  completed analysis, and incomplete analysis.
 - Record the trusted workflow revision, installed CLI version, and resolved
   coordinator and assessment-subprocess model, reasoning effort, and context tier.
   Identify assignments, session IDs, exit statuses, and evidence for their settings,

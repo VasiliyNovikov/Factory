@@ -44,6 +44,10 @@ provide input under their own accounts. The router runs as `github-actions[bot]`
 Factory work uses `factory-worker-bot[bot]`, and reviews use
 `factory-reviewer-bot[bot]`. Running in Actions does not change an App's authorship.
 
+Each shared AI action call sets its own [invocation budget](docs/examples/ai-tools.md#invocation-budget).
+The harness and its subtasks share that deadline; setup and receipt checks run
+outside it, under GitHub's default job limit.
+
 PR reviewers may run PR code, tests, and focused experiments under the
 [PR-review execution rules](docs/factory/pr-review.md#local-checks).
 
@@ -71,6 +75,8 @@ records a boundary without analysis; later runs compare observed execution and G
 outcomes with the contracts used by each assessed run, including successful runs
 and expected skips or handoffs. Results record supported conclusions, discrepancies,
 and coverage gaps; actionable findings follow the existing issue path.
+Diagnostics also assesses time-budget utilization and recommends evidence-backed
+timeout changes through that findings path.
 
 ```mermaid
 flowchart TD

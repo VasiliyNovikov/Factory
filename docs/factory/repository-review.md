@@ -8,7 +8,9 @@ delayed. `github.workflow_sha` pins source, guidance, and setup to this invocati
 Copilot reviews source, checks duplicates, publishes issues, and verifies results
 using the shared [AI action](../examples/ai-tools.md#shared-factory-action) and
 `review` profile. Scheduled and manual runs share one concurrency group, preserving
-active work and at most one pending run. The 30-minute budget includes setup and reporting.
+active work and at most one pending run. Complete assessment, publication,
+verification, and reporting within the shared
+[invocation budget](../examples/ai-tools.md#invocation-budget).
 
 ## Review scope
 

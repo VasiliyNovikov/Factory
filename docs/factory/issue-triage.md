@@ -59,8 +59,9 @@ tracking identity when ready. Triage never creates or links children.
   Reconcile uncertain outcomes before retrying.
 - Record the decision, verification links, and outstanding work in `GITHUB_STEP_SUMMARY`.
   API errors and unverified outcomes are failures, not skips.
-- Include setup, reporting, and verification in the 15-minute budget without
-  relaxing required checks.
+- Complete work, reporting, and verification within the shared
+  [invocation budget](../examples/ai-tools.md#invocation-budget), without relaxing
+  required checks.
 
 ## Tokens and execution
 
