@@ -75,6 +75,15 @@ Use this path only when all of the following are verified at immutable revisions
   [verified coverage](#prior-assessment-evidence). Do not reuse dismissed,
   withdrawn, or incomplete approvals. `A` differs from `H` and is on its
   first-parent history.
+- The review instructions and configuration are unchanged between the prior
+  source attempt's workflow revision (its run `head_sha`, not `A`) and this run's
+  `GITHUB_WORKFLOW_SHA`. Compare `AGENTS.md`, this guide, `review-checks.md`,
+  `.github/workflows/pr-review.yml`, the shared
+  [AI action](../../.github/actions/ai/action.yml) and its runner scripts, the
+  effective `review` profile in `.github/model-config.json`, and other guidance
+  or configuration they load. Any change or unverifiable comparison requires
+  a full review under the current criteria; unchanged PR work does not establish
+  coverage of new rules.
 - Every commit on the entire first-parent path from `A` (exclusive) to `H`
   (inclusive) has exactly two parents: the preceding PR head and an incoming
   commit on `D`'s first-parent history. There are no ordinary change commits,
@@ -102,8 +111,9 @@ approval rules. If any condition fails, explain why and perform a full review.
 
 In the review body and run summary, identify this as a **scoped merge-only
 reassessment**. Include full `A`, `H`, and `D` SHAs, the prior review and successful
-source-attempt links, all merge/tree verification results, unchanged-delta
-evidence, discussion assessment, interaction checks/findings, and limitations.
+source-attempt links, both workflow SHAs and the comparison of review instructions
+and configuration, all merge/tree verification results, unchanged-delta evidence,
+discussion assessment, interaction checks/findings, and limitations.
 Recheck the live head, base, discussion, and prior coverage before submission;
 drift requires reassessing the affected evidence. Use `H` and this attempt's
 marker for the fresh review and existing receipt, never the predecessor's marker.
