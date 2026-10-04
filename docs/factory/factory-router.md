@@ -13,6 +13,10 @@ freshness checks, and result verification.
 - The PR must be open, non-draft, and from this repository.
 - Review the current head.
 - Distinguish new requests from [successfully covered reviews](pr-review.md#skip-and-report).
+- Route clean default-branch merge heads too. The review worker, not the router,
+  verifies whether prior coverage permits a
+  [scoped merge-only reassessment](pr-review.md#clean-default-branch-merges);
+  an older head's approval does not cover the new head.
 
 ### [Issue / PR implementation](issue-implementation.md)
 
