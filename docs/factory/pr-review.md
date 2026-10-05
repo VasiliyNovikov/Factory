@@ -28,95 +28,57 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
 
 ## Assessment scope
 
-Review the current head in full unless the clean default-branch merge path below
-applies. That path reuses verified coverage of unchanged PR work, not approval of
-the new head: it still requires a fresh assessment and review submission.
-Read the full current discussion, review threads, requests, and edit/deletion
-history in either path.
+Review the current head in full unless the merge-only conditions below hold.
+Read the complete discussion, requests, threads, and edit/deletion history in
+either path. Reused coverage narrows the assessment; every new head still needs
+a fresh review.
 
 ### Prior assessment evidence
 
-Before reusing a Factory assessment, verify its same-PR reviewer identity, full
-reviewed SHA in the body, and `factory-review:RUN_ID:ATTEMPT` marker against its
-source attempt. Read the body's provenance; a later API `commit_id`, approval
-presence, run title, or successful job alone is not sufficient.
+Verify the same-PR Factory review's author, visible full SHA, and
+`factory-review:RUN_ID:ATTEMPT` marker against this repository's successful,
+non-skipped default-branch `pr-review.yml` attempt, including assessment and
+posted-review receipt. Establish the source workflow's PR/head/marker bindings,
+submission timing, unchanged SHA/marker provenance, and any inherited coverage.
+An approval, API `commit_id`, or run title/success alone is not proof.
 
-Use reviewer-App `GH_TOKEN` for these read-only API calls, without substituting
-tokens or adding permissions:
-
-- Read `repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt}` and all
-  pages of its `/jobs` endpoint. Require this repository's default-branch
-  `pr-review.yml` dispatch, completed successfully, with the assessment and
-  posted-review receipt steps both completed successfully, not skipped.
-- Inspect the source workflow at that attempt's workflow revision. Its
-  `run-name` binds the PR number and full input head to the API `display_title`;
-  verify those values match the review, and that the same inputs bind
-  `PR_NUMBER`, `PR_HEAD_SHA`, and the receipt. Verify the marker's run/attempt
-  binding too. The run's default-branch `head_sha` is not the reviewed PR head.
-- Check submission timing and review edits against the identified attempt and
-  receipt. Missing, conflicting, or changed SHA/marker provenance cannot supply
-  coverage. Confirm that the prior assessment covers the PR work being reused,
-  including its inherited coverage if it was itself scoped.
-
-These run/job metadata reads can establish non-skipped completion without log
-downloads. If more evidence is needed, use only permitted reads and follow the
-[shared log guidance](actions-logs.md) from the first log read. If source evidence
-cannot be verified, disclose the limitation and perform a full assessment; do not
-call a failed read a skip. Missing current discussion or other evidence needed
-for that full assessment remains a blocker.
+Use only reviewer-App `GH_TOKEN`. Run-attempt/job metadata and the source workflow
+can establish coverage without logs; follow [log guidance](actions-logs.md) if
+logs are needed. Unverifiable prior coverage requires a full review with the
+limitation disclosed, not a skip or expanded permissions. Missing evidence needed
+for that full review remains a blocker.
 
 ### Clean default-branch merges
 
-Use this path only when all of the following are verified at immutable revisions:
+Let `A` be the prior approved head, `H = PR_HEAD_SHA`, and `D` the live default tip.
+Use scoped reassessment only when all these conditions are verified:
 
-- The PR still targets the current default branch. The default branch's current
-  tip `D` is an ancestor of the expected head `H = PR_HEAD_SHA`.
-- A prior same-PR `APPROVED` Factory review of head `A` has
-  [verified coverage](#prior-assessment-evidence). Do not reuse dismissed,
-  withdrawn, or incomplete approvals. `A` differs from `H` and is on its
-  first-parent history.
-- The review instructions and configuration are unchanged between the prior
-  source attempt's workflow revision (its run `head_sha`, not `A`) and this run's
-  `GITHUB_WORKFLOW_SHA`. Compare `AGENTS.md`, this guide, `review-checks.md`,
-  `.github/workflows/pr-review.yml`, the shared
-  [AI action](../../.github/actions/ai/action.yml) and its runner scripts, the
-  effective `review` profile in `.github/model-config.json`, and other guidance
-  or configuration they load. Any change or unverifiable comparison requires
-  a full review under the current criteria; unchanged PR work does not establish
-  coverage of new rules.
+- The PR targets the default branch, `D` is an ancestor of `H`, and `A != H` is on
+  `H`'s first-parent history with a still-approved, [verified assessment](#prior-assessment-evidence).
+- Review inputs (`AGENTS.md`, review guidance/workflow, AI action/runners,
+  effective `review` profile, and other loaded guidance/configuration) are
+  unchanged between the prior source workflow SHA (not `A`) and `GITHUB_WORKFLOW_SHA`.
 - Every commit on the entire first-parent path from `A` (exclusive) to `H`
-  (inclusive) has exactly two parents: the preceding PR head and an incoming
-  commit on `D`'s first-parent history. There are no ordinary change commits,
-  side-branch merges, or octopus merges on that path.
-- For **each** merge, reconstruct `git merge-tree --write-tree <parent1> <parent2>`
-  under the shared check safeguards. Require exit status zero and a returned
-  tree exactly equal to that merge commit's tree. A tree ID alone is not proof
-  of a clean merge. Do not enable custom merge drivers or strategies to obtain
-  equality. Any conflict, extra change, manual resolution, unavailable history,
-  or uncertain reconstruction requires a full review.
-- Compare the PR's own delta against its corresponding old and new merge bases,
-  including paths, content, file modes, and binaries. It must be unchanged;
-  uncertain equivalence requires a full review. Identical file lists, patch IDs,
-  the last merge alone, or clean reconstruction alone do not establish this.
-- No new actionable feedback, changed requirements, or review requests have
-  appeared since the covered assessment. Check edits and inline replies as well
-  as new comments. Ordinary maintenance reports alone do not invalidate coverage.
+  (inclusive) has two parents: the preceding PR head and a commit on `D`'s
+  first-parent history. For each, `git merge-tree --write-tree <parent1> <parent2>`
+  exits zero and reproduces its tree under the shared check safeguards, without
+  custom merge drivers or strategies.
+- The PR's own delta against its respective old/new merge bases is unchanged,
+  including paths, content, modes, and binaries.
+- No new actionable feedback, changed requirements, or review requests exist
+  since that assessment. Maintenance reports alone do not invalidate coverage.
 
-Reassess how the incoming base changes interact with the PR's unchanged work,
-including relevant callers, contracts, configuration, and tests, not just
-overlapping files. A mechanically clean merge can still introduce a regression.
-Retain applicable prior findings and choose focused checks for these interactions;
-do not repeat unrelated checks already covered. Apply the usual simplicity and
-approval rules. If any condition fails, explain why and perform a full review.
+Any failed or uncertain condition requires a full review with the reason stated.
+Otherwise assess incoming-base/PR interactions, including non-overlapping
+dependencies, retaining applicable findings and normal simplicity/approval rules.
+Choose focused checks without repeating unaffected checks already covered.
 
-In the review body and run summary, identify this as a **scoped merge-only
-reassessment**. Include full `A`, `H`, and `D` SHAs, the prior review and successful
-source-attempt links, both workflow SHAs and the comparison of review instructions
-and configuration, all merge/tree verification results, unchanged-delta evidence,
-discussion assessment, interaction checks/findings, and limitations.
-Recheck the live head, base, discussion, and prior coverage before submission;
-drift requires reassessing the affected evidence. Use `H` and this attempt's
-marker for the fresh review and existing receipt, never the predecessor's marker.
+Identify the **scoped merge-only reassessment** in the body and run summary:
+full `A`, `H`, `D` and both workflow SHAs; prior review/source-attempt links;
+review-input comparison, all merge/tree and unchanged-delta evidence; discussion,
+interaction findings/checks, and limitations. Recheck live head, base, discussion,
+and prior coverage before submission; reassess drift. Submit for `H` with this
+attempt's marker and the existing receipt.
 
 ## Review outcome
 
@@ -241,9 +203,7 @@ assessment may deliver remaining findings.
 
 Static checks do not prove AI adherence or event delivery.
 
-After deploying the scoped path, verify a maintenance-triggered review on an open
-Factory PR. Link its review body and successful run attempt, confirm the scoped
-evidence and fresh-head receipt, and report its observed duration alongside
-comparable earlier full re-reviews using the same timing boundaries. Until then,
-report deployed behavior and any speedup as unverified; deterministic merge
-probes and static guidance inspection do not establish either.
+After deployment, verify a maintenance-triggered scoped review on an open Factory
+PR: link its body and successful receipt-bearing attempt, and compare its duration
+with earlier full reviews using the same timing boundaries. Until then, deployed
+behavior and any speedup remain unverified.
