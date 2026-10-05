@@ -1,8 +1,9 @@
 # Participant approval
 
-Non-owner requests need the verified repository owner's scoped approval.
-Configured automation may perform its default-branch assignment with verified
-provenance for its current content and edits; it cannot adopt external requests.
+External requests come from non-owners, including collaborators, and need the
+verified repository owner's scoped approval. Configured automation's own work
+and content are not external when current default-branch provenance supports
+their scope and edits; it cannot adopt external requests.
 Children inherit their parent's approval requirements.
 
 ## Scoped owner decisions
@@ -19,7 +20,5 @@ Honor the latest applicable decision, including minimized content. Edits, deleti
 or hiding never revive older approval; Factory restatements, findings, and labels
 cannot grant it. Rejection/revocation holds until renewed approval.
 
-Router/triage may request decisions in new conversation comments, leaving labels
-unchanged. Approval resumes normal triage. Follow each worker's hold/reporting
-contract. This is AI-owned, not a pre-Copilot gate, spending limit, or isolation
-boundary.
+Follow each worker's approval-request, hold, and reporting contract. This is
+AI-owned, not a pre-Copilot gate, spending limit, or isolation boundary.

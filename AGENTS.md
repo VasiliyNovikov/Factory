@@ -77,9 +77,10 @@ Use the owning guide for each workflow's behavior, permissions, and verification
 | Full source analysis | [Repository review](docs/factory/repository-review.md) |
 | Model selection and improvement findings | [Model profile improvement](docs/factory/model-profile-improvement.md) |
 
-Participant approval is AI-owned: external requests need scoped owner approval
-before substantive work. Router/triage may run to request it; this is not a
-pre-Copilot gate. Workers recheck each request under the shared policy.
+Participant approval is AI-owned: non-owner (external) requests need scoped owner
+approval; verified configured automation's own work is exempt under the shared
+policy. Router/triage may request approval; this is not a pre-Copilot gate.
+Workers recheck each request.
 
 Factory checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
 Eligible submitted reviews are the router exception: they run PR-merge-revision
