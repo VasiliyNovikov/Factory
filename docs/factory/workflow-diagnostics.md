@@ -185,6 +185,8 @@ workflow tests.
   ```
 
 - Select credentials by endpoint, not by whether evidence is CI-related.
+  Use `gh api` with explicit endpoints for Actions reads: `gh run view` summaries
+  also read PRs and Checks.
   All repository/issue/PR operations, including Checks and commit-status reads,
   keep App `GH_TOKEN` unchanged. Never switch globally or apply an Actions-token
   override to a subprocess that also makes non-Actions calls. A denied request
