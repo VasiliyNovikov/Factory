@@ -95,8 +95,7 @@ Shell-tool output can be collapsed by the CLI. A local report write, `cat`, or
 local-file comparison does not prove log retention. When verifying retention,
 read the complete downloaded attempt logs using the [shared log guidance](actions-logs.md)
 and permitted credentials, and compare the required evidence with the preserved
-job summary. Record the exercised CLI/workflow revision and retained-output
-evidence. Report unavailable destinations and unverified agreement explicitly;
+job summary. Report unavailable destinations and unverified agreement explicitly;
 an unavailable summary does not establish that it is missing or incorrect.
 
 Verification is AI-owned; a successful CLI exit is not proof of completion.
