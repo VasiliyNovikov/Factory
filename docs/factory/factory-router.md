@@ -105,8 +105,9 @@ these event-specific `source` fields:
 ## Execution and verification
 
 - Router events run independently; worker coordination follows the shared policy.
-- Other router events and all workers use the default branch. Checkouts use
-  `github.workflow_sha`; manual non-default jobs skip in versions with the guard.
+- Router events other than submitted reviews, and all workers, use the default
+  branch. Checkouts use `github.workflow_sha`; manual non-default jobs skip in
+  versions with the guard.
 - Static checks do not establish AI adherence or end-to-end event delivery.
   A PR cannot exercise its changed default-branch push or
   [`issue_comment`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issue_comment)
