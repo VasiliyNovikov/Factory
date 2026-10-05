@@ -1,7 +1,8 @@
 # Install AI tools and run a prompt
 
 This reusable snippet installs standalone Copilot without Node.js/npm and runs a
-prompt. It is not an installed workflow.
+prompt. It is not an installed workflow. Direct script calls make one setup
+attempt; use the [shared Factory action](#shared-factory-action) for setup retries.
 
 ```yaml
 name: CI
@@ -49,26 +50,21 @@ on GitHub-hosted Linux runners. For local macOS use, install coreutils first.
 Unsupported arguments fail before installation.
 
 Each bootstrap script is saved to a temporary file and executed only after a
-successful, nonempty download. Bootstrap downloads and vendor installer execution
-each get up to three attempts, waiting 5 then 10 seconds between failures:
+successful, nonempty download. The script makes one attempt at each stage:
 
 | Stage | Limit per attempt |
 | --- | --- |
 | Bootstrap download | 20 seconds total, including a 10-second connection limit |
 | Vendor installer (including its network requests) | 60 seconds, then up to 5 seconds before forced termination |
-| CLI version check (no retry) | 10 seconds, then up to 5 seconds before forced termination |
+| CLI version check | 10 seconds, then up to 5 seconds before forced termination |
 
-This budgets at most 5 minutes per selected CLI for these commands and backoff,
-excluding initial `jq` provisioning and process overhead; no-argument installation
-budgets twice that for both tools. Allow additional job time for AI work and
-reporting. Retries cover any nonzero download or installer exit, including curl
-exit 35 (connection reset), because vendor installers do not consistently
-distinguish network errors from other failures. Each retry and final exhaustion
-is logged. Empty downloads, exhausted retries, and version-check errors fail setup
-and prevent AI invocation; temporary bootstrap files are removed on exit.
+This budgets at most 100 seconds per selected CLI for these commands, excluding
+`jq` provisioning and process overhead; no-argument installation budgets twice
+that for both tools. Download, installer, empty-response, and version-check errors
+fail the attempt; temporary bootstrap files are removed on exit.
 
-Only setup is retried, never AI invocation or an entire workflow. A manual rerun
-can recover an already-failed setup job, subject to current event eligibility.
+The shared action owns retry policy, not this script. A manual rerun can also
+recover an already-failed setup job, subject to current event eligibility.
 Version-keyed caching or preinstalled runner images could reduce downloads, but
 require separate freshness and maintenance decisions; neither is configured here.
 
@@ -107,7 +103,22 @@ invocations remain unchanged.
 ## Shared Factory action
 
 Factory workflows use [`.github/actions/ai`](../../.github/actions/ai/action.yml)
-to install and invoke a CLI through these scripts:
+to install and invoke a CLI through these scripts. Its installation step retries
+the entire setup command up to three times, waiting 5 then 10 seconds between
+failures. Retry counts and delays live in that step; there is no nested retry
+helper, new action dependency, or retry around AI invocation.
+
+A retry repeats setup, including completed downloads, installer execution,
+`jq` provisioning if still missing, and the version check. It covers any nonzero
+setup exit, including curl exit 35 (connection reset); vendor installers do not
+consistently distinguish network errors from other failures. Each retry and final
+exhaustion is logged. Three attempts budget at most 5 minutes 15 seconds for the
+selected CLI's bounded commands and backoff, excluding `jq` provisioning and
+process overhead. Leave additional job time for AI work and reporting.
+
+The separate invocation step runs only after setup succeeds. Exhausted setup
+failures remain nonzero failures, never success or skip; AI work and entire
+workflows are not retried.
 
 ```yaml
 - name: Run a prompt
