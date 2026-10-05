@@ -3,7 +3,8 @@
 The [event router](factory-router.md) and [periodic maintenance](factory-maintenance.md)
 share these eligibility, action, skip, and dispatch rules. Their own guides define
 event selection or periodic discovery; workers own execution, freshness, and
-result verification. Keep common decisions here rather than maintaining two policies.
+result verification. Keep routing simple and AI-led, with common decisions here
+rather than maintaining two policies.
 
 ## Worker selection and eligibility
 
@@ -34,8 +35,7 @@ result verification. Keep common decisions here rather than maintaining two poli
 - Conflicting ownership, closed/merged PRs, or invalid tracking labels are blockers,
   not permission to repair labels, reopen work, or dispatch an ineligible worker.
 - Default-branch-only maintenance requires an existing eligible PR and cannot
-  create issues/PRs or expand its assigned scope. Push fan-out may include
-  already-current PRs; implementation owns the verified no-op decision.
+  create issues/PRs or expand its assigned scope.
 
 ### PR review
 
@@ -72,17 +72,22 @@ result verification. Keep common decisions here rather than maintaining two poli
 
 ## Feedback verification
 
+- Read worker-discovery, PR-review, and required provenance collections completely,
+  following the [shared pagination guidance](../../AGENTS.md#github-cli-pagination).
+- Humans and other bots may provide feedback.
 - Conversation requests and review findings remain actionable across head drift
-  when they still apply to current code. Read complete relevant discussions and
-  unresolved thread histories; outdated inline locations alone do not settle them.
+  when they still apply to current code. Read the current text, complete relevant
+  discussions, review inline comments, and unresolved thread histories; outdated
+  inline locations alone do not settle them. An empty review body alone is not a
+  reason to skip actionable inline comments or replies.
 - Before forwarding reviewer-App findings, verify:
   - The review belongs to the PR and is authored by the configured `REVIEWER_LOGIN`.
   - Its marker identifies this repository's default-branch `pr-review.yml` attempt.
   - The full reviewed SHA in its body matches that attempt's `PR_HEAD_SHA`, not a
     later review API `commit_id` or the worker's default-branch `head_sha`.
   - The assessment succeeded without skipping, including its posted-review check.
-- Failed, incomplete, or conflicting source verification is not valid feedback
-  delivery. An unsuccessful assessment needs a fresh successful review; never
+- Failed, incomplete, or conflicting source verification is failure, not a skip.
+  An unsuccessful assessment needs a fresh successful review; never
   forward its findings as if verified or treat its failure as PR-code CI.
 - CI failure/timeout evidence must belong to the PR's current head or merge
   revision. Router, maintenance, triage, implementation, diagnostics, repository
@@ -123,8 +128,13 @@ result verification. Keep common decisions here rather than maintaining two poli
     completion. An older-head run does not prove current work is covered.
 - Do not redispatch equivalent active or already-handled work. Jobs waiting for
   required approval are holds, not permission to bypass approval with a new run.
-  Per-worker concurrency preserves active jobs but is not dispatch deduplication;
-  independent coordinators can race, so recheck and retain worker freshness guards.
+- Review jobs serialize per PR/head, preserving the active assessment and its
+  receipt check; different heads run independently. Triage and implementation
+  preserve active jobs per issue; implementation feedback and base maintenance
+  share that group. Pending jobs can be replaced, so workers check the latest
+  discussion and outstanding feedback.
+- Worker concurrency is not dispatch deduplication; independent coordinators can
+  race, so recheck and retain worker freshness guards.
 - Verify dispatch acceptance and correlate the resulting native run/attempt when
   observable. Record accepted-but-not-yet-linked work without repeating dispatch.
   Acceptance is not successful worker execution or completed recovery.
