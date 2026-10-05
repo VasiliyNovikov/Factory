@@ -47,8 +47,8 @@ provide input under their own accounts. The router runs as `github-actions[bot]`
 Factory work uses `factory-worker-bot[bot]`, and reviews use
 `factory-reviewer-bot[bot]`. Running in Actions does not change an App's authorship.
 
-Writers' own requests and verified configured automation proceed normally;
-external human/bot requests need scoped
+The owner's requests and verified configured automation proceed normally;
+requests from other humans/bots need scoped
 [repository-owner approval](docs/factory/participant-approval.md). AI may request
 approval before normal triage; approval neither marks an issue ready nor adopts
 unrelated feedback. This is an AI-owned hold, not a pre-Copilot gate or spending limit.
