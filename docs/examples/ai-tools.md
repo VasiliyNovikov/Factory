@@ -13,7 +13,7 @@ on:
 jobs:
   ai:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
     permissions:
       contents: read
       copilot-requests: write
@@ -103,7 +103,7 @@ invocations remain unchanged.
 ## Shared Factory action
 
 Factory workflows use [`.github/actions/ai`](../../.github/actions/ai/action.yml)
-to install and invoke a CLI through these scripts. Its installation step retries
+to install and invoke a CLI through these scripts. Its installation step runs
 the entire setup command up to three times, waiting 5 then 10 seconds between
 failures. Retry counts and delays live in that step; there is no nested retry
 helper, new action dependency, or retry around AI invocation.
