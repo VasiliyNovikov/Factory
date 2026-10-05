@@ -126,10 +126,12 @@ internal review, share that deadline rather than receiving a fresh budget.
 Do not weaken required checks to meet it; report incomplete work accurately.
 
 The action uses GNU `timeout` around `scripts/ai.sh`: expiry sends `TERM`, with
-`KILL` after a further 30 seconds if needed. It preserves failure status and logs
-invocation start, deadline, completion, and exit status. A hard timeout is failure,
-not a skip or permission to omit reporting; the killed agent cannot finish its report.
-Direct `scripts/ai.sh` calls do not start a new budget or timeout.
+`KILL` after a further 30 seconds if needed. The command's exit status passes
+directly to GitHub Actions; nonzero means step failure, including on timeout.
+The action logs the invocation start and deadline; use the invocation step's
+completion time and exit status from Actions for diagnostics. A hard timeout is
+not a skip or permission to omit reporting; the killed agent cannot finish its
+report. Direct `scripts/ai.sh` calls do not start a new budget or timeout.
 
 Factory jobs omit `timeout-minutes`, restoring GitHub's
 [default job limit](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idtimeout-minutes).
