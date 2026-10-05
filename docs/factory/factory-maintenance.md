@@ -39,10 +39,8 @@ It dispatches existing workers, not repairs, findings issues, or another router.
     current-revision CI failures, or lacks the current default-branch revision.
 - Apply shared eligibility, feedback-source verification, human holds, and duplicate
   checks, including the [unsuccessful-recovery retry gate](routing-policy.md#dispatch-reconciliation-and-retries),
-  before selecting a worker. When retry is permitted, a failed review needs a
-  fresh review, not implementation of unverified findings. Skipped/stale runs
-  require reassessment of current need; their conclusion alone does not justify
-  another dispatch.
+  before selecting a worker. Skipped/stale runs require reassessment of current
+  need; their conclusion alone does not justify another dispatch.
 - For base recovery, compare the exact live PR head/default-branch ancestry;
   GitHub mergeability, an old push SHA, or the PR's age is not evidence of currency.
   Assign base-only maintenance to that existing PR with the implementation
@@ -73,9 +71,6 @@ It dispatches existing workers, not repairs, findings issues, or another router.
 - Do not fabricate an `issues`, `pull_request_review`, or `push` event to make the
   sweep look like the original trigger. The expected PR head is current context,
   not a claim that an older finding was reviewed at that head.
-- A successful dispatch is only accepted work. Follow shared reconciliation rules
-  across later sweeps, this run's attempts, and ordinary routing before retrying.
-  An uncertain dispatch or an active worker is not justification for a second one.
 - For an incomplete sweep, recovery is a native rerun of the originating
   maintenance run or a later sweep after reconciling its accepted/uncertain work.
   Do not cancel other runs or add durable markers, labels, or a custom queue.
@@ -85,9 +80,6 @@ It dispatches existing workers, not repairs, findings issues, or another router.
 - Append a job summary covering examined issues/PRs and history, coverage gaps,
   target/head/default revisions and source evidence, chosen workers, verified
   acceptance/run links, skipped/blocked reasons, and outstanding work.
-- Separate accepted, uncertain, failed, and undispatched targets. A failed API
-  call, missing evidence, or partial batch is not a successful no-work sweep.
-  Do not claim recovery completed until the worker's actual outcomes are verified.
 - The router ignores maintenance completions; worker events retain their ordinary
   routing. There is no receipt/report workflow or new feedback loop.
 
