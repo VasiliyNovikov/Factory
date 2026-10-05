@@ -69,18 +69,35 @@ Runs share one concurrency group without cancelling active work. Budget the
   [triage](issue-triage.md) and [implementation](issue-implementation.md) handle
   them; the router ignores this workflow's completion.
 
-Append the outcome and evidence to `GITHUB_STEP_SUMMARY` and report in the log:
+Append the complete report below to `GITHUB_STEP_SUMMARY`, preserving existing
+content, and include the same report in the evaluator's final CLI response,
+which the [CLI writes to the Actions log](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions#run-copilot-cli).
+This applies to every outcome, including no-change and incomplete/partial results:
 
 - **New findings**, **already covered**, **no change** after a complete assessment,
   or **incomplete/partial**. Empty/failed discovery, missing capabilities, research
   gaps, API errors, and verification failures are not no-change results. Publish
   no speculative findings or no-op comments; verify and report any partial publication.
-- Run-attempt link, evaluated SHA, CLI version, discovery time, model IDs and
-  policy/capability evidence, dated sources, unavailable models, conflicts, and gaps.
+- Run-attempt link, trusted workflow revision, exact evaluated SHA, CLI version,
+  discovery time, model IDs and policy/capability evidence, dated sources,
+  unavailable models, conflicts, and gaps.
 - A row per workflow/invocation: current profile/model/reasoning/context settings,
   retain or proposed settings, rationale/evidence, and constraints.
+  Explicitly identify workflows without AI.
 - Existing work and verified new issue links, checks actually run, limits, and
   outstanding work.
+
+The final response is the complete log copy, not just totals or a summary link.
+Keep both copies consistent without repeating issue creation or other GitHub
+mutations. Use concise tables and links without omitting required evidence.
+
+Shell-tool output can be collapsed by the CLI. A local report write, `cat`, or
+local-file comparison does not prove log retention. When verifying retention,
+read the complete downloaded attempt logs using the [shared log guidance](actions-logs.md)
+and permitted credentials, and compare the required evidence with the preserved
+job summary. Record the exercised CLI/workflow revision and retained-output
+evidence. Report unavailable destinations and unverified agreement explicitly;
+an unavailable summary does not establish that it is missing or incorrect.
 
 Verification is AI-owned; a successful CLI exit is not proof of completion.
 Research and capability checks prove neither comparative quality nor model-request success.
