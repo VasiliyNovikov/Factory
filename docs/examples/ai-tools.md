@@ -115,8 +115,9 @@ remain in the owning workflows.
 
 Set `budget` to a whole number of minutes from 1 to 360. The action starts this
 budget immediately before invoking the harness, after installation. It exports
-`AI_BUDGET_MINUTES` and the absolute `AI_DEADLINE_UTC` (UTC ISO 8601), and appends
-the resolved budget and deadline to the prompt. Child processes inherit these
+`AI_BUDGET_MINUTES` and the absolute `AI_DEADLINE_UTC` (UTC ISO 8601). One short
+budget/deadline notice is shared by the prompt and Actions log; the task and
+subtask rules stay in this guide. Child processes inherit the environment
 variables; coordinators must also pass the remaining time and an earlier deadline
 to delegated tasks, reserving time to integrate results.
 
@@ -128,10 +129,10 @@ Do not weaken required checks to meet it; report incomplete work accurately.
 The action uses GNU `timeout` around `scripts/ai.sh`: expiry sends `TERM`, with
 `KILL` after a further 30 seconds if needed. The command's exit status passes
 directly to GitHub Actions; nonzero means step failure, including on timeout.
-The action logs the invocation start and deadline; use the invocation step's
-completion time and exit status from Actions for diagnostics. A hard timeout is
-not a skip or permission to omit reporting; the killed agent cannot finish its
-report. Direct `scripts/ai.sh` calls do not start a new budget or timeout.
+For diagnostics, use the notice's Actions timestamp as the invocation start,
+and the invocation step's completion time and exit status from Actions. A hard
+timeout is not a skip or permission to omit reporting; the killed agent cannot
+finish its report. Direct `scripts/ai.sh` calls do not start a new budget or timeout.
 
 Factory jobs omit `timeout-minutes`, restoring GitHub's
 [default job limit](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idtimeout-minutes).
