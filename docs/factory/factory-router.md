@@ -70,13 +70,12 @@ checkout or AI setup. Copilot decides the rest.
 - Already-handled feedback.
 - Successful CI without review findings.
 - Cancelled runs.
-- Router, triage, implementation, diagnostics, [repository review](repository-review.md),
-  and [model profile improvement](model-profile-improvement.md)
-  completions (job-filtered). Source-review findings enter through new issues,
+- Router, [PR review](pr-review.md), triage, implementation, workflow diagnostics,
+  [repository review](repository-review.md), and
+  [model profile improvement](model-profile-improvement.md) completions
+  (job-filtered regardless of conclusion). Reviewer-App findings arrive through
+  `pull_request_review: submitted`; source-review findings enter through new issues,
   not self-triggered automation.
-- Failed review-worker completions (job-filtered): these are not PR-code CI
-  failures.
-- Skipped review-worker completions (job-filtered): these have no findings.
 
 ## Feedback and event handling
 
