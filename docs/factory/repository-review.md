@@ -47,13 +47,28 @@ active work and at most one pending run. The 30-minute budget includes setup and
 
 ## Reporting and verification
 
-Record in `GITHUB_STEP_SUMMARY` and the log:
+Append the complete report below to `GITHUB_STEP_SUMMARY`, preserving existing
+content, and include the same report in the final CLI response, which the
+[CLI writes to the Actions log](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions#run-copilot-cli).
+This applies to every outcome, including no-new-findings and incomplete/partial results:
 
 - Reviewed commit link, coverage, exclusions, and evidence gaps.
 - Executed checks/experiments, inputs, observed results, and limitations.
 - Existing findings/PRs and verified new issue links.
 - Outcome: completed with findings, completed with no new findings, or incomplete,
   including publication failures and outstanding work.
+
+The final response is the complete log copy, not just totals or a summary link.
+Keep both copies consistent without repeating issue creation or other GitHub
+mutations. Use concise tables and links without omitting required evidence.
+
+Shell-tool output can be collapsed by the CLI. A local report write, `cat`, or
+local-file comparison does not prove log retention. To verify retention later,
+read the complete downloaded attempt logs using the [shared log guidance](actions-logs.md)
+and permitted credentials, and compare the required evidence with the preserved
+job summary. Report unavailable destinations and unverified agreement explicitly;
+an unavailable summary does not establish that it is missing or incorrect.
+This does not grant this workflow Actions access.
 
 Reserve time for publication, verification, and reporting. Partial coverage or
 failed API calls are not a clean review. If later work fails, verify created issues
