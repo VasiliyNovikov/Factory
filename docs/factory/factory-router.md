@@ -59,8 +59,9 @@ checkout or AI setup. Copilot decides the rest.
   for conversation comments remains AI-owned.
 - Successful CI without review findings.
 - Cancelled runs.
-- Factory workflow completions, including every PR-review conclusion (job-filtered).
-  Source-review findings enter through new issues.
+- Factory workflow completions, including [PR review](pr-review.md), are
+  job-filtered regardless of conclusion. Source-review findings enter through new
+  issues.
 
 Ignoring a completion event does not prevent periodic recovery when the
 [shared retry rules](routing-policy.md#dispatch-reconciliation-and-retries) permit it.
