@@ -88,6 +88,24 @@ changes, or expand the work into unrelated refactoring.
   byte-comparing that output to the file can falsely fail. Do not trim or normalize
   either body: real Markdown or whitespace differences, including terminal
   newlines, must still fail.
+- Verify every submitted inline comment, not just the review receipt. Fully
+  paginate [`GET /repos/{owner}/{repo}/pulls/{pull_number}/comments`](https://docs.github.com/en/rest/pulls/comments#list-review-comments-on-a-pull-request)
+  and reconcile the submitted comment set and IDs with entries whose
+  `pull_request_review_id` is the review ID. Unlike the per-review listing's
+  legacy schema, these entries include canonical location metadata.
+- Match each comment's `REVIEWER_LOGIN`, PR, path, and exact submitted raw
+  `.body` using the JSON comparison above.
+  Verify its original publication at `PR_HEAD_SHA`, requiring
+  `original_commit_id == PR_HEAD_SHA` and the full submitted location.
+  For line-based comments, compare `original_line` and `side`, plus
+  `original_start_line` and `start_side` for a range. For legacy `position`
+  submissions, compare `original_position` at that same original commit:
+  a diff position is not a file line number.
+- After later commits, current `line` / `start_line` can move or become null,
+  and `commit_id` can change. This does not invalidate a verified original
+  location. Do not mix current and original coordinates across revisions.
+- Unavailable required canonical metadata or failed reads are explicit evidence
+  gaps; conflicting required metadata is a mismatch. Neither is a verified pass.
 - Record the target-qualified review URL, checked target head, decision,
   evidence, and outstanding work in `GITHUB_STEP_SUMMARY`, preserving the separate
   Factory revision report. Run-attempt links belong to the Factory host.
