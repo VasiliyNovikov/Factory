@@ -73,6 +73,8 @@ Immediately before POST, recheck that the PR is open, non-draft, same-repository
 and at `PR_HEAD_SHA`. A known false result must stop the publishing command before
 POST. A failed or incomplete read is not a false eligibility result. A head can
 still move after a valid check; HTTP 422 alone does not prove a broken gate.
+For a new submission, this recheck must pass before recording the attempt; a
+genuinely stale result must stop before both the state write and POST.
 
 The caller owns one receipt state, `REVIEW_RECEIPT`, initially empty. Append
 `REVIEW_RECEIPT=required` to `GITHUB_ENV` before any POST, when reconciling an
@@ -81,6 +83,12 @@ receipt mandatory even if `skipped=true` is later written. Keep the attempt reco
 and POST in the same shell invocation, handling failure explicitly, for example:
 
 ```sh
+if grep -qx 'REVIEW_RECEIPT=failed' "$GITHUB_ENV"; then
+  echo 'Publication already failed; reconcile without another POST.' >&2
+  exit 1
+else
+  [[ $? == 1 ]] || exit 1
+fi
 printf 'REVIEW_RECEIPT=required\n' >> "$GITHUB_ENV" &&
 if ! gh api --method POST "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/reviews" --input review.json; then
   printf 'REVIEW_RECEIPT=failed\n' >> "$GITHUB_ENV"
@@ -91,7 +99,8 @@ fi
 A rejected or uncertain POST, or conflicting or pending review, requires
 `REVIEW_RECEIPT=failed`. Reconcile without another POST and report failure, even
 if no review persisted or a matching review is later found. Never clear this state
-or downgrade `failed` to `required`. Preserve the command file's other entries.
+or append `required` when `failed` is already in this attempt's `GITHUB_ENV`,
+including during read-only recovery. Preserve the command file's other entries.
 `GITHUB_ENV` updates subsequent steps, not the current shell; track this attempt's
 history rather than treating an unchanged shell variable as permission to resubmit.
 
@@ -225,6 +234,8 @@ Run focused receipt regression checks with
 They execute the workflow's literal receipt command with a fake `gh` and check
 the actual Actions condition statically, without credentials or runner command
 files. They cover receipt fields, read failures, and retained publication failure.
+The publication example is also exercised with a synthetic state-file path to
+check that a rejected POST cannot be retried or overwrite its failure.
 They do not prove native Actions evaluation or `GITHUB_ENV` propagation.
 
 Eligibility, inline validation, no-duplicate reconciliation, and recording

@@ -8,7 +8,9 @@ import textwrap
 import unittest
 
 
-WORKFLOW = Path(__file__).resolve().parents[1] / ".github/workflows/pr-review.yml"
+ROOT = Path(__file__).resolve().parents[1]
+WORKFLOW = ROOT / ".github/workflows/pr-review.yml"
+GUIDE = ROOT / "docs/factory/pr-review.md"
 FAKE_GH = """#!/usr/bin/env python3
 import json
 import os
@@ -112,6 +114,37 @@ class ReviewReceiptTests(unittest.TestCase):
 
     def test_unknown_publication_state_fails(self):
         self.assertNotEqual(self.receipt([[self.review]], "unknown").returncode, 0)
+
+    def test_publication_example_preserves_failed_attempt(self):
+        publication = GUIDE.read_text().split("## Publication\n", 1)[1].split("## Skip and report", 1)[0]
+        example = re.search(r"```sh\n(.*?)```", publication, re.DOTALL)
+        self.assertIsNotNone(example)
+        command = example[1].replace('"$GITHUB_ENV"', '"receipt-state"')
+        state = self.directory / "receipt-state"
+        calls = self.directory / "gh-args.json"
+
+        def publish(status):
+            return subprocess.run(
+                ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", command],
+                cwd=self.directory,
+                env={**self.env, "GH_RESPONSE": "{}", "GH_STATUS": str(status)},
+                capture_output=True, text=True, check=False,
+            )
+
+        self.assertNotEqual(publish(0).returncode, 0)
+        self.assertFalse(calls.exists(), "Unreadable history must stop before POST")
+        state.write_text("UNRELATED=preserved\n")
+        self.assertNotEqual(publish(1).returncode, 0)
+        self.assertEqual(json.loads(calls.read_text()), [
+            "api", "--method", "POST", "repos/example/repo/pulls/7/reviews",
+            "--input", "review.json",
+        ])
+        failed = state.read_text()
+        self.assertEqual(failed, "UNRELATED=preserved\nREVIEW_RECEIPT=required\nREVIEW_RECEIPT=failed\n")
+        calls.unlink()
+        self.assertNotEqual(publish(0).returncode, 0)
+        self.assertFalse(calls.exists(), "A rejected or uncertain POST must not be repeated")
+        self.assertEqual(state.read_text(), failed)
 
     def test_condition_preserves_genuine_skip_and_required_receipt(self):
         condition = self.step.split("if:", 1)[1].split("shell:", 1)[0].strip()
