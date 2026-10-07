@@ -19,15 +19,6 @@ outputs:
   skipped:
     description: Whether the AI explicitly skipped before mutation
     value: ${{ steps.invoke.outputs.skipped }}
-  review_attempted:
-    description: Whether review publication was attempted or an existing attempt was found
-    value: ${{ steps.invoke.outputs.review_attempted }}
-  review_failed:
-    description: Whether review publication has a persistent failure
-    value: ${{ steps.invoke.outputs.review_failed }}
-  review_receipt_required:
-    description: Whether a pre-publication read failure requires a posted-review receipt
-    value: ${{ steps.invoke.outputs.review_receipt_required }}
 
 runs:
   using: composite

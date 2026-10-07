@@ -58,53 +58,49 @@ changes, or expand the work into unrelated refactoring.
 
 ## Publication
 
-Use [the publication helper](../../scripts/review-publication.sh), not a direct
-review POST. Write a literal JSON request containing the outcome fields above
-and any inline `comments`, then run:
+AI owns request preparation, eligibility, submission, and reconciliation through
+`gh`; there is no publication helper. Before POST, reconcile this attempt's marker
+and any reviewer-owned pending review. Reuse an exact submitted review, never
+duplicate it; conflicting or pending reviews require an explicit failure report.
+Verify the identity, SHA, event, marker, exact body, and inline comments below.
+
+Validate inline locations against the current diff before submission. Use paths
+and line/side or diff-position coordinates you have verified; multiline ranges
+must run forward within one hunk. Correct local request errors before POST, or
+put the finding in the body when its location cannot be verified.
+
+Immediately before POST, recheck that the PR is open, non-draft, same-repository,
+and at `PR_HEAD_SHA`. A known false result must stop the publishing command before
+POST. A failed or incomplete read is not a false eligibility result. A head can
+still move after a valid check; HTTP 422 alone does not prove a broken gate.
+
+The caller owns one receipt state, `REVIEW_RECEIPT`, initially empty. Append
+`REVIEW_RECEIPT=required` to `GITHUB_ENV` before any POST, when reconciling an
+existing attempt, or after a publication read error. This makes the independent
+receipt mandatory even if `skipped=true` is later written. Keep the attempt record
+and POST in the same shell invocation, handling failure explicitly, for example:
 
 ```sh
-./scripts/review-publication.sh publish review.json "$GITHUB_OUTPUT"
+printf 'REVIEW_RECEIPT=required\n' >> "$GITHUB_ENV" &&
+if ! gh api --method POST "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/reviews" --input review.json; then
+  printf 'REVIEW_RECEIPT=failed\n' >> "$GITHUB_ENV"
+  exit 1
+fi
 ```
 
-The helper reconciles this attempt's reviews and any reviewer-owned pending
-review, validates inline locations against paginated PR-file patches, then checks
-live eligibility immediately before submission. An initially ineligible PR stops
-before POST and can skip. A head can still move after a valid check; HTTP 422
-alone does not establish a broken freshness gate.
+A rejected or uncertain POST, or conflicting or pending review, requires
+`REVIEW_RECEIPT=failed`. Reconcile without another POST and report failure, even
+if no review persisted or a matching review is later found. Never clear this state
+or downgrade `failed` to `required`. Preserve the command file's other entries.
+`GITHUB_ENV` updates subsequent steps, not the current shell; track this attempt's
+history rather than treating an unchanged shell variable as permission to resubmit.
 
-A pre-publication read error or incomplete eligibility response returns failure
-and records `review_receipt_required=true`, not a submission attempt. Retry the
-helper with the same output file after checking the error; healthy reads can
-still lead to publication while eligible. If eligibility becomes false, stop
-without POST and report incomplete publication, not a skip. Until a review is
-verified, the required receipt cannot pass, even if the worker claims a skip.
-
-`review_attempted=true` is recorded before POST, not only after GitHub accepts it.
-A rejected or uncertain request is reconciled and records `review_failed=true`,
-even when no review persisted or an accepted review is found. Keep all publication
-outputs; do not overwrite them or classify the attempt as skipped. Do not resubmit
-after a failed request in this attempt. An eligible replacement head or rerun receives
-its own assessment and marker; later success does not erase the earlier failure.
-
-Local request-format, inline-location, or self-approval errors can be corrected
-before any POST; they do not mark an API attempt as failed. Inline comments need
-a path in the diff and valid `line`/`side` coordinates (or a diff `position`);
-multiline ranges also need `start_line`/`start_side` and must run forward within
-one hunk. Use `LEFT` for deletions and `RIGHT` for additions or context. Correct
-invalid locations or move findings into the review body when patches are
-unavailable or incomplete.
-
-After an accepted POST, a failed read or a review not yet visible is an unverified
-outcome, not a permanent publication failure. Retry the helper with the same
-request and output file to reconcile without another POST. A later exact
-read-back can complete publication; the attempted flag keeps the receipt
-mandatory throughout. Failed POSTs and conflicting read-backs remain failed
-even after a later matching read-back.
-
-The helper verifies the read-back identity, SHA, event, marker, and exact body.
-An already verified review is reused without another POST; conflicting or pending
-reviews remain failures requiring explanation. Verify inline feedback as usual,
-then report the actual result and any unresolved reconciliation.
+Read-only errors can be retried. After an accepted POST, delayed visibility or a
+failed read remains unverified with a required receipt, not a permanent failure;
+an exact later read-back can complete it without reposting. If the head becomes
+ineligible after a read error, stop without POST and report incomplete publication,
+not a skip. Replacement heads and reruns need their own assessment and marker;
+later success does not erase an earlier attempt's failure.
 
 ## Skip and report
 
@@ -121,8 +117,8 @@ then report the actual result and any unresolved reconciliation.
 - For eligible reruns or replacements of unsuccessful reviews, reassess current
   code/discussion, retain applicable findings, and submit a fresh review with this
   attempt's `REVIEW_MARKER`.
-- After a submission attempt, verify and report partial outcomes, not skips. Reconcile this
-  attempt's uncertain submissions before retrying; do not duplicate reviews.
+- After a submission attempt, verify and report partial outcomes, not skips.
+  Retry read-only reconciliation, not submission; do not duplicate reviews.
 - Retry failed report writes and correct read-back output formatting without
   resubmitting an accepted review.
 - Verify `REVIEWER_LOGIN` authored the review and it meets the outcome contract.
@@ -207,15 +203,15 @@ writes, or bypassing verification.
 
 ## Verification limits
 
-The receipt query is inline in the caller workflow, independent of the worker's
-checkout and publication helper. Deliberate same-runner tampering remains an
-accepted risk.
+The receipt query and its outcome gate belong to the caller workflow, not the
+shared AI action. The inline query is independent of the worker's checkout.
+Deliberate same-runner tampering remains an accepted risk.
 
 The read-only receipt check requires a submitted bot comment review or approval
 with the expected commit, visible full SHA, and run marker, unless skipped before
 any submission attempt or publication read failure. It runs after worker failures
-too, unless cancelled. Only a skip without a submission attempt, persistent failure,
-or required receipt bypasses the API receipt. The receipt step itself is skipped
+too, unless cancelled. Only a skip with an empty `REVIEW_RECEIPT` bypasses the API
+receipt. The receipt step itself is skipped
 in that case, not reported as a successful verification. A failed POST still fails
 even if reconciliation finds an accepted review. It proves neither review quality,
 required-review qualification, nor live event delivery.
@@ -224,11 +220,15 @@ Same-head redispatch must preserve active reviews and deliver findings once.
 After post-submission failure, timeout, or cancellation, only a fresh successful
 assessment may deliver remaining findings.
 
-Run focused publication/receipt regression checks with
-`python -m unittest discover -s tests -p 'test_review_publication.py'`.
-They invoke the production publication helper and the workflow's literal receipt
-command with a fake `gh` and synthetic output files; they do not use GitHub
-credentials or runner command-file paths. They cover
-observable POST, reconciliation, skip, and failure outcomes, not model adherence,
-GitHub races, or live event delivery. Confirm subsequent live worker/receipt
-outcomes after the changed default-branch workflow is deployed.
+Run focused receipt regression checks with
+`python -m unittest discover -s tests -p 'test_review_receipt.py'`.
+They execute the workflow's literal receipt command with a fake `gh` and check
+the actual Actions condition statically, without credentials or runner command
+files. They cover receipt fields, read failures, and retained publication failure.
+They do not prove native Actions evaluation or `GITHUB_ENV` propagation.
+
+Eligibility, inline validation, no-duplicate reconciliation, and recording
+publication state now depend on AI following this guide, not a scripted validator.
+The receipt cannot detect an unrecorded rejected POST. Confirm these behaviors,
+genuine pre-POST skips, and failed worker/receipt outcomes in subsequent live
+invocations after deployment; local checks do not prove AI adherence or GitHub races.

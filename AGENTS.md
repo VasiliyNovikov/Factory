@@ -59,7 +59,7 @@
 
 This is an agentic software factory scaffold, with no application code or
 toolchain yet. [README.md](README.md) tracks completed CI milestones. Focused
-[PR-review publication checks](docs/factory/pr-review.md#verification-limits) use
+[PR-review receipt checks](docs/factory/pr-review.md#verification-limits) use
 Python's standard library; other automated workflow tests are deferred.
 
 Use the owning guide for each workflow's behavior, permissions, and verification:
