@@ -28,19 +28,23 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
 
 ## Clean default-branch merges
 
-When a PR only merges updates from the default branch, review how those updates
-affect the PR instead of repeating unrelated checks. Use this narrower review
-only when all conditions below hold. Read the complete discussion, requests,
-threads and edit/deletion history in either path.
+Even a clean merge can break behavior. For PRs updated only by default-branch
+merges, review how the incoming changes affect the PR, including dependencies
+in otherwise unrelated files. Use this narrower review only when all conditions
+below hold. Read the complete discussion, requests, threads and edit/deletion
+history in either path.
 
 - The PR targets and includes the latest default branch. An earlier PR head
   is still approved and has [verified coverage](#skip-and-report).
-- Following each merge's PR-side parent (the first parent) reaches that approved
-  head. Every commit along that path is a two-parent merge: previous PR head
-  first, then a commit on the default branch's first-parent history. Recreating
-  each merge with `git merge-tree --write-tree <parent1> <parent2>` must exit 0
-  and produce exactly its recorded tree, under the
-  [check safeguards](review-checks.md), without custom drivers or strategies.
+- Since that approved head, the branch has only taken in default-branch updates
+  that Git can merge automatically, without hand-fixed conflicts or extra edits.
+  Follow the PR-side parent (first parent) from the current head back to the
+  approved head. Every commit on this path after the approved head must have
+  two parents: the previous PR head first, then a commit on the default branch's
+  mainline (first-parent history). Recreate each merge with
+  `git merge-tree --write-tree <parent1> <parent2>`: require exit 0 and exactly
+  the recorded tree, under the [check safeguards](review-checks.md), without
+  custom drivers or strategies.
 - All review inputs (guidance, workflow, tooling, effective configuration) match
   between the prior review's workflow revision and `GITHUB_WORKFLOW_SHA`.
   The PR's own changes against the old and new merge bases are identical,
@@ -50,9 +54,7 @@ threads and edit/deletion history in either path.
 
 If any condition fails or is uncertain, do a full review and explain why, without
 widening permissions. Missing evidence needed for that review remains a blocker.
-Even a clean merge can break behavior: check how the incoming updates and PR
-changes interact, including dependencies in otherwise unrelated files.
-Normal review rules still apply.
+Reuse unaffected checks; normal review rules still apply.
 
 Identify the **scoped merge-only reassessment** in the body and summary: full
 prior-approved, current PR (`PR_HEAD_SHA`), default-branch and both workflow SHAs;
