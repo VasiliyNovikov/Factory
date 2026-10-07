@@ -29,10 +29,10 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
 ## Clean default-branch merges
 
 Even a clean merge can break behavior. For PRs updated only by default-branch
-merges, review how the incoming changes affect the PR, including dependencies
-in otherwise unrelated files. Use this narrower review only when all conditions
-below hold. Read the complete discussion, requests, threads and edit/deletion
-history in either path.
+merges, review how the incoming changes and the PR interact, including dependencies
+in otherwise unrelated files, and reuse unaffected checks. Use this narrower review
+only when all conditions below hold. Read the complete discussion, requests, threads
+and edit/deletion history in either path.
 
 - The PR targets and includes the latest default branch. An earlier PR head
   is still approved and has [verified coverage](#skip-and-report).
@@ -54,7 +54,7 @@ history in either path.
 
 If any condition fails or is uncertain, do a full review and explain why, without
 widening permissions. Missing evidence needed for that review remains a blocker.
-Reuse unaffected checks; normal review rules still apply.
+Normal review rules still apply.
 
 Identify the **scoped merge-only reassessment** in the body and summary: full
 prior-approved, current PR (`PR_HEAD_SHA`), default-branch and both workflow SHAs;
