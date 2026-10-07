@@ -135,6 +135,39 @@ The [token action](https://github.com/actions/create-github-app-token) defaults 
 this repository in the reusable example; installed workers name their validated
 target explicitly. It revokes its token at job end. Generate a fresh token per job.
 
+## API evidence credentials
+
+[Diagnostics](workflow-diagnostics.md) and [implementation](issue-implementation.md),
+including their read-only analysis subprocesses, follow these rules from the first
+GitHub lookup. Each workflow's guide still owns source eligibility, permissions,
+and allowed mutations.
+
+- For read-only Actions endpoints (`repos/.../actions/...`, including runs,
+  attempts, jobs, and logs), use command-scoped `GH_TOKEN="$GITHUB_TOKEN"`.
+  For example, the first own-run metadata lookup uses:
+
+  ```sh
+  GH_TOKEN="${GITHUB_TOKEN:?built-in Actions token is required}" \
+    gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+  ```
+
+- All other repository/issue/PR operations, including permission checks and
+  verification, keep App `GH_TOKEN` unchanged. This includes Checks (`check-runs`,
+  `check-suites`), commit statuses (`status`, `statuses`), and GraphQL check/status
+  queries. CI-related evidence is not necessarily an Actions endpoint.
+- Use `gh api` with explicit endpoints for Actions reads: `gh run view` summaries
+  also read PRs and Checks. Never switch credentials globally or apply an
+  Actions-token override to a subprocess that also makes non-Actions calls.
+  A denied request is a failure to report, not permission to try another
+  credential or widen access.
+- Keep `COPILOT_GITHUB_TOKEN` bound to the built-in token for model requests.
+
+Retain non-secret API invocation evidence in the run log and summary: exercised
+workflow revision, endpoint/operation, credential role, and outcome, including the
+first Actions lookup. Use variable names or role labels, never token values.
+Report any credential-role deviation and its corrective reread separately.
+A successful request or static inspection alone does not prove live adherence.
+
 ## Review identity and approvals
 
 Posting an approval and qualifying for required reviews are different:
