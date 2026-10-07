@@ -146,15 +146,13 @@ class ReviewReceiptTests(unittest.TestCase):
         self.assertFalse(calls.exists(), "A rejected or uncertain POST must not be repeated")
         self.assertEqual(state.read_text(), failed)
 
-    def test_condition_preserves_genuine_skip_and_required_receipt(self):
+    def test_condition_preserves_success_prerequisite_and_receipt_triggers(self):
         condition = self.step.split("if:", 1)[1].split("shell:", 1)[0].strip()
         condition = condition.removeprefix(">-").strip()
-        gate = re.fullmatch(r"\$\{\{\s*!cancelled\(\)\s*&&\s*\((.*?)\)\s*\}\}",
-                            condition, re.DOTALL)
-        self.assertIsNotNone(gate, "Receipt must run after worker failure unless cancelled")
-        self.assertEqual({" ".join(term.split()) for term in gate[1].split("||")}, {
+        condition = condition.removeprefix("${{").removesuffix("}}").strip()
+        self.assertEqual({" ".join(term.split()) for term in condition.split("||")}, {
             "steps.worker.outputs.skipped != 'true'", "env.REVIEW_RECEIPT != ''",
-        })
+        }, "Receipt gate must retain implicit success() and both receipt triggers")
 
 
 if __name__ == "__main__":

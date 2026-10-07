@@ -79,8 +79,9 @@ genuinely stale result must stop before both the state write and POST.
 The caller owns one receipt state, `REVIEW_RECEIPT`, initially empty. Append
 `REVIEW_RECEIPT=required` to `GITHUB_ENV` before any POST, when reconciling an
 existing attempt, or after a publication read error. This makes the independent
-receipt mandatory even if `skipped=true` is later written. Keep the attempt record
-and POST in the same shell invocation, handling failure explicitly, for example:
+receipt mandatory in an otherwise successful job even if `skipped=true` is later
+written. Keep the attempt record and POST in the same shell invocation, handling
+failure explicitly, for example:
 
 ```sh
 if grep -qx 'REVIEW_RECEIPT=failed' "$GITHUB_ENV"; then
@@ -218,12 +219,14 @@ Deliberate same-runner tampering remains an accepted risk.
 
 The read-only receipt check requires a submitted bot comment review or approval
 with the expected commit, visible full SHA, and run marker, unless skipped before
-any submission attempt or publication read failure. It runs after worker failures
-too, unless cancelled. Only a skip with an empty `REVIEW_RECEIPT` bypasses the API
-receipt. The receipt step itself is skipped
-in that case, not reported as a successful verification. A failed POST still fails
-even if reconciliation finds an accepted review. It proves neither review quality,
-required-review qualification, nor live event delivery.
+any submission attempt or publication read failure. The receipt retains Actions'
+implicit `success()` prerequisite: setup or worker failures fail the job without
+running the receipt. This prevents review API reads with the built-in token after
+reviewer-token setup fails. After a successful worker, only a skip with an empty
+`REVIEW_RECEIPT` bypasses the API receipt; the step is skipped, not reported as a
+successful verification. A failed POST still fails even if reconciliation finds
+an accepted review. The receipt proves neither review quality, required-review
+qualification, nor live event delivery.
 
 Same-head redispatch must preserve active reviews and deliver findings once.
 After post-submission failure, timeout, or cancellation, only a fresh successful
