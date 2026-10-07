@@ -28,31 +28,37 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
 
 ## Clean default-branch merges
 
-Review fully unless all conditions below hold. Read the complete discussion,
-requests, threads, and edit/deletion history in either path.
+When a PR only merges updates from the default branch, review how those updates
+affect the PR instead of repeating unrelated checks. Use this narrower review
+only when all conditions below hold. Read the complete discussion, requests,
+threads and edit/deletion history in either path.
 
-- The PR targets the default branch; its live tip `D` is an ancestor of
-  `H = PR_HEAD_SHA`. A still-approved `A != H` on `H`'s first-parent history has
-  [verified coverage](#skip-and-report).
-- Every first-parent commit after `A` through `H` is a two-parent merge of its
-  predecessor and a commit on `D`'s first-parent history. Each tree matches
-  `git merge-tree --write-tree <parent1> <parent2>` with exit 0, under the
+- The PR targets and includes the latest default branch. An earlier PR head
+  is still approved and has [verified coverage](#skip-and-report).
+- Following each merge's PR-side parent (the first parent) reaches that approved
+  head. Every commit along that path is a two-parent merge: previous PR head
+  first, then a commit on the default branch's first-parent history. Recreating
+  each merge with `git merge-tree --write-tree <parent1> <parent2>` must exit 0
+  and produce exactly its recorded tree, under the
   [check safeguards](review-checks.md), without custom drivers or strategies.
 - All review inputs (guidance, workflow, tooling, effective configuration) match
-  between the prior source workflow SHA and `GITHUB_WORKFLOW_SHA`. The PR delta
-  is identical against old/new merge bases, including paths, content, modes and binaries.
+  between the prior review's workflow revision and `GITHUB_WORKFLOW_SHA`.
+  The PR's own changes against the old and new merge bases are identical,
+  including paths, content, modes and binaries.
 - No new actionable feedback, requirements, or review requests exist since that
   assessment. Maintenance reports alone do not invalidate coverage.
 
-Failed or uncertain conditions require a full review with the reason stated,
-without wider permissions. Missing evidence needed for that review remains a
-blocker. Otherwise reassess base/PR interactions, including non-overlapping
-dependencies, reusing unaffected checks. Normal review rules still apply.
+If any condition fails or is uncertain, do a full review and explain why, without
+widening permissions. Missing evidence needed for that review remains a blocker.
+Even a clean merge can break behavior: check how the incoming updates and PR
+changes interact, including dependencies in otherwise unrelated files.
+Normal review rules still apply.
 
 Identify the **scoped merge-only reassessment** in the body and summary: full
-`A`, `H`, `D` and workflow SHAs, prior review/attempt links, each condition's
-evidence and limitations. Recheck head, base, discussion and coverage before
-submitting a fresh review with this attempt's marker and receipt.
+prior-approved, current PR (`PR_HEAD_SHA`), default-branch and both workflow SHAs;
+prior review/attempt links; each condition's evidence and limitations. Recheck
+head, base, discussion and coverage before submitting a fresh review with this
+attempt's marker and receipt.
 
 ## Review outcome
 
