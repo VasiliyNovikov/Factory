@@ -133,51 +133,32 @@ deadline to recover coverage.
 
 ## Time-budget utilization
 
-Assess budget sizing within the same history window, eligibility rules, and
-investigation deadline. Roughly **50% average utilization** is a headroom goal,
-not a per-run cutoff or a reason to slow down work.
+Within the same history window, eligibility rules, and investigation deadline,
+treat roughly **50% average utilization** as a headroom goal, not a per-run cutoff
+or reason to slow work.
 
-- Group comparable attempts by workflow/job/invocation, workload, and executed
-  contract. Establish the applicable limit from the executed workflow and action
-  revisions and run context, including defaults or expressions. Current Factory
-  callers set the AI action's `budget`; older revisions may use job or step
-  `timeout-minutes`. Do not substitute today's configuration for unknown history
-  or mix different timeout boundaries in one sizing group.
-- Measure elapsed time at the matching boundary. For AI budgets, use invocation
-  start/completion logs or exact invocation-step timings, including AI-owned
-  checks, publication, and reporting, but not checkout, installation, or later
-  receipt checks. Do not use the outer composite-action duration if it includes
-  installation. For historical job budgets, include setup and completion work,
-  excluding queueing; for step budgets, use that step's elapsed time. Missing
-  boundary evidence is a gap, not permission to compare unlike measurements.
-- For each assessed group, report sample size, average utilization
-  (`elapsed time at the boundary / applicable budget`), runtime spread, and
-  near-limit and timeout counts with run-attempt links. State the basis for calling runs
-  near-limit; averages alone can hide insufficient headroom.
-- Separate skips, failed/cancelled work, unfinished attempts, and unknown timings
-  from attempts verified to have completed their expected substantive work.
-  Base reductions only on the latter; setup or mid-run failures do not show the
-  time needed to finish, and a green exit alone does not prove completion.
-- Identify timeouts from job/step/invocation evidence, not conclusion alone: job
-  timeouts can appear as `cancelled`, while the AI action fails on GNU `timeout`
-  expiry (normally exit 124, or 137 after forced termination). A kill status alone
-  does not establish its cause. Use termination logs, maximum-execution-time
-  annotations, or other eligible evidence, following the
-  [shared log guidance](actions-logs.md) when needed.
-  Distinguish other cancellations and report timeouts separately as lower bounds
-  on required time, not completed-work runtimes.
-- Identify persistent substantial underuse or recurring near-limit/timeouts.
-  Distinguish AI-budget pressure from enclosing job/step limits, hangs, and
-  fixable failures. Recommend a lower or higher budget only with evidence that
-  accounts for variability and all work within its boundary. Check job/runner
-  headroom separately; a mostly unused default job limit is not evidence to
-  reduce the AI budget.
-  Sparse, mixed, or missing evidence is a limitation, not proof of a sizing problem.
-- Route actionable recommendations through the duplicate-checked, unlabeled
-  findings-issue path below. Include the proposed budget value and boundary,
-  rationale, linked run-attempt evidence, and the owning caller input or historical
-  timeout plus relevant shared budget guidance. Diagnostics must not edit
-  workflows or settings.
+- Group comparable workloads by workflow and executed contract. Resolve historical
+  action `budget` or job/step `timeout-minutes`, including defaults/expressions,
+  and measure at that boundary. AI timings exclude checkout, installation, and
+  later receipts; job timings include setup/completion but not queueing. Do not
+  mix boundaries or substitute today's limits or outer composite-action duration
+  for missing invocation evidence.
+- Report sample size, mean elapsed/budget, runtime spread, and near-limit/timeout
+  counts with run-attempt links and the near-limit criterion. Separate verified
+  substantive completions from skips, failures, cancellations, unfinished work,
+  and unknown timings. Only verified completions justify reductions; green exits
+  alone do not.
+- Confirm timeouts with termination evidence, following the
+  [shared log guidance](actions-logs.md); a cancellation or exit status alone is
+  insufficient. Report timeouts separately as lower bounds on needed time.
+  Distinguish AI-budget pressure from enclosing limits, hangs, and fixable failures;
+  check job/runner headroom separately.
+- Recommend resizing for persistent substantial underuse or recurring near-limit
+  runs/timeouts, accounting for variability and all work within the boundary,
+  including AI-owned checks, publication, and reporting. Sparse, mixed, or missing
+  evidence does not justify resizing. Use the [findings path](#findings-and-reporting)
+  with a proposed value and boundary, rationale, evidence, and the owning caller
+  input or historical timeout plus shared budget guidance.
 
 ## Findings and reporting
 
