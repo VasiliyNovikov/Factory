@@ -214,11 +214,11 @@ Deliver findings once while preserving active same-head reviews. After
 post-submission failure, timeout, or cancellation, remaining findings require a
 fresh successful assessment.
 
-Run `python -m unittest discover -s tests -p 'test_review_receipt.py'` under the
-check safeguards. Tests execute the literal receipt/example with fake `gh` and
-synthetic state, and inspect the actual gate statically. They cover receipt fields,
-read failures, and sticky failed-POST/no-retry behavior, not hosted Actions
-evaluation or `GITHUB_ENV` propagation.
+Choose relevant checks under [Local checks](#local-checks).
+The [receipt tests](../../tests/test_review_receipt.py) exercise the literal
+receipt/example with fake `gh` and synthetic state, covering receipt fields,
+read failures, and sticky failed-POST/no-retry behavior. Gate checks are static;
+neither proves hosted Actions evaluation or `GITHUB_ENV` propagation.
 
 Eligibility, inline validation, reconciliation, and recording state depend on AI
 adherence; the receipt cannot detect an unrecorded rejected POST. After deployment,
