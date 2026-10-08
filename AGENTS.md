@@ -74,6 +74,7 @@ Use the owning guide for each workflow's behavior, permissions, and verification
 | Run-history analysis | [Workflow diagnostics](docs/factory/workflow-diagnostics.md) |
 | Full source analysis | [Repository review](docs/factory/repository-review.md) |
 | Model selection and improvement findings | [Model profile improvement](docs/factory/model-profile-improvement.md) |
+| Recurring owner feedback and guidance findings | [Owner feedback learning](docs/factory/owner-feedback.md) |
 
 Factory tooling checkouts use `github.workflow_sha`; target code and project
 guidance stay separate. Only the Factory-local target is enabled. Manual jobs skip

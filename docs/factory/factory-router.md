@@ -79,8 +79,9 @@ checkout or AI setup. Copilot decides the rest.
 - Successful CI without review findings.
 - Cancelled runs.
 - Router, [PR review](pr-review.md), triage, implementation, workflow diagnostics,
-  [repository review](repository-review.md), and
-  [model profile improvement](model-profile-improvement.md) completions
+  [repository review](repository-review.md),
+  [model profile improvement](model-profile-improvement.md), and
+  [owner feedback learning](owner-feedback.md) completions
   (job-filtered regardless of conclusion). Reviewer-App findings arrive through
   `pull_request_review: submitted`; source-review findings enter through new issues,
   not self-triggered automation.

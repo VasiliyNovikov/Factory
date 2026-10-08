@@ -134,6 +134,21 @@ profile edits. Normal triage and implementation handle the changes. Findings
 and the run summary record capability checks, per-workflow decisions, and dated
 evidence.
 
+## Owner feedback learning
+
+[Owner feedback learning](docs/factory/owner-feedback.md) runs weekly on
+**Monday at 00:17 UTC** or manually on the default branch. It reviews the last
+**90 days** of the owner's issue/PR discussions and reviews, including inline
+feedback on older or closed work, for recurring preferences that current
+instructions, docs, or prompts do not yet address.
+
+Findings need multiple independent owner examples, current-guidance checks, and
+provider research where applicable. The evaluator reconciles issues and PRs in
+all states, then creates only new **unlabeled Factory issues** for normal triage
+and implementation. It does not directly edit guidance or existing discussions.
+No new actionable pattern means no new issue; incomplete coverage and failures
+are reported explicitly in the job summary and retained log.
+
 ## CI examples
 
 These are reusable snippets, not installed workflows. Basic examples use the
