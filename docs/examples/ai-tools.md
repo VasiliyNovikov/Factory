@@ -75,8 +75,9 @@ review, model profile improvement,
 [owner feedback learning](../factory/owner-feedback.md), and
 [implementation self-review](../factory/issue-implementation.md#internal-self-review)
 share `review`. Implementation stays on `implement` and invokes the same runner
-with `--profile review` for its internal pre-publication pass; it does not install
-another CLI or replace independent PR review.
+with `--profile review` for its internal pass over the complete uncommitted
+candidate before publication commits; it does not install another CLI or replace
+independent PR review.
 
 [Model profile improvement](../factory/model-profile-improvement.md) evaluates
 every caller weekly and files evidence-backed, unlabeled issues for triage. Its

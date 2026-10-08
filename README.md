@@ -41,9 +41,9 @@ PR reviewers may run PR code, tests, and focused experiments under the
 [PR-review execution rules](docs/factory/pr-review.md#local-checks).
 
 Implementation keeps eligible PRs current with the default branch and resolves
-conflicts, but never merges PRs or closes issues. It self-reviews changed candidates
-with the `review` profile before publication, except for clean push-only base
-maintenance.
+conflicts, but never merges PRs or closes issues. It self-reviews complete
+uncommitted candidates with the `review` profile before publication commits,
+except for clean push-only base maintenance.
 Independent PR review still runs. Verified clean base-merge heads can reuse prior
 coverage for a [scoped reassessment](docs/factory/pr-review.md#clean-default-branch-merges),
 with a fresh review of the new head.
