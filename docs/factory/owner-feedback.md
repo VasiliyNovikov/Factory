@@ -22,7 +22,7 @@ with `review`. Budget 30 minutes, including publication, verification, and repor
 - Read current remote default guidance and linked decisions/outcomes with `gh`.
 - Require **two independent owner examples** and a durable, still-actionable gap.
   Check contrary evidence/resolutions; exclude one-off, superseded, or addressed
-  requests. Repeated replies, quotations, or edits are not independent examples.
+  requests. Repeated replies on one request, quotations, or edits are not independent.
   Do not duplicate already-clear rules.
 - Follow [provider-research guidance](../../AGENTS.md#ai-led-work), citing retrieval
   and available publication/update dates.
@@ -39,7 +39,7 @@ with `review`. Budget 30 minutes, including publication, verification, and repor
 - Create one **unlabeled** issue per cohesive finding in `GITHUB_REPOSITORY` as
   `FACTORY_LOGIN`. Include preference, original feedback links/dates, context and
   contrary evidence, gap, owning files and source permalinks at the evaluated SHA,
-  scope, acceptance criteria, dependencies (or "none"), dated provider evidence,
+  scope, acceptance criteria, dependencies (or "none"), applicable dated provider evidence,
   and run-attempt URL.
 - Verify empty labels on creation and repository/author/body/URL through fresh reads.
   Reconcile uncertain creation with fresh, paginated reads before retrying; leave
