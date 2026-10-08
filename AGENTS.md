@@ -42,6 +42,8 @@
 
 - Use concise, plain language in docs, issue/PR bodies, comments, and reviews.
   Keep documentation aligned with the code and workflows.
+- Durable docs, guides, and prompts describe current behavior and decisions; put change history (superseded approaches, change-specific issue/PR/run/commit references, per-change verification evidence) in PR descriptions, comments, or commit messages.
+  Preserve README milestones, owning-guide links, durable verification requirements and limits, and required evidence links and markers in issue/PR bodies, comments, and reports.
 - Lead with the outcome or request. Start AI-written PR descriptions, issue
   bodies, triage assessments, and other longer comments, reviews, or reports with
   a `## TL;DR` section: one or two short, plain-language sentences before supporting
