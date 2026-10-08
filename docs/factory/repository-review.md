@@ -13,22 +13,16 @@ active work and at most one pending run. The 30-minute budget includes setup and
 ## Review scope
 
 - Review the full checked-out repository snapshot from scratch.
-- Record the exact reviewed commit and derive the tracked-file inventory and
-  total from its Git tree, not a manually reconstructed list or a prior count.
-  For example, count the NUL-delimited paths returned by
-  `git ls-tree -r --name-only -z <reviewed-commit>`.
-- Reconcile every tracked path as fully read, partially read, or unread/unreadable
-  against the content actually inspected at that commit. These counts must sum
-  to the tree total; exclusions remain accounted for, not silently dropped.
-- Listing paths, counting lines/bytes, or reading only samples, search matches,
-  filtered content, or truncated output does not establish full-file coverage.
-  Check returned ranges and truncation; read the missing content before marking
-  a file fully read. This includes files such as `LICENSE` and `.gitignore`.
-- Finish missing reads or report incomplete analysis with the remaining
-  paths/ranges and reasons. Distinguish unavailable invocation evidence from
-  demonstrated unread content; neither supports an unqualified full-coverage
-  claim. A plan to read, a successful tool/CLI exit, or folded output alone
-  cannot establish complete inspection.
+- Record the reviewed commit and get its file list and count from the Git tree:
+  `git ls-tree -r --full-tree --name-only -z <reviewed-commit>`.
+- Account for every file, including exclusions, as fully read, partially read,
+  or unread/unreadable. The counts must add up to the tree total.
+- Count only content actually inspected. Listings, samples, filtered or
+  truncated output, planned reads, and successful exits are not full reads.
+  Read missing content or report incomplete analysis with the remaining
+  paths/ranges and reasons.
+- If read evidence is missing or folded, report that limit: it proves neither
+  full coverage nor that a read never happened.
 - Report distinct, evidenced, actionable improvements, not speculation, style
   churn, or unnecessary refactoring. Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Always assess [whether the implementation can be simpler](pr-review.md#simplicity).
