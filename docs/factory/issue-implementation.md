@@ -117,14 +117,14 @@ outcomes. Required base maintenance still applies. The main worker stays on
 
 - Keep implementation and review fixes uncommitted through the review loop.
   Do not create checkpoint commits to start or repeat review. Preserve existing
-  history and required base-merge commits; make normal publication commits after
-  the loop.
+  history and required base-merge commits; make normal publication commits through
+  the real index after the loop.
 - Finish the candidate, including required base merges. Record the base and local
   HEAD commit SHAs, plus the previous published head when applicable. Capture the
   complete intended final contents as an immutable Git tree (`candidate_tree`,
-  not a commit), using `git write-tree` with a temporary index. Build it from
-  local HEAD plus all intended staged and unstaged changes, new files, deletions,
-  and file modes. Exclude unrelated work and leave the real index unchanged.
+  not a commit), using `git write-tree` from an index containing exactly that
+  candidate: local HEAD plus all intended staged and unstaged changes, new files,
+  deletions, and file modes. Exclude unrelated work.
   Verify the tree matches the intended candidate and keep that candidate unchanged
   while the reviewer runs.
 - Use `git worktree add --detach` to create a temporary `review_checkout` under
@@ -168,12 +168,13 @@ outcomes. Required base maintenance still applies. The main worker stays on
   coverage alone do not block otherwise verified work: disclose the incomplete
   internal review in publication and reporting, preserving independent PR review.
   Never call these failures a skip or a clean review, or bypass required checks.
-- Before pushing, verify the publication commit's tree equals the final
-  `candidate_tree` submitted for review. A mismatch requires refreshed affected
-  review coverage and checks, not a claim that the published content was reviewed.
+- Before pushing, verify the actual head to be pushed has the same tree as the
+  final `candidate_tree` submitted for review. A mismatch requires refreshed
+  affected review coverage and checks, not a claim that the published content was
+  reviewed.
 - In the PR and run summary, record the selected profile and resolved model
   settings, trusted workflow revision, base/local HEAD and previous published head
-  SHAs, candidate tree IDs and their review coverage, eventual publication commit
+  SHAs, candidate tree IDs and their review coverage, eventual published head
   SHA and verified tree equality, findings and their disposition, and validation
   limits. Distinguish tree IDs from commit SHAs and a live invocation from static
   wiring evidence; do not claim a measured speedup without comparative evidence.
