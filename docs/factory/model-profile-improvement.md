@@ -52,54 +52,52 @@ Runs share one concurrency group without cancelling active work. Budget the
 
 ## Publish and report
 
-- Reconcile issues and PRs in **all states** before each finding, including prior
-  attempts and other Factory findings. Paginate and read relevant discussions and
-  resolutions; link covered work instead of duplicating it. Closed work is not
-  permission to duplicate; explain materially new evidence for rejected choices.
+- Before each finding, reconcile issues and PRs in **all states**, including prior
+  attempts and Factory findings. Read and paginate relevant discussions and resolutions;
+  link covered work instead of duplicating it. Closed work does not permit
+  duplication; explain materially new evidence for rejected choices.
 - Create one **unlabeled** issue in `GITHUB_REPOSITORY` as `FACTORY_LOGIN` per
-  cohesive improvement. Keep coupled profile/caller changes together. Include
-  scope, context, before/after settings, affected workflows and their rationale,
-  source permalinks at the evaluated SHA, dated evidence, compatibility checks
-  and limits, acceptance criteria, dependencies (or "none"), and the run-attempt URL.
-- Verify each issue's repository, `FACTORY_LOGIN` author, body, URL, and initially
-  empty labels through fresh API reads; leave later triage updates alone.
+  cohesive improvement, keeping coupled profile/caller changes together. Include
+  scope, context, before/after settings, affected workflows and rationale, source
+  permalinks at the evaluated SHA, dated evidence, compatibility checks and limits,
+  acceptance criteria, dependencies (or "none"), and the run-attempt URL.
+- Fresh API reads must verify each issue's repository, `FACTORY_LOGIN` author,
+  body, URL, and initially empty labels; leave later triage updates alone.
   Reconcile uncertain creation with fresh, paginated reads before retrying, not
   search indexing alone. Never retry blindly or treat API errors as empty results.
-- Do not implement findings, create native children, or label issues. Normal
-  [triage](issue-triage.md) and [implementation](issue-implementation.md) handle
-  them; the router ignores this workflow's completion.
+- Do not implement findings, create native children, or label issues.
+  [Triage](issue-triage.md) and [implementation](issue-implementation.md) handle
+  findings; the router ignores this workflow's completion.
 
-Append the complete report below to `GITHUB_STEP_SUMMARY`, preserving existing
-content, and include the same report in the evaluator's final CLI response,
-which the [CLI writes to the Actions log](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions#run-copilot-cli).
-This applies to every outcome, including no-change and incomplete/partial results:
+For every outcome, append the complete report to `GITHUB_STEP_SUMMARY`, preserving
+existing content, and include the same report in the final CLI response, which
+the [CLI writes to the Actions log](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions#run-copilot-cli).
+Use concise tables and links, not just totals or a summary link, without omitting
+evidence or repeating GitHub mutations:
 
-- **New findings**, **already covered**, **no change** after a complete assessment,
-  or **incomplete/partial**. Empty/failed discovery, missing capabilities, research
-  gaps, API errors, and verification failures are not no-change results. Publish
-  no speculative findings or no-op comments; verify and report any partial publication.
-- Run-attempt link, trusted workflow revision, exact evaluated SHA, CLI version,
-  discovery time, model IDs and policy/capability evidence, dated sources,
-  unavailable models, conflicts, and gaps.
-- A row per workflow/invocation: current profile/model/reasoning/context settings,
-  retain or proposed settings, rationale/evidence, and constraints.
-  Explicitly identify workflows without AI.
-- Existing work and verified new issue links, checks actually run, limits, and
-  outstanding work.
+- **Outcome:** distinguish new findings, already covered, no change after a
+  complete assessment, and incomplete/partial results. Empty/failed discovery,
+  missing capabilities, research gaps, API errors, and verification failures are
+  not no-change results. Publish no speculative findings or no-op comments;
+  verify and report partial publication.
+- **Evidence:** run-attempt link, trusted workflow revision, exact evaluated SHA,
+  CLI version, discovery time, model IDs and policy/capability evidence, dated
+  sources, unavailable models, conflicts, and gaps.
+- **Decisions:** a row per workflow/invocation with current
+  profile/model/reasoning/context settings, retain or proposed settings,
+  rationale/evidence, and constraints. Explicitly identify workflows without AI.
+- **Follow-up:** existing work and verified new issue links, checks actually run,
+  limits, and outstanding work.
 
-The final response is the complete log copy, not just totals or a summary link.
-Keep both copies consistent without repeating issue creation or other GitHub
-mutations. Use concise tables and links without omitting required evidence.
+Shell-tool output can be collapsed; local writes, `cat`, and file comparisons do
+not prove log retention. When verifying retention, read the complete downloaded
+attempt logs using the [shared log guidance](actions-logs.md) and permitted
+credentials, then compare required evidence with the preserved job summary.
+Report unavailable destinations and unverified agreement explicitly; an
+unavailable summary does not establish that it is missing or incorrect.
 
-Shell-tool output can be collapsed by the CLI. A local report write, `cat`, or
-local-file comparison does not prove log retention. When verifying retention,
-read the complete downloaded attempt logs using the [shared log guidance](actions-logs.md)
-and permitted credentials, and compare the required evidence with the preserved
-job summary. Report unavailable destinations and unverified agreement explicitly;
-an unavailable summary does not establish that it is missing or incorrect.
-
-Verification is AI-owned; a successful CLI exit is not proof of completion.
-Research and capability checks prove neither comparative quality nor model-request success.
+Verification is AI-owned: a successful CLI exit does not prove completion, nor
+do research and capability checks prove comparative quality or model-request success.
 
 ## Permissions and trust
 
