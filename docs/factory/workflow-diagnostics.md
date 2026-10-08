@@ -150,8 +150,10 @@ deadline to recover coverage.
 - Within the 30-minute job, record the window, per-workflow expected-versus-observed
   conclusions and evidence links, selection rationale, per-workflow assessed/total
   run-attempt counts, exclusions, existing/new issue links, and evidence gaps or
-  failures in `GITHUB_STEP_SUMMARY` and the log. Identify unassessed runs/attempts
-  with links or clearly defined linked groups, and explain why they were not assessed.
+  failures in `GITHUB_STEP_SUMMARY` and the coordinator's final CLI response,
+  which the [CLI writes to the Actions log](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions#run-copilot-cli).
+  Identify partially assessed and unassessed runs/attempts with links or clearly
+  defined linked groups, and explain their coverage gaps.
   Distinguish initialization, completed analysis, and incomplete analysis.
 - Record the trusted workflow revision, installed CLI version, and resolved
   coordinator and assessment-subprocess model, reasoning effort, and context tier.
@@ -163,6 +165,17 @@ deadline to recover coverage.
   Initialization reports no assessments launched rather than claiming verified
   execution.
 - Retain [API invocation evidence](github-app.md#api-evidence-credentials).
+- The final response is the complete log copy of this report, including the
+  coverage and execution-binding evidence above, not just totals or a summary
+  link. Keep it consistent with the preserved job summary. Use concise tables
+  and linked groups without omitting required evidence; rendering both copies
+  must not repeat issue creation or other GitHub mutations.
+- Shell-tool output can be collapsed by the CLI. A local report write, `cat`, or
+  spool comparison does not prove log retention. When verifying retention, read
+  the complete downloaded log using the [shared log guidance](actions-logs.md)
+  and compare its ledger with the preserved job summary. Report unavailable
+  destinations and unverified agreement explicitly; inability to read a job
+  summary does not establish that it is missing.
 - Unassessed runs/attempts, including those omitted by sampling, mean incomplete
   analysis. Do not extrapolate a sample's conclusions to the whole window.
 - Missing evidence or API failures are not a clean result.
