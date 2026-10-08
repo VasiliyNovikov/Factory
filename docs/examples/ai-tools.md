@@ -45,9 +45,8 @@ standalone binaries:
 | `./scripts/install-tools.sh` | Both |
 
 The installer downloads and version-checks the selected CLIs and installs missing
-`jq`. It requires GNU `timeout` (`gtimeout` is also accepted), provided by coreutils
-on GitHub-hosted Linux runners. For local macOS use, install coreutils first.
-Unsupported arguments fail before installation.
+`jq`. Unsupported arguments fail before installation; download, install, or
+version-check errors fail setup.
 
 Bootstrap scripts run only after a successful, nonempty download.
 
@@ -88,8 +87,9 @@ invocations remain unchanged.
 
 Factory workflows use [`.github/actions/ai`](../../.github/actions/ai/action.yml)
 to install and invoke a CLI. The installation step retries failures; AI invocation
-is not retried and runs only after setup succeeds. Retry and timeout settings live
-in the action and [installer](../../scripts/install-tools.sh).
+is not retried and runs only after setup succeeds. Settings live in the action and
+[installer](../../scripts/install-tools.sh). Only bootstrap downloads have a time
+limit; a hung vendor installer or version check waits for the caller's job timeout.
 
 ```yaml
 - name: Run a prompt

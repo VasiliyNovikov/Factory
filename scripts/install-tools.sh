@@ -9,11 +9,6 @@ elif (( $# != 1 )) || [[ "$1" != copilot && "$1" != opencode ]]; then
   exit 1
 fi
 
-timeout_command=$(command -v timeout || command -v gtimeout) || {
-  printf 'Error: GNU timeout is required (install coreutils).\n' >&2
-  exit 1
-}
-
 if ! command -v jq >/dev/null; then
   sudo apt-get update
   sudo apt-get install -y jq
@@ -38,19 +33,14 @@ for harness in "${harnesses[@]}"; do
 
   export PATH="$bin_dir:$PATH"
   : > "$installer"
-  curl -fsSL --connect-timeout 10 --max-time 20 --output "$installer" "$installer_url"
+  curl -fsSL --max-time 60 --output "$installer" "$installer_url"
   if [[ ! -s "$installer" ]]; then
     printf 'Error: %s bootstrap download was empty.\n' "$harness" >&2
     exit 1
   fi
 
-  "$timeout_command" --kill-after=5s 60s "${installer_command[@]}"
-
-  "$timeout_command" --kill-after=5s 10s "$harness" --version || {
-    status=$?
-    printf 'Error: %s version check failed (exit %s).\n' "$harness" "$status" >&2
-    exit "$status"
-  }
+  "${installer_command[@]}"
+  "$harness" --version
 
   if [[ -n "${GITHUB_PATH:-}" ]]; then
     printf '%s\n' "$bin_dir" >> "$GITHUB_PATH"
