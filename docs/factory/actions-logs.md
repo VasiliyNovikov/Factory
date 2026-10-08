@@ -14,11 +14,16 @@ when checking a PR-review source's head/marker fields:
 ```sh
 set -o pipefail
 log_file="$RUNNER_TEMP/actions-job-$job_id.jsonl"
-gh api --allow-escape-sequences \
-  "repos/$GITHUB_REPOSITORY/actions/jobs/$job_id/logs" |
+GH_TOKEN="${GITHUB_TOKEN:?built-in Actions token is required}" \
+  gh api --allow-escape-sequences \
+    "repos/$GITHUB_REPOSITORY/actions/jobs/$job_id/logs" |
   jq -Ra . > "$log_file" &&
   jq -ace 'select(test("PR_HEAD_SHA|REVIEW_MARKER"))' "$log_file"
 ```
+
+The command-scoped token binding follows the
+[API evidence credential rules](github-app.md#api-evidence-credentials) and leaves
+ambient `GH_TOKEN` unchanged for other calls.
 
 `--allow-escape-sequences` belongs after `api`, not before it. Confine it to the
 log fetch feeding the escaping step; never emit raw logs or disable protections
