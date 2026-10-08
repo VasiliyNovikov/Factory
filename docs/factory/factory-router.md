@@ -12,7 +12,8 @@ This guide owns event selection, push fan-out, and event-specific provenance.
 
 ### [PR review](pr-review.md)
 
-- A PR is opened, reopened, marked ready, or receives new commits.
+- A PR is opened, reopened, marked ready, or receives new commits, including
+  clean default-branch merges.
 - A PR conversation comment requests review or gives new context for reassessment.
 
 ### [Issue / PR implementation](issue-implementation.md)

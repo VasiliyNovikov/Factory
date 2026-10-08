@@ -44,6 +44,8 @@ rather than maintaining two policies.
   a new review request or clarification.
 - Apply the worker's [successful-assessment coverage rule](pr-review.md#skip-and-report).
   A review object or green workflow alone does not establish coverage.
+- Prior approval does not cover a new head. Only the review worker may choose
+  [scoped reassessment](pr-review.md#clean-default-branch-merges).
 
 ## Holds and handled work
 
