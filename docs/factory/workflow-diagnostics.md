@@ -147,10 +147,10 @@ Within the 30-minute job, write the complete, consistent report to both
 Use concise tables and linked groups, not just totals or a summary link. Include:
 
 - **Coverage and outcomes:** history window, selection rationale, per-workflow
-  expected-versus-observed conclusions, evidence links and assessed/total
-  run-attempt counts, exclusions, and existing/new issue links. Identify partially
-  assessed and unassessed runs/attempts with links or clearly defined linked
-  groups, explaining their coverage gaps.
+  expected-versus-observed conclusions with evidence links, per-workflow
+  assessed/total run-attempt counts, exclusions, and existing/new issue links.
+  Identify partially assessed and unassessed runs/attempts with links or clearly
+  defined linked groups, explaining their coverage gaps.
 - **Execution binding:** trusted workflow revision, installed CLI version, resolved
   coordinator and assessment-subprocess model, reasoning effort, and context tier;
   assignments, session IDs, exit statuses, settings evidence, and delegation-check
