@@ -51,7 +51,9 @@ Implementation keeps eligible PRs current with the default branch and resolves
 conflicts, but never merges PRs or closes issues. Each implementation worker
 handles only its assigned issue/PR and self-reviews changed candidates with the
 `review` profile before publication, except for clean push-only base maintenance.
-Independent PR review remains unchanged.
+Independent PR review still runs. Verified clean base-merge heads can reuse prior
+coverage for a [scoped reassessment](docs/factory/pr-review.md#clean-default-branch-merges),
+with a fresh review of the new head.
 See [implementation guidance](docs/factory/issue-implementation.md) for eligibility,
 ownership, split recovery, and verification.
 
