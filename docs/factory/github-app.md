@@ -105,6 +105,8 @@ The [shared action](../examples/ai-tools.md#shared-factory-action) sets these
 variables only during AI invocation, using the caller's `gh-token` input:
 `steps.factory-token.outputs.token`, `steps.reviewer-token.outputs.token`, or
 `github.token`. Token creation and Git identity stay in callers.
+PR review also sets the built-in `GITHUB_TOKEN` at job level for
+[authenticated Copilot installation](../examples/ai-tools.md#installation-authentication).
 
 For direct App-based script calls, set these variables and keep the Git identity:
 
