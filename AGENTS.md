@@ -5,8 +5,8 @@
 - Prefer small, focused changes without sacrificing correctness, quality, clarity,
   or maintainability. Use clear names and structure; avoid unrelated edits,
   duplication, and needless abstractions.
-- Keep tightly coupled code, docs, workflows, and tasks together; split only when
-  it improves understanding, review, or independent delivery.
+- Keep tightly coupled work together. Split code, docs, workflows, or tasks only
+  when it improves understanding, review, or independent delivery.
 - Give issues and PRs a bounded scope, verifiable acceptance criteria, and explicit
   dependencies. Use native sub-issues for independent work; the parent tracks the
   outcome instead of duplicating child work in a PR.
@@ -19,13 +19,13 @@
 ## AI-led work
 
 - State goals, when to act or skip, constraints, and verifiable outcomes. Let
-  capable models choose how to meet them with the available tools and context.
-  Design for capable models and future improvements without weakening permissions,
-  safety checks, or result verification.
-- Keep already-clear requests short; add only missing context or decisions needed
-  to act and verify. Keep detailed requirements in the owning guidance document
-  and link to it instead of repeating them; prompts supply only the task and
-  run-specific context.
+  capable models choose how to meet them with the available tools and context;
+  design for future improvements without weakening permissions, safety checks,
+  or result verification.
+- Do not expand already-clear requests; add only missing context or decisions
+  needed to act and verify. Keep detailed requirements in the owning guidance
+  document and link to it instead of repeating them; prompts supply only the task
+  and run-specific context.
 - Prescribe procedures only for a required contract, safety boundary, or known
   failure.
 - When changing prompts or agent instructions (including workflow prompts, this
