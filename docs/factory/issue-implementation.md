@@ -115,31 +115,22 @@ add this pass to clean push-only base maintenance, no-op, reply-only, or split-o
 outcomes. Required base maintenance still applies. The main worker stays on
 `implement`; independent [PR review](pr-review.md) after publication is unchanged.
 
-- Keep implementation and review fixes uncommitted through the review loop.
-  Do not create checkpoint commits to start or repeat review. Preserve existing
-  history and required base-merge commits; make normal publication commits through
-  the real index after the loop.
-- Finish the candidate, including required base merges. Record the base and local
-  HEAD commit SHAs, plus the previous published head when applicable. Capture the
-  complete intended final contents as an immutable Git tree (`candidate_tree`,
-  not a commit), using `git write-tree` from an index containing exactly that
-  candidate: local HEAD plus all intended staged and unstaged changes, new files,
-  deletions, and file modes. Exclude unrelated work.
-  Verify the tree matches the intended candidate and keep that candidate unchanged
-  while the reviewer runs.
+- Finish the candidate, including required base merges and all intended staged,
+  unstaged, and new-file changes; exclude unrelated work. Local checkpoint commits
+  are allowed for review iterations. Record immutable base/candidate commit SHAs,
+  the previous published head when applicable, issue requirements, outstanding
+  feedback, and validation results. Review the actual local candidate diff, not
+  the old remote PR alone; keep it unchanged while the reviewer runs.
 - Use `git worktree add --detach` to create a temporary `review_checkout` under
   `RUNNER_TEMP` at `GITHUB_WORKFLOW_SHA`. Run the installed harness there through
   `scripts/ai.sh --profile review`, keeping the runner, model configuration, and
   guidance at the trusted workflow revision, not their candidate versions. Do not
   hard-code a model or use a default-profile subagent.
 - Set `review_prompt` to the trusted
-  [internal reviewer contract](#internal-reviewer-contract) plus those commit SHAs,
-  `candidate_tree`, issue requirements, outstanding feedback, validation results,
-  and the original candidate checkout path. Review the complete base-to-candidate
-  tree diff, not just committed history or the old remote PR. The temporary
-  checkout supplies tools and guidance, not the review target. Choose
-  `review_timeout` from the remaining 30-minute job budget, reserving time for
-  fixes, checks, publication, and reporting:
+  [internal reviewer contract](#internal-reviewer-contract) plus the context above
+  and the original candidate checkout path. The temporary checkout supplies tools
+  and guidance, not the review target. Choose `review_timeout` from the remaining
+  30-minute job budget, reserving time for fixes, checks, publication, and reporting:
 
   ```sh
   (
@@ -158,9 +149,8 @@ outcomes. Required base maintenance still applies. The main worker stays on
   checkouts and remove the temporary worktree on success or failure. A successful
   exit without a complete, correctly scoped result is not a clean review.
   The implementer owns fixes and reruns relevant validation.
-  Capture a new candidate tree after fixes and obtain review of its changes so
-  the final candidate is covered; retain the earlier tree IDs and findings to
-  reuse still-applicable coverage rather than repeating the entire review.
+  Obtain review of subsequent changes so the final candidate is covered; reuse
+  unchanged coverage rather than repeating the entire review unnecessarily.
 - Recheck eligibility and remote head/base before publication as usual. After
   drift, reconcile changes and refresh affected review coverage and checks.
   Fix confirmed actionable findings before publication; if blocked, report the
@@ -168,34 +158,34 @@ outcomes. Required base maintenance still applies. The main worker stays on
   coverage alone do not block otherwise verified work: disclose the incomplete
   internal review in publication and reporting, preserving independent PR review.
   Never call these failures a skip or a clean review, or bypass required checks.
-- Before pushing, verify the actual head to be pushed has the same tree as the
-  final `candidate_tree` submitted for review. A mismatch requires refreshed
-  affected review coverage and checks, not a claim that the published content was
-  reviewed.
+- Before pushing, squash unpublished implementation/review-fix checkpoints into
+  one final implementation commit, without rewriting published history. Recreate
+  unpublished base merges if needed to remove checkpoint ancestry, keeping the
+  previous published head and current default as ancestors. Verify the head to be
+  pushed has the same tree as the final candidate submitted for review and no
+  intermediate checkpoint in its ancestry. Content changes require refreshed
+  affected review coverage and checks.
 - In the PR and run summary, record the selected profile and resolved model
-  settings, trusted workflow revision, base/local HEAD and previous published head
-  SHAs, candidate tree IDs and their review coverage, eventual published head
-  SHA and verified tree equality, findings and their disposition, and validation
-  limits. Distinguish tree IDs from commit SHAs and a live invocation from static
-  wiring evidence; do not claim a measured speedup without comparative evidence.
+  settings, trusted workflow revision, base/candidate and published head SHAs,
+  verified tree equality, findings and their disposition, and validation limits.
+  Distinguish a live invocation from static wiring evidence; do not claim a
+  measured speedup without comparative evidence.
 
 ### Internal reviewer contract
 
 This is analysis for the implementer, not another implementation assignment or
 the independent PR-review worker.
 
-- Review the supplied candidate tree, including its uncommitted changes, and
-  relevant context for actionable bugs, regressions, unmet requirements, and
-  necessary coverage gaps. Do not substitute the checkout's HEAD for the supplied
-  tree or omit intended new files. Follow the
+- Review the supplied candidate and relevant context for actionable bugs,
+  regressions, unmet requirements, and necessary coverage gaps. Follow the
   [test-value policy](../../AGENTS.md#test-value-and-verification); avoid speculative
   or style-only findings. Optional checks use the [shared safeguards](review-checks.md).
 - Always assess [whether the candidate can be simpler](pr-review.md#simplicity).
 - Return findings to the implementer in the CLI response: reviewed SHAs and
-  candidate tree ID, scope and any reused coverage, actionable findings with
-  paths/lines and impact, checks performed, and coverage gaps or blockers.
-  Explicitly distinguish a complete review with no findings from an incomplete
-  review. Finish the assessment before returning; a progress note is not a result.
+  scope, actionable findings with paths/lines and impact, checks performed, and
+  coverage gaps or blockers. Explicitly distinguish a complete review with no
+  findings from an incomplete review. Finish the assessment before returning;
+  a progress note is not a result.
 - Do not edit the candidate, commit, push, change GitHub state, submit a review or
   approval, write runner reports, or invoke another reviewer. The implementer
   owns all fixes, publication, conversation replies, and reporting.
