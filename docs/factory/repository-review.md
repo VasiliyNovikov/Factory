@@ -17,8 +17,16 @@ run. The 30-minute budget includes setup and reporting.
 - Follow the [host/target contract](target-context.md). Review the full
   `TARGET_ROOT` snapshot for `TARGET_REPOSITORY` from scratch; use `FACTORY_ROOT`
   only for executing guidance and tooling. Preserve target project instructions.
-- Account for all tracked files: scripts, workflows, configuration, application
-  code, and relevant docs. Record the exact commit, coverage, and unread/unreadable areas.
+- Record the reviewed commit and get its file list and count from the Git tree:
+  `git -C "$TARGET_ROOT" ls-tree -r --full-tree --name-only -z <reviewed-commit>`.
+- Account for every file, including exclusions, as fully read, partially read,
+  or unread/unreadable. The counts must add up to the tree total.
+- Count only content actually inspected. Listings, samples, filtered or
+  truncated output, planned reads, and successful exits are not full reads.
+  Read missing content or report incomplete analysis with the remaining
+  paths/ranges and reasons.
+- If read evidence is missing or folded, report that limit: it proves neither
+  full coverage nor that a read never happened.
 - Report distinct, evidenced, actionable improvements, not speculation, style
   churn, or unnecessary refactoring. Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Always assess [whether the implementation can be simpler](pr-review.md#simplicity).
@@ -57,7 +65,10 @@ content, and include the same report in the final CLI response, which the
 This applies to every outcome, including no-new-findings and incomplete/partial results:
 
 - Target repository and reviewed commit link, separately from the Factory
-  tooling revision; coverage, exclusions, and evidence gaps.
+  tooling revision; exact-tree tracked-file total and reconciled full/partial/unread
+  counts, with remaining paths/ranges, exclusions, and evidence gaps. Tie coverage
+  claims to the invocation's read operations and returned content/ranges,
+  not just a list of intended reads.
 - Executed checks/experiments, inputs, observed results, and limitations.
 - Existing findings/PRs and verified new issue links.
 - Outcome: completed with findings, completed with no new findings, or incomplete,
@@ -68,11 +79,14 @@ Keep both copies consistent without repeating issue creation or other GitHub
 mutations. Use concise tables and links without omitting required evidence.
 
 Shell-tool output can be collapsed by the CLI. A local report write, `cat`, or
-local-file comparison does not prove log retention. To verify retention later,
-read the complete downloaded attempt logs using the [shared log guidance](actions-logs.md)
-and permitted credentials, and compare the required evidence with the preserved
-job summary. Report unavailable destinations and unverified agreement explicitly;
-an unavailable summary does not establish that it is missing or incorrect.
+local-file comparison does not prove log retention or coverage accuracy. To
+verify later, read the complete downloaded attempt logs using the
+[shared log guidance](actions-logs.md) and permitted credentials. Reconcile the
+reported counts and completion claims with the exact reviewed tree and retained
+read evidence, then compare the complete report with the preserved job summary.
+Report unavailable read evidence or destinations and unverified agreement
+explicitly; missing evidence does not prove that a read never occurred, and an
+unavailable summary does not establish that it is missing or incorrect.
 This does not grant this workflow Actions access.
 
 Reserve time for publication, verification, and reporting. Partial coverage or
