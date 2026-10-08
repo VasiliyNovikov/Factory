@@ -67,7 +67,7 @@ Request only the permissions needed by the job, within the installation's grants
 | Triage | Contents read, Issues write |
 | Implementation | Contents, Pull requests, Issues, and Workflows write |
 | PR review | Contents read, Pull requests write |
-| Diagnostics, repository review, and model profile improvement | Contents/Pull requests read, Issues write |
+| Diagnostics, repository review, model profile improvement, and owner feedback learning | Contents/Pull requests read, Issues write |
 
 Workflow changes need Workflows write **before pushing a PR branch**. The
 installation must grant it, and the worker's token-generation input must already
@@ -77,8 +77,9 @@ be on the default branch.
 same-repository runs/jobs/logs; [repository review](repository-review.md) needs no
 Actions access. Both create only new unlabeled findings, verified with the App token.
 
-[Model profile improvement](model-profile-improvement.md) also creates only new
-unlabeled findings for triage, never PRs or profile edits. It needs no Actions or
+[Model profile improvement](model-profile-improvement.md) and
+[owner feedback learning](owner-feedback.md) also create only new unlabeled
+findings for triage, never PRs or direct edits. Neither needs Actions or
 workflow-write access.
 
 The [router](factory-router.md) needs no App token: it uses built-in Actions write
