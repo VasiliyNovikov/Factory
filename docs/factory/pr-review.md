@@ -26,6 +26,42 @@ the [router](factory-router.md). Review proposed code and use focused checks whe
 - Check exactly `PR_HEAD_SHA` under the [shared check safeguards](review-checks.md),
   including for required dependency installs.
 
+## Clean default-branch merges
+
+Even a clean merge can break behavior. For PRs updated only by default-branch
+merges, review how the incoming changes and the PR interact, including dependencies
+in otherwise unrelated files, and reuse unaffected checks. Use this narrower review
+only when all conditions below hold. Read the complete discussion, requests, threads
+and edit/deletion history in either path.
+
+- The PR targets and includes the latest default branch. An earlier PR head
+  is still approved and has [verified coverage](#skip-and-report).
+- Since that approved head, the branch has only taken in default-branch updates
+  that Git can merge automatically, without hand-fixed conflicts or extra edits.
+  Follow the PR-side parent (first parent) from the current head back to the
+  approved head. Every commit on this path after the approved head must have
+  two parents: the previous PR head first, then a commit on the default branch's
+  mainline (first-parent history). Recreate each merge with
+  `git merge-tree --write-tree <parent1> <parent2>`: require exit 0 and exactly
+  the recorded tree, under the [check safeguards](review-checks.md), without
+  custom drivers or strategies.
+- All review inputs (guidance, workflow, tooling, effective configuration) match
+  between the prior review's workflow revision and `GITHUB_WORKFLOW_SHA`.
+  The PR's own changes against the old and new merge bases are identical,
+  including paths, content, modes and binaries.
+- No new actionable feedback, requirements, or review requests exist since that
+  assessment. Maintenance reports alone do not invalidate coverage.
+
+If any condition fails or is uncertain, do a full review and explain why, without
+widening permissions. Missing evidence needed for that review remains a blocker.
+Normal review rules still apply.
+
+Identify the **scoped merge-only reassessment** in the body and summary: full
+prior-approved, current PR (`PR_HEAD_SHA`), default-branch and both workflow SHAs;
+prior review/attempt links; each condition's evidence and limitations. Recheck
+head, base, discussion and coverage before submitting a fresh review with this
+attempt's marker and receipt.
+
 ## Review outcome
 
 - Find actionable bugs, regressions, security issues, unnecessary complexity, or
@@ -63,10 +99,13 @@ changes, or expand the work into unrelated refactoring.
 - Append to the existing `GITHUB_STEP_SUMMARY`; preserve its content.
 - Skip stale or covered assignments only before mutation: write `skipped=true`
   to `GITHUB_OUTPUT`, explain in `GITHUB_STEP_SUMMARY`, and make no GitHub changes.
-- Prior Factory reviews count as coverage only after verified successful,
-  non-skipped source completion, including the posted-review check. If allowed reads
-  cannot prove this, note the limitation and perform the assessment; do not change
-  tokens or permissions.
+- Verify prior same-PR Factory coverage against this repository's successful,
+  non-skipped default-branch `pr-review.yml` assessment and receipt: author, full
+  SHA/marker, source-workflow PR/head/marker bindings, submission timing, unchanged
+  SHA/marker provenance, and inherited coverage. Use reviewer-App `GH_TOKEN`,
+  workflow/attempt/job evidence, and [log guidance](actions-logs.md) if needed.
+  An approval or API `commit_id` alone is insufficient. Unverifiable coverage
+  requires full review; older coverage never skips a new head.
 - For eligible reruns or replacements of unsuccessful reviews, reassess current
   code/discussion, retain applicable findings, and submit a fresh review with this
   attempt's `REVIEW_MARKER`.
@@ -166,3 +205,8 @@ After post-submission failure, timeout, or cancellation, only a fresh successful
 assessment may deliver remaining findings.
 
 Static checks do not prove AI adherence or event delivery.
+
+After deployment, verify a maintenance-triggered scoped review on an open Factory
+PR: link its body and successful receipt-bearing attempt, and compare its duration
+with earlier full reviews using the same timing boundaries. Until then, deployed
+behavior and any speedup remain unverified.
