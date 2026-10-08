@@ -93,7 +93,8 @@ rather than maintaining two policies.
   forward its findings as if verified or treat its failure as PR-code CI.
 - CI failure/timeout evidence must belong to the PR's current head or merge
   revision. Router, maintenance, triage, implementation, diagnostics, repository
-  review, and model profile improvement outcomes are not PR-code CI feedback.
+  review, model profile improvement, and owner feedback learning outcomes are not
+  PR-code CI feedback.
 - API errors and unavailable required evidence are failures or verification gaps,
   not proof that there is no work.
 
