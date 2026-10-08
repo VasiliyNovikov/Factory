@@ -83,6 +83,25 @@ every caller weekly and files evidence-backed, unlabeled issues for triage. Its
 evaluator owns live model discovery and compatibility checks; ordinary
 invocations remain unchanged.
 
+## Installation authentication
+
+Installation inherits the caller's environment; the shared action's `gh-token`
+input is invocation-only. The vendor
+[Copilot installer](https://github.com/github/copilot-cli/blob/752496d8c1e5db3ff9e7ff2dc460edc3e86d38c2/install.sh#L39-L97)
+uses an inherited `GITHUB_TOKEN`, when present, to authenticate release archive
+and checksum downloads. The wrapper's bootstrap-script download adds no
+authorization header.
+
+[PR review](../factory/pr-review.md#identity-and-execution) retains a job-level
+built-in `GITHUB_TOKEN` for that installer. [Upstream cites avoiding rate limits](https://github.com/github/copilot-cli/commit/0160eb95560d4f17b0f307677ce3d74903b52a59)
+as a reason for authentication, not a guarantee against throttling. Stable
+installation downloads release assets rather than REST release metadata, so
+REST API request quotas are not download limits.
+
+This is separate from the invocation's built-in model credentials and the
+reviewer App `GH_TOKEN` used for repository operations and the receipt check;
+see [token roles](../factory/github-app.md#token-names-and-identities).
+
 ## Shared Factory action
 
 Factory workflows use [`.github/actions/ai`](../../.github/actions/ai/action.yml)
