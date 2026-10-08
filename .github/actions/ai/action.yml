@@ -30,7 +30,24 @@ runs:
       shell: bash
       env:
         AI_HARNESS: ${{ inputs.harness }}
-      run: ./scripts/install-tools.sh "$AI_HARNESS"
+      run: |
+        for attempt in 1 2 3; do
+          if ./scripts/install-tools.sh "$AI_HARNESS"; then
+            exit 0
+          else
+            status=$?
+          fi
+
+          if (( attempt == 3 )); then
+            printf 'Error: AI-tool installation failed after 3 attempts (exit %s).\n' "$status" >&2
+            exit "$status"
+          fi
+
+          delay=$((attempt * 5))
+          printf 'AI-tool installation failed (exit %s); retrying in %ss (attempt %s/3).\n' \
+            "$status" "$delay" "$((attempt + 1))" >&2
+          sleep "$delay"
+        done
 
     - name: Invoke AI
       id: invoke
