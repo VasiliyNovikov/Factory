@@ -117,9 +117,9 @@ flowchart TD
     issues --> router["Factory router"] --> triage["Issue triage"]
 ```
 
-Only **new untriaged Factory issues** go to normal triage and implementation;
-no direct PRs or profile edits. Findings and run summaries include capability
-checks, per-workflow decisions, and dated evidence.
+Recommendations become **new untriaged Factory issues** for normal triage and
+implementation, never direct PRs or profile edits. Findings and run summaries
+include capability checks, per-workflow decisions, and dated evidence.
 
 ## Owner feedback learning
 

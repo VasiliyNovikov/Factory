@@ -113,7 +113,7 @@ changes, or expand the work into unrelated refactoring.
   attempt's `REVIEW_MARKER`.
 - After mutation, verify and report partial outcomes, not skips. Reconcile this
   attempt's uncertain submissions before retrying; do not duplicate reviews.
-  Incomplete reviews and API errors are failures, not skips.
+  Report incomplete reviews and failures accurately; API errors are not skips.
 - Retry failed report writes and correct read-back output formatting without
   resubmitting an accepted review.
 - Verify `REVIEWER_LOGIN` authored the review and it meets the outcome contract.
