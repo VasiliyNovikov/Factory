@@ -1,7 +1,8 @@
 # Install AI tools and run a prompt
 
 This reusable snippet installs standalone Copilot without Node.js/npm and runs a
-prompt. It is not an installed workflow.
+prompt. It is not an installed workflow. Direct script calls make one setup
+attempt; use the [shared Factory action](#shared-factory-action) for setup retries.
 
 ```yaml
 name: CI
@@ -47,6 +48,8 @@ The installer downloads and version-checks the selected CLIs and installs missin
 `jq`. Unsupported arguments fail before installation; download, install, or
 version-check errors fail setup.
 
+Bootstrap scripts run only after a successful, nonempty download.
+
 Copilot installs to `$HOME/.local/bin` and OpenCode to `$HOME/.opencode/bin`.
 The installer updates its `PATH` and Actions' `GITHUB_PATH`, not shell startup
 files. For local use, add the installed directories to your shell (both shown):
@@ -83,7 +86,10 @@ invocations remain unchanged.
 ## Shared Factory action
 
 Factory workflows use [`.github/actions/ai`](../../.github/actions/ai/action.yml)
-to install and invoke a CLI through these scripts:
+to install and invoke a CLI. The installation step retries failures; AI invocation
+is not retried and runs only after setup succeeds. Settings live in the action and
+[installer](../../scripts/install-tools.sh). Only bootstrap downloads have a time
+limit; a hung vendor installer or version check waits for the caller's job timeout.
 
 ```yaml
 - name: Run a prompt

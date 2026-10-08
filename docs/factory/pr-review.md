@@ -81,9 +81,7 @@ attempt's marker and receipt.
   use inline comments where possible.
 - If clean, use `APPROVE`, unless the author is `REVIEWER_LOGIN`; then use `COMMENT`
   explaining the self-approval restriction.
-- Report executed checks/experiments, checked revisions, inputs, observed results,
-  and limitations in the review. Distinguish static inspection from runtime evidence.
-- Never approve incomplete work. Report incomplete reviews and API failures accurately.
+- Never approve incomplete work.
 
 ### Simplicity
 
@@ -102,7 +100,13 @@ changes, or expand the work into unrelated refactoring.
 
 - Write review bodies and summaries as literal Markdown, without shell
   interpretation. Preserve backticks and exact resolved environment values.
-- Append to the existing `GITHUB_STEP_SUMMARY`; preserve its content.
+- In the review, report executed checks/experiments, checked revisions, inputs,
+  observed results, and limitations; distinguish static inspection from runtime evidence.
+- Append every write to `GITHUB_STEP_SUMMARY`, preserving its content. Record the
+  target-qualified review URL, checked target head, decision, evidence, and
+  outstanding work, keeping the Factory revision report separate. Run-attempt
+  links belong to the Factory host.
+- Report incomplete reviews and API failures accurately; API errors are not skips.
 - Skip stale or covered assignments only before mutation: write `skipped=true`
   to `GITHUB_OUTPUT`, explain in `GITHUB_STEP_SUMMARY`, and make no GitHub changes.
 - Verify prior same-PR Factory coverage against this repository's successful,
@@ -145,10 +149,6 @@ changes, or expand the work into unrelated refactoring.
   location. Do not mix current and original coordinates across revisions.
 - Unavailable required canonical metadata or failed reads are explicit evidence
   gaps; conflicting required metadata is a mismatch. Neither is a verified pass.
-- Record the target-qualified review URL, checked target head, decision,
-  evidence, and outstanding work in `GITHUB_STEP_SUMMARY`, preserving the separate
-  Factory revision report. Run-attempt links belong to the Factory host.
-  Report failures accurately; API errors are not skips.
 - Include setup, reporting, and verification in the 30-minute budget without
   relaxing required checks.
 

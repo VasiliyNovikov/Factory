@@ -14,20 +14,32 @@ if ! command -v jq >/dev/null; then
   sudo apt-get install -y jq
 fi
 
+installer=$(mktemp)
+trap 'rm -f -- "$installer"' EXIT
+
 for harness in "${harnesses[@]}"; do
   case "$harness" in
     copilot)
       bin_dir="$HOME/.local/bin"
-      export PATH="$bin_dir:$PATH"
-      curl -fsSL https://gh.io/copilot-install | PREFIX="$HOME/.local" bash
+      installer_url=https://gh.io/copilot-install
+      installer_command=(env PREFIX="$HOME/.local" bash "$installer")
       ;;
     opencode)
       bin_dir="$HOME/.opencode/bin"
-      export PATH="$bin_dir:$PATH"
-      curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path
+      installer_url=https://opencode.ai/install
+      installer_command=(bash "$installer" --no-modify-path)
       ;;
   esac
 
+  export PATH="$bin_dir:$PATH"
+  : > "$installer"
+  curl -fsSL --max-time 60 --output "$installer" "$installer_url"
+  if [[ ! -s "$installer" ]]; then
+    printf 'Error: %s bootstrap download was empty.\n' "$harness" >&2
+    exit 1
+  fi
+
+  "${installer_command[@]}"
   "$harness" --version
 
   if [[ -n "${GITHUB_PATH:-}" ]]; then
