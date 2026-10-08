@@ -117,11 +117,12 @@ periodic/manual recovery), no-op, reply-only, or split-only outcomes. Required b
 maintenance still applies. The main worker stays on `implement`; independent
 [PR review](pr-review.md) after publication is unchanged.
 
-- Finish the candidate, including required base merges, and identify immutable
-  base/candidate commit SHAs before review. Include the previous published head
-  when applicable, issue requirements, outstanding feedback, and validation
-  results. Review the actual local candidate diff, not the old remote PR alone;
-  keep it unchanged while the reviewer runs.
+- Finish the candidate, including required base merges and all intended staged,
+  unstaged, and new-file changes; exclude unrelated work. Local checkpoint commits
+  are allowed for review iterations. Record immutable base/candidate commit SHAs,
+  the previous published head when applicable, issue requirements, outstanding
+  feedback, and validation results. Review the actual local candidate diff, not
+  the old remote PR alone; keep it unchanged while the reviewer runs.
 - Use `git worktree add --detach` to create a temporary `review_checkout` under
   `RUNNER_TEMP` at `GITHUB_WORKFLOW_SHA`. Run the installed harness there through
   `scripts/ai.sh --profile review`, keeping the runner, model configuration, and
@@ -159,11 +160,18 @@ maintenance still applies. The main worker stays on `implement`; independent
   coverage alone do not block otherwise verified work: disclose the incomplete
   internal review in publication and reporting, preserving independent PR review.
   Never call these failures a skip or a clean review, or bypass required checks.
+- Before pushing, squash unpublished implementation/review-fix checkpoints into
+  one final implementation commit, without rewriting published history. Recreate
+  unpublished base merges if needed to remove checkpoint ancestry, keeping the
+  previous published head and current default as ancestors. Verify the head to be
+  pushed has the same tree as the final candidate submitted for review and no
+  intermediate checkpoint in its ancestry. Content changes require refreshed
+  affected review coverage and checks.
 - In the PR and run summary, record the selected profile and resolved model
-  settings, trusted workflow revision, reviewed base/candidate SHAs, findings and
-  their disposition, and validation limits. Distinguish a live invocation from
-  static wiring evidence; do not claim a measured speedup without comparative
-  evidence.
+  settings, trusted workflow revision, base/candidate and published head SHAs,
+  verified tree equality, findings and their disposition, and validation limits.
+  Distinguish a live invocation from static wiring evidence; do not claim a
+  measured speedup without comparative evidence.
 
 ### Internal reviewer contract
 
