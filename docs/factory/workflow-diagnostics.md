@@ -14,7 +14,7 @@ The [host/target context](target-context.md) is explicit, but diagnostics remain
 Factory-local: `TARGET_REPOSITORY == FACTORY_REPOSITORY`. Use the target-qualified
 API paths for runs and findings, and preserve the tooling revision in the summary.
 No external run discovery, forwarding analysis, or cross-repository diagnostics
-is enabled by this preparatory refactor.
+is enabled.
 
 This retrospective assessment complements, not replaces, workers' immediate
 eligibility checks, mutation verification, and required receipt checks.
