@@ -57,8 +57,7 @@ then submit a fresh review with this attempt's marker and receipt.
 - Use `COMMENT` for findings: paths, lines, impact, fixes, and inline comments
   where possible. If clean, `APPROVE`, unless the author is `REVIEWER_LOGIN`;
   then `COMMENT` explaining the self-approval restriction.
-- Include checks, revisions, inputs, results, and limits; distinguish static
-  from runtime evidence. Never approve incomplete work or conceal API failures.
+- Never approve incomplete work.
 
 ### Simplicity
 
@@ -116,6 +115,13 @@ later success does not erase an earlier failure.
 
 ## Skip and report
 
+- Write literal Markdown, preserving backticks and resolved environment values.
+- In the review, report executed checks/experiments, checked revisions, inputs,
+  results, and limits; distinguish static inspection from runtime evidence.
+- Append every write to `GITHUB_STEP_SUMMARY`, preserving existing content.
+  Record the review URL, decision, evidence, and outstanding work. Retry failed
+  writes; CLI success proves neither correctness nor publication.
+- Report incomplete reviews and API failures accurately; API errors are not skips.
 - Skip stale/covered assignments only before any POST attempt or publication
   read failure: write `skipped=true` to `GITHUB_OUTPUT`, explain in the summary,
   and make no GitHub changes.
@@ -144,10 +150,6 @@ later success does not erase an earlier failure.
   original coordinates; never mix revisions.
 - Missing required canonical metadata or failed reads are evidence gaps;
   conflicting metadata is a mismatch, never a pass.
-- Write literal Markdown, preserving backticks and resolved environment values.
-  Append the review URL, decision, evidence, and outstanding work to existing
-  `GITHUB_STEP_SUMMARY`. Retry failed writes; CLI success proves neither
-  correctness nor publication. API failures are not skips.
 
 App submissions trigger [source verification](factory-router.md#feedback-and-event-handling)
 at the PR merge revision, with the [documented risk](factory-router.md#accepted-risk-router-changes-can-run-before-merge).
