@@ -13,22 +13,23 @@
 - Keep decisions in the component that owns them. Reuse existing logic and
   contracts rather than spreading implementation details across boundaries.
 - Prefer existing tools and native GitHub features. Add scripts or orchestration
-  only for a concrete need or a clear reduction in complexity.
+  only for a concrete need or a clear reduction in complexity; remove unnecessary
+  mechanisms rather than renaming them.
 
 ## AI-led work
 
 - State goals, when to act, hold, or skip, constraints, and verifiable outcomes. Let
-  capable models choose how to meet them with the available tools and context.
-- A clear request may already be enough. Do not turn a short prompt into a large
-  spec; add only missing context or decisions needed to act and verify the result.
-- Keep detailed requirements in the owning guidance document. Prompts should
-  link to it and supply only the task and run-specific context.
+  capable models choose how to meet them with the available tools and context;
+  design for future improvements without weakening permissions, safety checks,
+  or result verification.
+- Do not expand already-clear requests; add only missing context or decisions
+  needed to act and verify. Keep detailed requirements in the owning guidance
+  document and link to it instead of repeating them; prompts supply only the task
+  and run-specific context.
 - Prescribe procedures only for a required contract, safety boundary, or known
-  failure. Remove unnecessary mechanisms, not just rename them.
+  failure.
 - Strengthen shared rules when review reveals a gap, rather than adding a checklist
   per scenario. Consolidate overlaps without weakening required checks.
-- Design for capable models and future improvements, without weakening
-  permissions, safety checks, or result verification.
 - When changing prompts or agent instructions (including workflow prompts, this
   file, and Factory guides), research current official recommendations for the
   affected models/providers rather than relying on memory. For shared Factory
@@ -42,8 +43,10 @@
 
 ## Writing docs and comments
 
-- Use concise, plain language in docs, issue/PR bodies, comments, and reviews.
-  Keep documentation aligned with the code and workflows.
+- Be brief by default and use plain language in docs, issue/PR bodies, comments,
+  and reviews. Include only useful scope, evidence, decisions, blockers, or next
+  steps; avoid repeated context and process narration. Keep documentation aligned
+  with the code and workflows.
 - Durable docs, guides, and prompts describe current behavior and decisions; put
   change history (superseded approaches, change-specific issue/PR/run/commit
   references, per-change verification evidence) in PR descriptions, comments, or
@@ -54,14 +57,11 @@
   bodies, triage assessments, and other longer comments, reviews, or reports with
   a `## TL;DR` section: one or two short, plain-language sentences before supporting
   detail. Already-brief replies do not need a separate summary.
-- Include only useful scope, evidence, decisions, blockers, or next steps; avoid
-  repeated context and process narration.
-- Be brief by default, but retain required links, markers, checked revisions,
-  verification results, and failure details. Concision must not hide uncertainty.
+- Retain required links, markers, checked revisions, verification results, and
+  failure details. Concision must not hide uncertainty.
 - Use descriptive headings and focused bullets when they help scanning. Group
   related conditions under a shared bullet; do not force short replies into a
-  template or expand an already-clear request.
-- Link to the owning guidance instead of repeating it.
+  template.
 
 ## Repository map
 
