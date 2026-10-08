@@ -18,6 +18,9 @@ stage, but must not be inferred from the current directory.
 - The PR must be open, non-draft, and from this repository.
 - Review the current head.
 - Distinguish new requests from [successfully covered reviews](pr-review.md#skip-and-report).
+- Route every new head, including clean base merges. Only the worker may choose
+  [scoped reassessment](pr-review.md#clean-default-branch-merges); prior approval
+  does not cover a new head.
 
 ### [Issue / PR implementation](issue-implementation.md)
 
