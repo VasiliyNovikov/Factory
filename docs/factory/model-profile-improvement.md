@@ -89,12 +89,12 @@ evidence or repeating GitHub mutations:
 - **Follow-up:** existing work and verified new issue links, checks actually run,
   limits, and outstanding work.
 
-Shell-tool output can be collapsed; local writes, `cat`, and file comparisons do
-not prove log retention. When verifying retention, read the complete downloaded
-attempt logs using the [shared log guidance](actions-logs.md) and permitted
-credentials, then compare required evidence with the preserved job summary.
-Report unavailable destinations and unverified agreement explicitly; an
-unavailable summary does not establish that it is missing or incorrect.
+Shell-tool output can be collapsed by the CLI. A local report write, `cat`, or
+local-file comparison does not prove log retention. When verifying retention,
+read the complete downloaded attempt logs using the [shared log guidance](actions-logs.md)
+and permitted credentials, then compare required evidence with the preserved job
+summary. Report unavailable destinations and unverified agreement explicitly;
+an unavailable summary does not establish that it is missing or incorrect.
 
 Verification is AI-owned: a successful CLI exit does not prove completion, nor
 do research and capability checks prove comparative quality or model-request success.
