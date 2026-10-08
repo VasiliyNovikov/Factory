@@ -236,7 +236,7 @@ the independent PR-review worker.
 
 ## Skip and report
 
-- Skip only before mutation when no eligible work remains, including base merges.
+- Skip before mutation only when no eligible work remains, including base merges.
   For push-only maintenance, verify the head includes the current default branch
   and there are no changes, unhandled feedback, errors, or blockers. Make no
   GitHub changes or no-op comments on a skip.
@@ -245,7 +245,7 @@ the independent PR-review worker.
   the outcome and producing workflow run-attempt link; the PR link when available;
   any child links and incomplete split work; and addressed/outstanding feedback
   with thread links.
-- Verify applicable outcomes in fresh remote state: the checked commit and eligible
+- Verify claimed outcomes in fresh remote state: the checked commit and eligible
   PR metadata for code changes, native child links and eligible parent for splits,
   resolved threads, and Factory-authored replies/comments on the intended targets.
   Reconcile responses with fresh state before retrying uncertain mutations.
