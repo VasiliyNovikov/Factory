@@ -237,29 +237,24 @@ the independent PR-review worker.
 ## Skip and report
 
 - Skip before mutation only when no eligible work remains, including base merges.
-  Record evidence in `GITHUB_STEP_SUMMARY` and make no GitHub changes.
-- Skip push-only maintenance when the verified head includes the current default
-  branch and there are no changes, unhandled feedback, errors, or blockers.
-  Do not post no-op comments.
-- Once mutations begin, verify and report partial outcomes rather than claiming a skip.
+  For push-only maintenance, verify the head includes the current default branch
+  and there are no changes, unhandled feedback, errors, or blockers. Make no
+  GitHub changes or no-op comments on a skip.
 - Otherwise post a new Factory comment in the triggering conversation (`source_pr`
   if supplied, else `issue_number`), even after mutation failure. Include:
-  - The outcome.
-  - The producing workflow run attempt link.
-  - The PR link when available.
-  - Child links and incomplete split work, if any.
-  - Addressed/outstanding feedback with thread links.
-- Confirm claimed outcomes in fresh remote state:
-  - The checked commit and eligible PR metadata for code changes.
-  - Native child links and eligible parent for splits.
-  - Resolved threads.
-  - Factory-authored replies/comments on the intended targets.
-- Reconcile responses with fresh state before retrying uncertain mutations.
-- Record the decision, evidence, verification links, and outstanding work in
-  `GITHUB_STEP_SUMMARY`.
-- Retain [API invocation evidence](github-app.md#api-evidence-credentials),
+  the outcome and producing workflow run-attempt link; the PR link when available;
+  any child links and incomplete split work; and addressed/outstanding feedback
+  with thread links.
+- Verify claimed outcomes in fresh remote state: the checked commit and eligible
+  PR metadata for code changes, native child links and eligible parent for splits,
+  resolved threads, and Factory-authored replies/comments on the intended targets.
+  Reconcile responses with fresh state before retrying uncertain mutations.
+- For every outcome, record the decision, evidence, verification links, and
+  outstanding work in `GITHUB_STEP_SUMMARY`. Retain
+  [API invocation evidence](github-app.md#api-evidence-credentials),
   including checked head/merge SHAs for CI evidence.
-- API errors, denied permissions, and unverified outcomes are failures, not skips.
+- After mutations begin, verify and report partial outcomes, never a skip.
+  API errors, denied permissions, and unverified outcomes are failures, not skips.
 - Budget the 30-minute job for setup, work, reporting, and verification without
   relaxing required checks.
 
