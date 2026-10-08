@@ -241,25 +241,23 @@ the independent PR-review worker.
 - Skip push-only maintenance when the verified head includes the current default
   branch and there are no changes, unhandled feedback, errors, or blockers.
   Do not post no-op comments.
-- Once mutations begin, verify and report partial outcomes rather than claiming a skip.
-- Otherwise post a new Factory comment in the triggering conversation (`source_pr`
-  if supplied, else `issue_number`), even after mutation failure. Include:
-  - The outcome.
-  - The producing workflow run attempt link.
-  - The PR link when available.
-  - Child links and incomplete split work, if any.
-  - Addressed/outstanding feedback with thread links.
+- After mutation, verify and report partial outcomes, not skips. API errors,
+  denied permissions, and unverified outcomes are failures.
+- Reconcile uncertain mutations with fresh state before retrying.
+- For every non-skipped outcome, post a new Factory comment in the triggering
+  conversation (`source_pr` if supplied, else `issue_number`), even after mutation
+  failure. Include:
+  - Outcome and producing workflow run-attempt link.
+  - PR link when available; child links and incomplete split work, if any.
+  - Addressed/outstanding feedback and thread links.
 - Confirm claimed outcomes in fresh remote state:
   - The checked commit and eligible PR metadata for code changes.
   - Native child links and eligible parent for splits.
   - Resolved threads.
   - Factory-authored replies/comments on the intended targets.
-- Reconcile responses with fresh state before retrying uncertain mutations.
-- Record the decision, evidence, verification links, and outstanding work in
-  `GITHUB_STEP_SUMMARY`.
-- Retain [API invocation evidence](github-app.md#api-evidence-credentials),
-  including checked head/merge SHAs for CI evidence.
-- API errors, denied permissions, and unverified outcomes are failures, not skips.
+- Append the decision, evidence, verification links, and outstanding work to
+  `GITHUB_STEP_SUMMARY`, including [API invocation evidence](github-app.md#api-evidence-credentials)
+  and checked head/merge SHAs for CI evidence.
 - Budget the 30-minute job for setup, work, reporting, and verification without
   relaxing required checks.
 

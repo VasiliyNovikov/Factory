@@ -69,10 +69,12 @@ Runs share one concurrency group without cancelling active work. Budget the
   [triage](issue-triage.md) and [implementation](issue-implementation.md) handle
   them; the router ignores this workflow's completion.
 
-Append the complete report below to `GITHUB_STEP_SUMMARY`, preserving existing
-content, and include the same report in the evaluator's final CLI response,
+Append the complete report to `GITHUB_STEP_SUMMARY`, preserving existing content,
+and include the same report in the evaluator's final CLI response,
 which the [CLI writes to the Actions log](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions#run-copilot-cli).
-This applies to every outcome, including no-change and incomplete/partial results:
+For every outcome, totals or a summary link are not enough. Keep both copies
+consistent, using concise tables and links without omitting evidence or repeating
+GitHub mutations. Include:
 
 - **New findings**, **already covered**, **no change** after a complete assessment,
   or **incomplete/partial**. Empty/failed discovery, missing capabilities, research
@@ -86,10 +88,6 @@ This applies to every outcome, including no-change and incomplete/partial result
   Explicitly identify workflows without AI.
 - Existing work and verified new issue links, checks actually run, limits, and
   outstanding work.
-
-The final response is the complete log copy, not just totals or a summary link.
-Keep both copies consistent without repeating issue creation or other GitHub
-mutations. Use concise tables and links without omitting required evidence.
 
 Shell-tool output can be collapsed by the CLI. A local report write, `cat`, or
 local-file comparison does not prove log retention. When verifying retention,

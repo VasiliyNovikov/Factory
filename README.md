@@ -13,9 +13,8 @@ The [router](docs/factory/factory-router.md) sends events to Copilot workers for
 triage, implementation, or review. It skips irrelevant events; workers check
 current state and verify their results.
 
-Triage adds `factory-issue-<number>` before `triaged` to hand off a ready issue.
-Implementation chooses one focused PR or native sub-issues, without duplicating
-child work in a parent PR. Children enter normal triage with their own identity.
+Native sub-issues enter normal triage with their own identity; parents never
+duplicate child implementation.
 
 ```mermaid
 flowchart TD
@@ -38,24 +37,21 @@ flowchart TD
     router -->|No actionable work| skip["Skip with reason"]
 ```
 
-Approved reviews and other payload-only skips bypass router checkout and AI setup.
-Copilot makes the remaining routing and worker decisions. People and other bots
-provide input under their own accounts. The router runs as `github-actions[bot]`;
-Factory work uses `factory-worker-bot[bot]`, and reviews use
-`factory-reviewer-bot[bot]`. Running in Actions does not change an App's authorship.
+Payload-only skips bypass router checkout and AI setup; Copilot decides the rest.
+People and bots provide input under their own accounts. The router uses
+`github-actions[bot]`, Factory work uses `factory-worker-bot[bot]`, and reviews use
+`factory-reviewer-bot[bot]`. Actions does not change an App's authorship.
 
 PR reviewers may run PR code, tests, and focused experiments under the
 [PR-review execution rules](docs/factory/pr-review.md#local-checks).
 
-Implementation keeps eligible PRs current with the default branch and resolves
-conflicts, but never merges PRs or closes issues. Each implementation worker
-handles only its assigned issue/PR and self-reviews changed candidates with the
-`review` profile before publication, except for clean push-only base maintenance.
-Independent PR review still runs. Verified clean base-merge heads can reuse prior
-coverage for a [scoped reassessment](docs/factory/pr-review.md#clean-default-branch-merges),
+[Implementation](docs/factory/issue-implementation.md) keeps eligible PRs current
+with the default branch, resolves conflicts, and handles only its assigned
+issue/PR; it never merges PRs or closes issues. Changed candidates receive internal
+self-review with the `review` profile before publication, except for clean push-only
+base maintenance. Independent PR review still runs; verified clean base merges may
+reuse prior coverage for a [scoped reassessment](docs/factory/pr-review.md#clean-default-branch-merges)
 with a fresh review of the new head.
-See [implementation guidance](docs/factory/issue-implementation.md) for eligibility,
-ownership, split recovery, and verification.
 
 **Before-merge risk:** eligible submitted reviews run the PR-merge-revision router.
 Router/setup changes can therefore execute before merge with the router's token.
@@ -67,12 +63,10 @@ Removing environment variables does not isolate credentials.
 
 ## Workflow diagnostics
 
-[Workflow diagnostics](docs/factory/workflow-diagnostics.md) examines same-repository
-workflow runs with parallel read-only assessment sessions. Its first invocation
-records a boundary without analysis; later runs compare observed execution and GitHub
-outcomes with the contracts used by each assessed run, including successful runs
-and expected skips or handoffs. Results record supported conclusions, discrepancies,
-and coverage gaps; actionable findings follow the existing issue path.
+[Workflow diagnostics](docs/factory/workflow-diagnostics.md) compares same-repository
+execution and GitHub outcomes with each run's contracts, including successful runs,
+skips, and handoffs. Assessments run in parallel and read-only, reporting supported
+conclusions, discrepancies, and coverage gaps.
 
 ```mermaid
 flowchart TD
@@ -123,10 +117,9 @@ flowchart TD
     issues --> router["Factory router"] --> triage["Issue triage"]
 ```
 
-Recommendations become **new untriaged Factory issues**, not direct PRs or
-profile edits. Normal triage and implementation handle the changes. Findings
-and the run summary record capability checks, per-workflow decisions, and dated
-evidence.
+Only **new untriaged Factory issues** go to normal triage and implementation;
+no direct PRs or profile edits. Findings and run summaries include capability
+checks, per-workflow decisions, and dated evidence.
 
 ## Owner feedback learning
 

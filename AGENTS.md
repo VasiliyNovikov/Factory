@@ -2,31 +2,30 @@
 
 ## Working style
 
-- Prefer small, focused changes without sacrificing correctness, quality, clarity,
-  or maintainability. Use clear names and structure; avoid unrelated edits,
-  duplication, and needless abstractions.
-- Keep tightly coupled work together. Split code, docs, workflows, or tasks only
-  when it improves understanding, review, or independent delivery.
-- Give issues and PRs a bounded scope, verifiable acceptance criteria, and explicit
-  dependencies. Use native sub-issues for independent work; the parent tracks the
-  outcome instead of duplicating child work in a PR.
-- Keep decisions in the component that owns them. Reuse existing logic and
-  contracts rather than spreading implementation details across boundaries.
-- Prefer existing tools and native GitHub features. Add scripts or orchestration
-  only for a concrete need or a clear reduction in complexity.
+- Keep changes focused without sacrificing correctness, quality, or maintainability.
+  Use clear names and structure; avoid unrelated edits, duplication, and needless
+  abstractions.
+- Keep tightly coupled work together; split only for clearer understanding,
+  review, or independent delivery.
+- Bound issues and PRs with verifiable acceptance criteria and explicit dependencies.
+  Use native sub-issues for independent work; parents track outcomes rather than
+  duplicating child implementation.
+- Keep decisions and contracts with their owning component; reuse existing logic,
+  tools, and native GitHub features. Add scripts or orchestration only for a concrete
+  need or reduced complexity.
 
 ## AI-led work
 
-- State goals, when to act or skip, constraints, and verifiable outcomes. Let
-  capable models choose how to meet them with the available tools and context.
-- A clear request may already be enough. Do not turn a short prompt into a large
-  spec; add only missing context or decisions needed to act and verify the result.
-- Keep detailed requirements in the owning guidance document. Prompts should
-  link to it and supply only the task and run-specific context.
-- Prescribe procedures only for a required contract, safety boundary, or known
-  failure. Remove unnecessary mechanisms, not just rename them.
-- Design for capable models and future improvements, without weakening
-  permissions, safety checks, or result verification.
+- State goals, when to act or skip, constraints, and verifiable outcomes; let capable
+  models choose the method.
+- Keep an already-clear request short; add only missing context or decisions needed
+  to act and verify.
+- Keep detailed requirements in owning guidance; prompts link to it and add only
+  the task and run-specific context.
+- Prescribe procedures only for required contracts, safety boundaries, or known
+  failures. Remove unnecessary mechanisms rather than renaming them; design for
+  capable models and future improvements without weakening permissions, safety
+  checks, or result verification.
 - When changing prompts or agent instructions (including workflow prompts, this
   file, and Factory guides), research current official recommendations for the
   affected models/providers rather than relying on memory. For shared Factory
@@ -40,19 +39,17 @@
 
 ## Writing docs and comments
 
-- Use concise, plain language in docs, issue/PR bodies, comments, and reviews.
-  Keep documentation aligned with the code and workflows.
+- Write concise, plain language in docs, issue/PR bodies, comments, and reviews;
+  keep docs aligned with code and workflows.
 - Lead with the outcome or request. Start AI-written PR descriptions, issue
   bodies, triage assessments, and other longer comments, reviews, or reports with
   a `## TL;DR` section: one or two short, plain-language sentences before supporting
   detail. Already-brief replies do not need a separate summary.
-- Include only useful scope, evidence, decisions, blockers, or next steps; avoid
-  repeated context and process narration.
-- Be brief by default, but retain required links, markers, checked revisions,
-  verification results, and failure details. Concision must not hide uncertainty.
-- Use descriptive headings and focused bullets when they help scanning. Group
-  related conditions under a shared bullet; do not force short replies into a
-  template or expand an already-clear request.
+- Include only useful scope, evidence, decisions, blockers, or next steps. Avoid
+  repeated context and process narration, but retain required links, markers,
+  checked revisions, verification results, and failure details; never hide uncertainty.
+- Use descriptive headings and focused bullets when helpful; group related
+  conditions. Do not force short replies into a template.
 - Link to the owning guidance instead of repeating it.
 
 ## Repository map

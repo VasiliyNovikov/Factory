@@ -140,38 +140,41 @@ deadline to recover coverage.
 - Create issues **without labels** for normal [triage](issue-triage.md). Verify
   creation responses and URLs; leave later labels and triage updates alone.
   The [router](factory-router.md) job condition skips diagnostics completions.
-- Within the 30-minute job, record the window, per-workflow expected-versus-observed
-  conclusions and evidence links, selection rationale, per-workflow assessed/total
-  run-attempt counts, exclusions, existing/new issue links, and evidence gaps or
-  failures in `GITHUB_STEP_SUMMARY` and the coordinator's final CLI response,
-  which the [CLI writes to the Actions log](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions#run-copilot-cli).
-  Identify partially assessed and unassessed runs/attempts with links or clearly
-  defined linked groups, and explain their coverage gaps.
-  Distinguish initialization, completed analysis, and incomplete analysis.
-- Record the trusted workflow revision, installed CLI version, and resolved
-  coordinator and assessment-subprocess model, reasoning effort, and context tier.
-  Identify assignments, session IDs, exit statuses, and evidence for their settings,
-  including delegation-check results. Record nested-delegation events and any
-  available nested-agent settings with the originating coordinator or assessment
-  session ID and affected work; report them, mismatches, and unverified settings
-  or delegation checks as coverage gaps.
+
+Within the 30-minute job, append the complete report to `GITHUB_STEP_SUMMARY`,
+preserving existing content, and include the same report in the coordinator's
+final CLI response, which the [CLI writes to the Actions log](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions#run-copilot-cli).
+Totals or a summary link are not enough. Keep both copies consistent, using
+concise tables and linked groups without omitting evidence or repeating GitHub
+mutations. Include:
+
+- **Outcome and coverage:** initialization, completed analysis, or incomplete
+  analysis; window, per-workflow expected-versus-observed conclusions and evidence
+  links, selection rationale, assessed/total run-attempt counts per workflow,
+  exclusions, existing/new issue links, and evidence gaps or failures. Identify
+  partially assessed and unassessed runs/attempts with links or clearly defined
+  linked groups and explain their gaps.
+- **Execution binding:** trusted workflow revision, installed CLI version, and
+  resolved coordinator and assessment-subprocess model, reasoning effort, and
+  context tier; assignments, session IDs, exit statuses, settings evidence, and
+  delegation-check results. Record nested-delegation events and available
+  nested-agent settings with the originating session ID and affected work.
+  Report these events, mismatches, and unverified settings or delegation checks
+  as coverage gaps.
   Initialization reports no assessments launched rather than claiming verified
   execution.
-- Retain [API invocation evidence](github-app.md#api-evidence-credentials).
-- The final response is the complete log copy of this report, including the
-  coverage and execution-binding evidence above, not just totals or a summary
-  link. Keep it consistent with the preserved job summary. Use concise tables
-  and linked groups without omitting required evidence; rendering both copies
-  must not repeat issue creation or other GitHub mutations.
-- Shell-tool output can be collapsed by the CLI. A local report write, `cat`, or
-  spool comparison does not prove log retention. When verifying retention, read
-  the complete downloaded log using the [shared log guidance](actions-logs.md)
-  and compare its ledger with the preserved job summary. Report unavailable
-  destinations and unverified agreement explicitly; inability to read a job
-  summary does not establish that it is missing.
-- Unassessed runs/attempts, including those omitted by sampling, mean incomplete
-  analysis. Do not extrapolate a sample's conclusions to the whole window.
-- Missing evidence or API failures are not a clean result.
+- [API invocation evidence](github-app.md#api-evidence-credentials).
+
+Shell-tool output can be collapsed by the CLI. A local report write, `cat`, or
+spool comparison does not prove log retention. When verifying retention, read
+the complete downloaded log using the [shared log guidance](actions-logs.md)
+and compare its ledger with the preserved job summary. Report unavailable
+destinations and unverified agreement explicitly; inability to read a job
+summary does not establish that it is missing.
+
+Unassessed runs/attempts, including those omitted by sampling, mean incomplete
+analysis; do not extrapolate to the whole window. Missing evidence or API
+failures are not a clean result.
 
 Coverage and creation checks are AI-owned: no JSON contract, report artifact, or
 separate verification job. Setup/CLI errors fail their steps, but a successful
