@@ -96,8 +96,8 @@ changes, or expand the work into unrelated refactoring.
   interpretation. Preserve backticks and exact resolved environment values.
 - In the review, report executed checks/experiments, checked revisions, inputs,
   observed results, and limitations; distinguish static inspection from runtime evidence.
-- Append the review URL, decision, evidence, and outstanding work to
-  `GITHUB_STEP_SUMMARY`, preserving its content.
+- Append every write to `GITHUB_STEP_SUMMARY`, preserving its content. Record the
+  review URL, decision, evidence, and outstanding work.
 - Report incomplete reviews and API failures accurately; API errors are not skips.
 - Skip stale or covered assignments only before mutation: write `skipped=true`
   to `GITHUB_OUTPUT`, explain in `GITHUB_STEP_SUMMARY`, and make no GitHub changes.
