@@ -12,6 +12,8 @@ Runs share one concurrency group without cancelling active work. Budget the
 
 ## Assess and verify
 
+- Apply [credential rules](#permissions-and-trust) before the first
+  GitHub lookup, including optional run-history probes.
 - Evaluate the current remote default revision, read with `gh`, not the setup
   snapshot. Keep configured tooling pinned to the invocation checkout.
 - Discover models available to this run's Copilot identity through a verified,
@@ -82,7 +84,10 @@ evidence or repeating GitHub mutations:
   verify and report partial publication.
 - **Evidence:** run-attempt link, trusted workflow revision, exact evaluated SHA,
   CLI version, discovery time, model IDs and policy/capability evidence, dated
-  sources, unavailable models, conflicts, and gaps.
+  sources, unavailable models, conflicts, gaps, and API invocation evidence
+  (endpoint/operation, credential role, and outcome, including the first optional
+  lookup). Use role/variable names, never token values; disclose any credential
+  deviation separately from later compliant reads.
 - **Decisions:** a row per workflow/invocation with current
   profile/model/reasoning/context settings, retain or proposed settings,
   rationale/evidence, and constraints. Explicitly identify workflows without AI.
@@ -98,15 +103,22 @@ an unavailable summary does not establish that it is missing or incorrect.
 
 Verification is AI-owned: a successful CLI exit does not prove completion, nor
 do research and capability checks prove comparative quality or model-request success.
+Verify credential use and failed-read handling in an eligible evaluator invocation,
+including optional run-history reads when exercised. Static checks do not prove
+live adherence; report unexercised paths and unavailable outcomes.
 
 ## Permissions and trust
 
 - The [Factory App](github-app.md) has Contents/Pull requests read and Issues write;
   checkout does not persist credentials. The built-in token has Contents read and
   `copilot-requests: write`, without Actions or workflow-write access.
-- Keep App `GH_TOKEN` for GitHub operations; use built-in `GITHUB_TOKEN` as
-  `COPILOT_GITHUB_TOKEN` only for discovery/inference. Never switch repository
-  credentials, expose secrets, or send repository data to external providers.
+- Keep ambient App `GH_TOKEN` for every GitHub operation, including Actions
+  run/job/log reads and permission probes. Diagnostics' and implementation's
+  Actions-token exception does not apply. Never switch repository credentials,
+  even after a failed read; report the failure and evidence gap.
+  Use built-in `GITHUB_TOKEN` as `COPILOT_GITHUB_TOKEN` only for configured
+  model discovery/inference. Never expose secrets or send repository data to
+  external providers.
 - Outside configured setup, run the installed CLI and temporary code only for
   read-only discovery and the non-mutating comparisons above. Use `RUNNER_TEMP`
   for code, data, and candidate configurations. Never execute analyzed/downloaded
