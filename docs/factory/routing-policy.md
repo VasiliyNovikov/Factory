@@ -92,9 +92,8 @@ rather than maintaining two policies.
   An unsuccessful assessment needs a fresh successful review; never
   forward its findings as if verified or treat its failure as PR-code CI.
 - CI failure/timeout evidence must belong to the PR's current head or merge
-  revision. Router, maintenance, triage, implementation, diagnostics, repository
-  review, model profile improvement, and owner feedback learning outcomes are not
-  PR-code CI feedback.
+  revision. Router outcomes and runs triggered by `workflow_dispatch` or
+  `schedule`, including maintenance and Factory workers, are not PR-code CI feedback.
 - API errors and unavailable required evidence are failures or verification gaps,
   not proof that there is no work.
 
