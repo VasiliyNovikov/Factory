@@ -52,22 +52,16 @@ tracking identity when ready. Triage never creates or links children.
 
 ### Verify the decision receipt
 
-For the first receipt check and any reconciliation, use Factory App `GH_TOKEN`
-with REST `GET /repos/{owner}/{repo}/issues/comments/{comment_id}`, matching the
-workflow's REST identity contract. If the comment ID is uncertain, fully paginate
-the assigned issue's REST comments before retrying a mutation.
+Use Factory App `GH_TOKEN` and REST
+`GET /repos/{owner}/{repo}/issues/comments/{comment_id}` for receipt checks and
+reconciliation. Require the assigned issue, exact `user.login == FACTORY_LOGIN`,
+exact JSON `.body` equality with submitted text (no trimming or CLI-added
+newlines), the expected decision marker, and this attempt's exact run marker.
 
-- Require the assigned issue, exact REST `user.login == FACTORY_LOGIN` supplied
-  by the caller, exact submitted body, the expected decision marker, and this
-  attempt's exact run marker. Compare JSON `.body` directly with the submitted
-  text; do not trim, normalize, or compare CLI-added output newlines.
-- REST spells the Factory login `factory-worker-bot[bot]`; GraphQL can return
-  `factory-worker-bot` for the same bot. GraphQL discussion reads are still useful,
-  but do not compare their author login with the REST login for receipt identity.
-  Do not strip suffixes or accept a matching display name or different actor.
-- An API/schema error, missing receipt, or mismatch is a verification failure,
-  not absence of work or permission to proceed with labels. Reconcile and verify
-  before retrying; report unresolved or partial outcomes.
+GraphQL may omit `[bot]`; do not compare logins across APIs, strip suffixes, or
+trust display names. If the ID is uncertain, fully paginate the issue's REST
+comments before retrying. Missing receipts, mismatches, and API/schema errors
+block label changes; reconcile and verify first.
 
 ## Skip and report
 
