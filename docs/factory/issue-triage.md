@@ -36,7 +36,8 @@ not just inspected. Do not implement code or create issues or PRs.
 - Replies leave labels unchanged. Explain conflicting `factory-issue-*` labels;
   do not reassign them or add another tracking identity.
 - For a ready handoff, preserve this order:
-  1. Post the scope and acceptance criteria in the marked ready comment.
+  1. Post the scope and acceptance criteria in the marked ready comment and
+     [verify its receipt](#verify-the-decision-receipt).
   2. Add `TRACKING_LABEL` (`factory-issue-<issue-number>`) and verify it is the
      issue's only `factory-issue-*` label.
   3. Add `triaged` in a separate request and verify both labels on the issue.
@@ -49,6 +50,25 @@ The Factory-authenticated `triaged` event routes to [implementation](issue-imple
 label order is required. Children use the same triage path and get their own
 tracking identity when ready. Triage never creates or links children.
 
+### Verify the decision receipt
+
+For the first receipt check and any reconciliation, use Factory App `GH_TOKEN`
+with REST `GET /repos/{owner}/{repo}/issues/comments/{comment_id}`, matching the
+workflow's REST identity contract. If the comment ID is uncertain, fully paginate
+the assigned issue's REST comments before retrying a mutation.
+
+- Require the assigned issue, exact REST `user.login == FACTORY_LOGIN` supplied
+  by the caller, exact submitted body, the expected decision marker, and this
+  attempt's exact run marker. Compare JSON `.body` directly with the submitted
+  text; do not trim, normalize, or compare CLI-added output newlines.
+- REST spells the Factory login `factory-worker-bot[bot]`; GraphQL can return
+  `factory-worker-bot` for the same bot. GraphQL discussion reads are still useful,
+  but do not compare their author login with the REST login for receipt identity.
+  Do not strip suffixes or accept a matching display name or different actor.
+- An API/schema error, missing receipt, or mismatch is a verification failure,
+  not absence of work or permission to proceed with labels. Reconcile and verify
+  before retrying; report unresolved or partial outcomes.
+
 ## Skip and report
 
 - Skip stale or handled work only before mutation: write `skipped=true` to
@@ -58,6 +78,8 @@ tracking identity when ready. Triage never creates or links children.
 - Confirm the Factory decision and claimed label handoff in fresh state.
   Reconcile uncertain outcomes before retrying.
 - Record the decision, verification links, and outstanding work in `GITHUB_STEP_SUMMARY`.
+  Include the first receipt check's endpoint, outcome, comment link, and
+  `GITHUB_WORKFLOW_SHA`; distinguish any failed check from its recovery.
   API errors and unverified outcomes are failures, not skips.
 - Include setup, reporting, and verification in the 15-minute budget without
   relaxing required checks.
