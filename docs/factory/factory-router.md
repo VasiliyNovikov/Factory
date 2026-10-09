@@ -76,11 +76,11 @@ checkout or AI setup. Copilot decides the rest.
 - Already-handled feedback.
 - Successful CI without review findings.
 - Cancelled runs.
-- Router, [PR review](pr-review.md), triage, implementation, workflow diagnostics,
-  [repository review](repository-review.md),
-  [model profile improvement](model-profile-improvement.md), and
-  [owner feedback learning](owner-feedback.md) completions
-  (job-filtered regardless of conclusion). Reviewer-App findings arrive through
+- Router completions and completions triggered by `workflow_dispatch` or `schedule`
+  (job-filtered regardless of conclusion). Other `workflow_run` events require
+  a same-repository head. Future non-Factory dispatch/scheduled workflows are also
+  excluded; the CI route covers PR-linked CI at the current head or merge revision.
+  Reviewer-App findings arrive through
   `pull_request_review: submitted`; source-review findings enter through new issues,
   not self-triggered automation.
 
