@@ -27,6 +27,7 @@ runs:
       shell: bash
       env:
         AI_HARNESS: ${{ inputs.harness }}
+        GITHUB_TOKEN: ${{ inputs.harness == 'copilot' && github.token || '' }}
       run: |
         for attempt in 1 2 3; do
           if ./scripts/install-tools.sh "$AI_HARNESS"; then

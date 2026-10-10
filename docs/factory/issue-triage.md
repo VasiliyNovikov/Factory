@@ -36,7 +36,8 @@ not just inspected. Do not implement code or create issues or PRs.
 - Replies leave labels unchanged. Explain conflicting `factory-issue-*` labels;
   do not reassign them or add another tracking identity.
 - For a ready handoff, preserve this order:
-  1. Post the scope and acceptance criteria in the marked ready comment.
+  1. Post the scope and acceptance criteria in the marked ready comment and
+     [verify its receipt](#verify-the-decision-receipt).
   2. Add `TRACKING_LABEL` (`factory-issue-<issue-number>`) and verify it is the
      issue's only `factory-issue-*` label.
   3. Add `triaged` in a separate request and verify both labels on the issue.
@@ -49,6 +50,19 @@ The Factory-authenticated `triaged` event routes to [implementation](issue-imple
 label order is required. Children use the same triage path and get their own
 tracking identity when ready. Triage never creates or links children.
 
+### Verify the decision receipt
+
+Use Factory App `GH_TOKEN` and REST
+`GET /repos/{owner}/{repo}/issues/comments/{comment_id}` for receipt checks and
+reconciliation. Require the assigned issue, exact `user.login == FACTORY_LOGIN`,
+exact JSON `.body` equality with submitted text (no trimming or CLI-added
+newlines), the expected decision marker, and this attempt's exact run marker.
+
+GraphQL may omit `[bot]`; do not compare logins across APIs, strip suffixes, or
+trust display names. If the ID is uncertain, fully paginate the issue's REST
+comments before retrying. Missing receipts, mismatches, and API/schema errors
+block label changes; reconcile and verify first.
+
 ## Skip and report
 
 - Skip stale or handled work only before mutation: write `skipped=true` to
@@ -58,6 +72,8 @@ tracking identity when ready. Triage never creates or links children.
 - Confirm the Factory decision and claimed label handoff in fresh state.
   Reconcile uncertain outcomes before retrying.
 - Record the decision, verification links, and outstanding work in `GITHUB_STEP_SUMMARY`.
+  Include the first receipt check's endpoint, outcome, comment link, and
+  `GITHUB_WORKFLOW_SHA`; distinguish any failed check from its recovery.
   API errors and unverified outcomes are failures, not skips.
 - Include setup, reporting, and verification in the 15-minute budget without
   relaxing required checks.

@@ -167,7 +167,7 @@ at the PR merge revision, with the [documented risk](factory-router.md#accepted-
 ## Identity and execution
 
 - Use reviewer-App `GH_TOKEN` for all repository/review operations and receipts.
-  Built-in credentials serve checkout, inherited
+  Built-in credentials serve checkout, shared-action
   [Copilot installation](../examples/ai-tools.md#installation-authentication), and
   `COPILOT_GITHUB_TOKEN` model access, never reviewer API calls.
   [App setup](github-app.md) and worker YAML own grants;
@@ -206,8 +206,8 @@ Credential access, extra GitHub writes, and verification bypasses remain forbidd
 The caller owns the inline receipt/gate, independent of the worker checkout and
 shared action. It checks the submitted bot review's state, commit, full SHA, and
 marker. Actions' implicit `success()` prevents receipt reads after setup/worker
-failure, including built-in-token fallback. After worker success, only a skip
-with empty `REVIEW_RECEIPT` bypasses it, visibly skipped rather than verified.
+failure. After worker success, only a skip with empty `REVIEW_RECEIPT` bypasses
+it, visibly skipped rather than verified.
 Recorded failure still fails even with a matching receipt.
 
 Deliver findings once while preserving active same-head reviews. After
@@ -215,17 +215,9 @@ post-submission failure, timeout, or cancellation, remaining findings require a
 fresh successful assessment.
 
 Choose relevant checks under [Local checks](#local-checks).
-The [receipt tests](../../tests/test_review_receipt.py) exercise the literal
-receipt/example with fake `gh` and synthetic state, covering receipt fields,
-read failures, and sticky failed-POST/no-retry behavior. Gate checks are static;
-neither proves hosted Actions evaluation or `GITHUB_ENV` propagation.
+Local checks do not prove hosted Actions evaluation or `GITHUB_ENV` propagation.
 
 Eligibility, inline validation, reconciliation, and recording state depend on AI
-adherence; the receipt cannot detect an unrecorded rejected POST. After deployment,
-verify these behaviors, genuine skips, and failed worker/receipt outcomes live.
+adherence; the receipt cannot detect an unrecorded rejected POST.
 Neither receipts nor local checks prove review quality, required-review
 qualification, AI adherence, event delivery, or GitHub races.
-
-Also verify a maintenance-triggered scoped review on an open Factory PR: link its
-body and successful receipt-bearing attempt; compare duration with full reviews
-using identical timing boundaries. Deployment and speedup claims need live evidence.

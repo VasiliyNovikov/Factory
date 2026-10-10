@@ -64,9 +64,8 @@
 ## Repository map
 
 This is an agentic software factory scaffold, with no application code or
-toolchain yet. [README.md](README.md) tracks completed CI milestones. Focused
-[PR-review receipt checks](docs/factory/pr-review.md#verification-limits) use
-Python's standard library; other automated workflow tests are deferred.
+toolchain yet. [README.md](README.md) tracks completed CI milestones. There are no
+configured build/test/lint commands; automated workflow tests are deferred.
 
 Use the owning guide for each workflow's behavior, permissions, and verification:
 
