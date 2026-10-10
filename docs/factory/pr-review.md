@@ -167,7 +167,7 @@ It runs at the PR merge revision, with the [accepted risk](factory-router.md#acc
 
 - Use [reviewer App](github-app.md#configure-the-apps) `GH_TOKEN` for all
   repository/review operations, including receipt verification.
-- The built-in token is for checkout, inherited
+- The built-in token is for checkout, shared-action
   [Copilot installation](../examples/ai-tools.md#installation-authentication), and
   `COPILOT_GITHUB_TOKEN` model access, never reviewer API calls.
   Worker YAML owns permissions and [AI setup](../examples/ai-tools.md).
@@ -226,8 +226,3 @@ After post-submission failure, timeout, or cancellation, only a fresh successful
 assessment may deliver remaining findings.
 
 Static checks do not prove AI adherence or event delivery.
-
-After deployment, verify a maintenance-triggered scoped review on an open Factory
-PR: link its body and successful receipt-bearing attempt, and compare its duration
-with earlier full reviews using the same timing boundaries. Until then, deployed
-behavior and any speedup remain unverified.

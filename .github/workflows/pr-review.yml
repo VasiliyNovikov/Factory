@@ -36,7 +36,6 @@ jobs:
       contents: read
       copilot-requests: write
     env:
-      GITHUB_TOKEN: ${{ github.token }}
       REVIEWER_LOGIN: factory-reviewer-bot[bot]
       PR_NUMBER: ${{ inputs.pr_number }}
       PR_HEAD_SHA: ${{ inputs.head_sha }}

@@ -62,6 +62,8 @@ jobs:
 
       - name: Triage issue with Copilot
         id: worker
+        env:
+          FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
         uses: ./factory/.github/actions/ai
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
