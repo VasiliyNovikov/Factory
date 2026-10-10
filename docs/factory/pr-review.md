@@ -215,8 +215,3 @@ After post-submission failure, timeout, or cancellation, only a fresh successful
 assessment may deliver remaining findings.
 
 Static checks do not prove AI adherence or event delivery.
-
-After deployment, verify a maintenance-triggered scoped review on an open Factory
-PR: link its body and successful receipt-bearing attempt, and compare its duration
-with earlier full reviews using the same timing boundaries. Until then, deployed
-behavior and any speedup remain unverified.
