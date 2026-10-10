@@ -194,7 +194,6 @@ checkout or AI setup. Copilot decides the rest.
 - Static checks do not establish AI adherence or end-to-end event delivery.
   A PR cannot exercise its changed default-branch push or
   [`issue_comment`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issue_comment)
-  triggers. After merge, link an edited test-issue comment to its router run and
-  verified worker dispatch or reasoned skip.
+  triggers.
 - Participant approval is AI-owned, not a workflow `if` guard. External events can
   start Copilot.
