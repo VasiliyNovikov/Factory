@@ -19,6 +19,10 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Follow the [shared pagination guidance](../../AGENTS.md#github-cli-pagination)
   for node-bounded, complete discussion and provenance reads.
 - Act on feedback that still applies, even from older heads or outdated lines.
+- Apply [participant approval](participant-approval.md) to the original issue
+  scope and individual requests throughout the discussion. Only authorized
+  requests count as outstanding feedback; a trusted triggering comment does not
+  adopt unrelated external feedback.
 - Tie review-worker findings to the source review's
   [verified reviewed SHA](routing-policy.md#feedback-verification), not a
   later API `commit_id` or the run's default-branch `head_sha`.
@@ -45,6 +49,10 @@ Commit identity does not establish GitHub authentication or permissions.
 
 - Recheck eligibility and remote revisions before edits or GitHub mutations.
   The dispatched `head_sha` alone is not a freshness check.
+- Recheck any required owner approval before implementation, decomposition, or
+  maintenance and their mutations. Missing, ambiguous, or revoked approval needs
+  an owner-decision hold, not a code change. Existing handoff labels and a Factory
+  PR do not replace approval; explain the hold using the normal reporting contract.
 - The original issue must be open, with `triaged` and exactly one tracking label:
   `factory-issue-NUMBER`, matching its number.
 - Each issue owns `factory/issue-NUMBER`. Do not duplicate or overwrite work in
@@ -254,8 +262,9 @@ the independent PR-review worker.
 - Otherwise post a new Factory comment in the triggering conversation (`source_pr`
   if supplied, else `issue_number`), even after mutation failure. Include:
   the outcome and producing workflow run-attempt link; the PR link when available;
-  any child links and incomplete split work; and addressed/outstanding feedback
-  with thread links.
+  any child links and incomplete split work; addressed/outstanding feedback with
+  thread links; and required owner approval with its source link and adopted scope,
+  or the outstanding owner decision.
 - Verify claimed outcomes in fresh remote state: the checked commit and eligible
   PR metadata for code changes, native child links and eligible parent for splits,
   resolved threads, and Factory-authored replies/comments on the intended targets.

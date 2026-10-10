@@ -18,7 +18,7 @@
 
 ## AI-led work
 
-- State goals, when to act or skip, constraints, and verifiable outcomes. Let
+- State goals, when to act, hold, or skip, constraints, and verifiable outcomes. Let
   capable models choose how to meet them with the available tools and context;
   design for future improvements without weakening permissions, safety checks,
   or result verification.
@@ -28,6 +28,8 @@
   and run-specific context.
 - Prescribe procedures only for a required contract, safety boundary, or known
   failure.
+- Strengthen shared rules when review reveals a gap, rather than adding a checklist
+  per scenario. Consolidate overlaps without weakening required checks.
 - When changing prompts or agent instructions (including workflow prompts, this
   file, and Factory guides), research current official recommendations for the
   affected models/providers rather than relying on memory. For shared Factory
@@ -72,6 +74,7 @@ Use the owning guide for each workflow's behavior, permissions, and verification
 | Area | Guidance |
 |---|---|
 | App identities and credentials | [GitHub App setup](docs/factory/github-app.md) |
+| External requests and owner decisions | [Participant approval](docs/factory/participant-approval.md) |
 | Event routing and dispatch | [Factory router](docs/factory/factory-router.md) |
 | Shared worker eligibility and dispatch | [Routing policy](docs/factory/routing-policy.md) |
 | Periodic lifecycle recovery | [Factory maintenance](docs/factory/factory-maintenance.md) |
@@ -82,6 +85,11 @@ Use the owning guide for each workflow's behavior, permissions, and verification
 | Full source analysis | [Repository review](docs/factory/repository-review.md) |
 | Model selection and improvement findings | [Model profile improvement](docs/factory/model-profile-improvement.md) |
 | Recurring owner feedback and guidance findings | [Owner feedback learning](docs/factory/owner-feedback.md) |
+
+Participant approval is AI-owned: non-owner (external) requests need scoped owner
+approval; verified configured automation's own work is exempt under the shared
+policy. Router/triage may request approval; this is not a pre-Copilot gate.
+Workers recheck each request.
 
 Factory checkouts use `github.workflow_sha`; manual jobs skip non-default refs.
 Eligible submitted reviews are the router exception: they run PR-merge-revision

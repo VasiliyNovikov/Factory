@@ -115,3 +115,5 @@ these event-specific `source` fields:
   A PR cannot exercise its changed default-branch push or
   [`issue_comment`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issue_comment)
   triggers.
+- Participant approval is AI-owned, not a workflow `if` guard. External events can
+  start Copilot.

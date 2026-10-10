@@ -13,6 +13,9 @@ rather than maintaining two policies.
 - Select [triage](issue-triage.md) for an open, untriaged issue, never a PR:
   - An unattended initial request or actionable clarification.
   - An interrupted ready-comment/tracking-label handoff.
+- An external issue needs an owner decision: dispatch triage to request approval
+  or explain rejection, not to hand off unapproved work. An owner approval comment
+  resumes normal readiness assessment; avoid repeated requests while waiting.
 - An earlier ready comment or tracking label alone is not a completed handoff.
   Reassess the full discussion; an unanswered Factory question is a hold, not a
   recovery gap.
@@ -49,12 +52,15 @@ rather than maintaining two policies.
 
 ## Holds and handled work
 
-- Respect the live discussion and applicable worker/participant-approval guidance.
+- Apply [participant approval](participant-approval.md) to the original scope and
+  individual discussion requests before dispatch. Unapproved external input is
+  context, not actionable implementation or review work. A later owner comment
+  explicitly adopting the request can resume routing; an unrelated trusted event
+  cannot authorize it.
+- Respect the live discussion.
   Clarification or owner-approval waits, rejection/revocation, deliberate holds,
   unresolved prerequisites, and parents awaiting child-owned delivery are not
   automation failures. Recovery cannot grant approval or bypass those decisions.
-- Do not recreate the owner-approval policy or treat Factory restatements/labels
-  as authorization to bypass it.
 - Changed evidence can make a previously blocked request actionable; elapsed time
   alone cannot. Do not repeatedly dispatch workers to restate unchanged blockers.
 - Compare current conversation-comment feedback with the request covered by earlier
@@ -76,7 +82,6 @@ rather than maintaining two policies.
 
 - Read worker-discovery, PR-review, and required provenance collections completely,
   following the [shared pagination guidance](../../AGENTS.md#github-cli-pagination).
-- Humans and other bots may provide feedback.
 - Conversation requests and review findings remain actionable across head drift
   when they still apply to current code. Read the current text, complete relevant
   discussions, review inline comments, and unresolved thread histories; outdated
@@ -166,3 +171,4 @@ rather than maintaining two policies.
   in `GITHUB_STEP_SUMMARY`. Append to this existing runner-provided file; preserve
   earlier content. Use native reruns for incomplete coordinator attempts, without
   depending on another event or claiming unverified work succeeded.
+- Include any required owner-decision link and adopted scope, or the approval hold.
