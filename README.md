@@ -131,6 +131,20 @@ per-workflow decisions, and dated evidence.
 feedback on older or closed work, for recurring preferences that current
 instructions, docs, or prompts do not yet address.
 
+```mermaid
+flowchart TD
+    trigger["Monday 00:17 UTC or manual<br/>Default branch"] --> assess["Review owner feedback<br/>Last 90 days; check current guidance"]
+    assess -->|Complete assessment| findings{"Recurring actionable gap?<br/>Two independent owner examples"}
+    assess -->|Missing evidence or failure| incomplete["Report incomplete / partial"]
+    findings -->|No| unchanged["Report no new actionable finding"]
+    findings -->|Yes| duplicates["Check issues and PRs<br/>All states"]
+    duplicates -->|Already covered| covered["Link existing work"]
+    duplicates -->|Incomplete evidence| incomplete
+    duplicates -->|New finding| issues["Create and verify unlabeled issues"]
+    issues -->|Publication or verification failure| incomplete
+    issues --> router["Factory router"] --> workers["Normal triage and implementation"]
+```
+
 Findings need multiple independent owner examples, current-guidance checks, and
 provider research where applicable. The evaluator reconciles issues and PRs in
 all states, then creates only new **unlabeled Factory issues** for normal triage
