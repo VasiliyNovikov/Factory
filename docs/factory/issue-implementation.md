@@ -1,7 +1,8 @@
 # Issue and PR implementation
 
 [Implementation](../../.github/workflows/issue-implementation.yml) handles triaged
-issues and Factory PR feedback selected by the [router](factory-router.md).
+issues and Factory PR feedback selected by the [router](factory-router.md) or
+[maintenance](factory-maintenance.md).
 Copilot checks current state, implements or splits the work, replies, and verifies
 results. For unclear, blocked, or already-satisfied requests, ask or explain.
 Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
@@ -9,7 +10,7 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 ## Assignment and context
 
 - `GITHUB_EVENT_PATH` contains dispatch inputs, not the original webhook.
-  See the worker YAML and [router contract](factory-router.md#dispatch-and-reporting).
+  See the worker YAML and [shared dispatch contract](routing-policy.md#dispatch-contract).
 - Stay within the assigned issue; do not repeat repository-wide routing.
 - Apply the [API evidence credential rules](github-app.md#api-evidence-credentials)
   before the first GitHub lookup, including CI evidence reads.
@@ -23,7 +24,7 @@ Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
   requests count as outstanding feedback; a trusted triggering comment does not
   adopt unrelated external feedback.
 - Tie review-worker findings to the source review's
-  [verified reviewed SHA](factory-router.md#feedback-and-event-handling), not a
+  [verified reviewed SHA](routing-policy.md#feedback-verification), not a
   later API `commit_id` or the run's default-branch `head_sha`.
 - CI evidence must match the current PR head or merge revision.
 
@@ -119,9 +120,10 @@ Commit identity does not establish GitHub authentication or permissions.
 Before publishing a changed candidate, run an internal review with the existing
 `review` [profile](../../.github/model-config.json) for new implementations, feedback
 fixes (including their base merges), and maintenance conflict resolutions. Do not
-add this pass to clean push-only base maintenance, no-op, reply-only, or split-only
-outcomes. Required base maintenance still applies. The main worker stays on
-`implement`; independent [PR review](pr-review.md) after publication is unchanged.
+add this pass to clean default-branch-only maintenance (from a push or
+periodic/manual recovery), no-op, reply-only, or split-only outcomes. Required base
+maintenance still applies. The main worker stays on `implement`; independent
+[PR review](pr-review.md) after publication is unchanged.
 
 - Finish the candidate, including required base merges and all intended staged,
   unstaged, and new-file changes; exclude unrelated work. Local checkpoint commits
@@ -212,7 +214,8 @@ the independent PR-review worker.
 - Resolve conflicts while preserving both histories and intended changes. Do not
   blindly choose a side or weaken checks.
 - GitHub mergeability and policy status neither gate this work nor replace revision checks.
-- Push maintenance covers only `source_pr`: no new issues, PRs, or expanded scope.
+- Default-branch-only maintenance, from a push or periodic/manual recovery,
+  covers only `source_pr`: no new issues, PRs, or expanded scope.
 
 ### Verification and blockers
 
@@ -253,9 +256,9 @@ the independent PR-review worker.
 ## Skip and report
 
 - Skip before mutation only when no eligible work remains, including base merges.
-  For push-only maintenance, verify the head includes the current default branch
-  and there are no changes, unhandled feedback, errors, or blockers. Make no
-  GitHub changes or no-op comments on a skip.
+  For push-only maintenance or base-only recovery, verify the head includes the
+  current default branch and there are no changes, unhandled feedback, errors,
+  or blockers. Make no GitHub changes or no-op comments on a skip.
 - Otherwise post a new Factory comment in the triggering conversation (`source_pr`
   if supplied, else `issue_number`), even after mutation failure. Include:
   the outcome and producing workflow run-attempt link; the PR link when available;

@@ -51,7 +51,7 @@ PR reviewers may run PR code, tests, and focused experiments under the
 
 Implementation keeps eligible PRs current with the default branch and resolves
 conflicts, but never merges PRs or closes issues. It self-reviews changed candidates
-with the `review` profile before publication, except for clean push-only base
+with the `review` profile before publication, except for clean default-branch-only
 maintenance.
 Independent PR review still runs. Verified clean base-merge heads can reuse prior
 coverage for a [scoped reassessment](docs/factory/pr-review.md#clean-default-branch-merges),
@@ -66,6 +66,20 @@ Other events and workers use the default branch. See the
 PR checks also run in a credentialed reviewer job, with the
 [accepted risk of approval-token access or receipt-check bypass](docs/factory/pr-review.md#accepted-risk-pr-code-runs-in-the-reviewer-job).
 Removing environment variables does not isolate credentials.
+
+## Periodic recovery
+
+[Factory maintenance](docs/factory/factory-maintenance.md) runs every six hours at
+00:00, 06:00, 12:00, and 18:00 UTC, or manually on the default branch. It discovers
+missed or interrupted triage handoffs, implementation, reviews, feedback, and default-branch updates,
+then dispatches the existing workers using the router's
+[shared policy](docs/factory/routing-policy.md).
+
+The coordinator uses the built-in token for read-only discovery and workflow
+dispatch, not comments, labels, code changes, or new issues/PRs. It reconciles
+active/handled work across sweeps and ordinary routing, respects human/approval
+holds and child-owned scope, and reports coverage, dispatch evidence, and partial
+failures in the job summary. Dispatch acceptance is not completed recovery.
 
 ## Workflow diagnostics
 

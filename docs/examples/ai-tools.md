@@ -132,8 +132,9 @@ limit; a hung vendor installer or version check waits for the caller's job timeo
 - `harness` defaults to `copilot`, as used by current callers. Set
   `harness: opencode` to select OpenCode. Only that CLI is installed and invoked;
   other values fail before installation.
-- The caller chooses `gh-token`: built-in for routing, reviewer App for PR review,
-  Factory App for other workers. Only invocation receives it as `GH_TOKEN`;
+- The caller chooses `gh-token`: built-in for routing and maintenance, reviewer
+  App for PR review, Factory App for other workers. Only invocation receives it
+  as `GH_TOKEN`;
   `GITHUB_TOKEN` and `COPILOT_GITHUB_TOKEN` use the built-in token.
 - `skipped` forwards the invocation's `GITHUB_OUTPUT` value for triage/review
   receipt checks. Install and invocation errors fail the action, not skip it.

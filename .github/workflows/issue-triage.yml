@@ -1,5 +1,5 @@
 name: Issue triage
-run-name: 'Issue triage: ${{ inputs.issue_number }} (router ${{ inputs.router_run_id }})'
+run-name: 'Issue triage: ${{ inputs.issue_number }} (coordinator ${{ inputs.router_run_id }})'
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ on:
         required: true
         type: string
       router_run_id:
-        description: Factory router run ID
+        description: Dispatching coordinator run ID (legacy input name)
         required: true
         type: string
 
