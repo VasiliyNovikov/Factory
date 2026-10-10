@@ -18,6 +18,9 @@ flowchart TD
     feedback["Created/edited comments, submitted reviews, or current-PR CI failures"] --> router
     base["Default-branch update"] --> router
     router -->|Untriaged issue| triage["Triage"]
+    triage -->|External issue needs approval| ownerRequest["Ask owner; labels unchanged"]
+    ownerRequest --> ownerDecision["Owner approval or rejection in a new comment"]
+    ownerDecision --> router
     triage -->|Ready: tracking label, then triaged| router
     triage -->|Not ready| reply["Clarification or explanation"]
     router -->|Ready issue, feedback, or base update| implementation["Implementation"]
@@ -36,6 +39,12 @@ flowchart TD
 People and other bots provide input under their own accounts. The router runs as
 `github-actions[bot]`; Factory work uses `factory-worker-bot[bot]`, and reviews use
 `factory-reviewer-bot[bot]`.
+
+The owner's requests and verified configured automation proceed normally;
+requests from other humans/bots need scoped
+[repository-owner approval](docs/factory/participant-approval.md). AI may request
+approval before normal triage; approval neither marks an issue ready nor adopts
+unrelated feedback. This is an AI-owned hold, not a pre-Copilot gate or spending limit.
 
 PR reviewers may run PR code, tests, and focused experiments under the
 [PR-review execution rules](docs/factory/pr-review.md#local-checks).
@@ -143,6 +152,7 @@ author/reviewer identities.
 ## Factory guidance
 
 Worker contracts and verification boundaries live in [docs/factory/](docs/factory/).
-Start with [routing](docs/factory/factory-router.md), [triage](docs/factory/issue-triage.md),
+Start with [participant approval](docs/factory/participant-approval.md),
+[routing](docs/factory/factory-router.md), [triage](docs/factory/issue-triage.md),
 [implementation](docs/factory/issue-implementation.md), or [PR review](docs/factory/pr-review.md).
 Contributor expectations are in [AGENTS.md](AGENTS.md).
