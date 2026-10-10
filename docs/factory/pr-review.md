@@ -159,7 +159,7 @@ It runs at the PR merge revision, with the [accepted risk](factory-router.md#acc
 
 - Use [reviewer App](github-app.md#configure-the-apps) `GH_TOKEN` for all
   repository/review operations, including receipt verification.
-- The built-in token is for checkout, inherited
+- The built-in token is for checkout, shared-action
   [Copilot installation](../examples/ai-tools.md#installation-authentication), and
   `COPILOT_GITHUB_TOKEN` model access, never reviewer API calls.
   Worker YAML owns permissions and [AI setup](../examples/ai-tools.md).
