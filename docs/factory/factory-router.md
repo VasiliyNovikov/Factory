@@ -114,5 +114,4 @@ these event-specific `source` fields:
 - Static checks do not establish AI adherence or end-to-end event delivery.
   A PR cannot exercise its changed default-branch push or
   [`issue_comment`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issue_comment)
-  triggers. After merge, link an edited test-issue comment to its router run and
-  verified worker dispatch or reasoned skip.
+  triggers.
