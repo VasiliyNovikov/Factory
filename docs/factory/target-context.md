@@ -77,4 +77,5 @@ live default branch and revisions before work or mutations; neither that name,
 
 Pre-merge checks can verify configuration, target rejection, checkout separation,
 and receipt contracts. They do not prove AI adherence or event delivery.
-Participant trust and key isolation remain separate work in #69 and #79.
+Participant approval follows the [shared policy](participant-approval.md) for
+`TARGET_REPOSITORY`. Private-key isolation remains separate work in #79.
