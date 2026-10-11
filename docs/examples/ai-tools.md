@@ -13,7 +13,6 @@ on:
 jobs:
   ai:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     permissions:
       contents: read
       copilot-requests: write
@@ -27,6 +26,7 @@ jobs:
         run: ./scripts/install-tools.sh copilot
 
       - name: Run a prompt
+        timeout-minutes: 5
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
@@ -121,12 +121,13 @@ limit; a hung vendor installer or version check waits for the caller's job timeo
   uses: ./.github/actions/ai
   with:
     gh-token: ${{ github.token }}
+    budget: 5
     prompt: Reply with 'Hello from CI'. Do not use any tools.
 ```
 
 - Check out the repository first. Factory callers use `github.workflow_sha`;
   implementation also needs App-authenticated checkout and full history.
-- `prompt` and `gh-token` are required; `profile` defaults to `default`.
+- `prompt`, `gh-token`, and `budget` are required; `profile` defaults to `default`.
 - Prompts are data, not shell code. Use Actions expressions for runtime values,
   not shell variable expansion in the input.
 - `harness` defaults to `copilot`, as used by current callers. Set
@@ -140,6 +141,36 @@ limit; a hung vendor installer or version check waits for the caller's job timeo
 
 Checkout, App permissions/token creation, Git identity, prompts, and receipt checks
 remain in the owning workflows.
+
+### Invocation budget
+
+Set `budget` to a whole number of minutes from 1 to 360. The action starts this
+budget immediately before invoking the harness, after installation. It exports
+`AI_BUDGET_MINUTES` and the absolute `AI_DEADLINE_UTC` (UTC ISO 8601). One short
+budget/deadline notice is shared by the prompt and Actions log; the task and
+subtask rules stay in this guide. Child processes inherit the environment
+variables; coordinators must also pass the remaining time and an earlier deadline
+to delegated tasks, reserving time to integrate results.
+
+Finish all AI-owned work, including checks, publication, reporting, and outcome
+verification, before `AI_DEADLINE_UTC`. Subtasks, including implementation's
+internal review, share that deadline rather than receiving a fresh budget.
+Do not weaken required checks to meet it; report incomplete work accurately.
+
+The action uses GNU `timeout` around `scripts/ai.sh`: expiry sends `TERM`, with
+`KILL` after a further 30 seconds if needed. The command's exit status passes
+directly to GitHub Actions; nonzero means step failure, including on timeout.
+For diagnostics, use the notice's Actions timestamp as the invocation start,
+and the invocation step's completion time and exit status from Actions. A hard
+timeout is not a skip or permission to omit reporting; the killed agent cannot
+finish its report. Direct `scripts/ai.sh` calls do not start a new budget or timeout.
+
+Factory jobs omit `timeout-minutes`, restoring GitHub's
+[default job limit](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idtimeout-minutes).
+Checkout, token creation, harness installation, and post-invocation receipt checks
+are outside the AI budget, but remain subject to the job/runner limits. Any shorter
+enclosing limit still wins. The invocation boundary is inside the composite
+action so installation does not consume the AI budget.
 
 Build on this setup to [create a pull request](create-pull-request.md) or
 [create an issue](create-issue.md).
