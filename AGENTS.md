@@ -22,6 +22,9 @@
   capable models choose how to meet them with the available tools and context;
   design for future improvements without weakening permissions, safety checks,
   or result verification.
+- Every AI session has a time budget. Follow the shared
+  [invocation-budget guidance](docs/examples/ai-tools.md#invocation-budget),
+  including its subtask, verification, and reporting requirements.
 - Do not expand already-clear requests; add only missing context or decisions
   needed to act and verify. Keep detailed requirements in the owning guidance
   document and link to it instead of repeating them; prompts supply only the task
@@ -115,6 +118,12 @@ incompatible.
 Follow GitHub's [node limit](https://docs.github.com/en/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api#node-limit)
 and [cursor pagination](https://docs.github.com/en/graphql/guides/using-pagination-in-the-graphql-api).
 
+- Reuse verified schema information instead of unnecessary introspection. When
+  discovery is needed, cap each introspection collection field (such as
+  `__Type.fields` or `__Type.inputFields`) at two selections per request, including
+  across aliased lookups, from the first request. Split larger probes into
+  separate requests. These observed repetition limits are independent of the
+  500,000-node connection limit.
 - Keep every query, including the first, within 500,000 worst-case nodes across
   all nested and sibling connections, with `first`/`last` bounds of 1-100.
 - Read all required bodies, discussions, reviews, inline replies, and edit/deletion

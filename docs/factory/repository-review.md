@@ -12,7 +12,7 @@ Copilot reviews source, checks duplicates, publishes issues, and verifies result
 using the shared [AI action](../examples/ai-tools.md#shared-factory-action) and
 `review` profile. Scheduled and manual runs keep the host-only `repository-review`
 concurrency group, preserving active work across deployment and at most one pending
-run. The 30-minute budget includes setup and reporting.
+run.
 
 ## Review scope
 
@@ -43,6 +43,12 @@ run. The 30-minute budget includes setup and reporting.
 - Before publishing each finding, check issues and PRs in **all states**, including prior
   attempts and diagnostics. Handle pagination and read relevant discussions and
   resolutions; closed work is not permission to duplicate it.
+- Retrieval alone is not inspection. Failed parsing, filtering, or rendering of
+  required evidence leaves the dependent assessment incomplete. Recover and inspect
+  the primary content from saved data or another authorized representation; related
+  summaries do not replace required discussion reads. Defer dependent publication
+  until recovery completes. If recovery cannot finish within the budget, report
+  incomplete analysis while preserving independently verified outcomes.
 - Link existing work in the summary; never edit, comment on, reopen, or replace it.
   No new actionable findings means no new issues.
 - Create one issue per new finding in `TARGET_REPOSITORY` as `FACTORY_LOGIN`, using
@@ -71,6 +77,10 @@ This applies to every outcome, including no-new-findings and incomplete/partial 
   counts, with remaining paths/ranges, exclusions, and evidence gaps. Tie coverage
   claims to the invocation's read operations and returned content/ranges,
   not just a list of intended reads.
+- Prior-work inspection: distinguish retrieved evidence from content actually
+  inspected. Record processing failures and recovery, or the missing discussions
+  and affected findings. Complete source-file counts or successful publication
+  do not establish completed prior-work assessment.
 - Executed checks/experiments, inputs, observed results, and limitations.
 - Existing findings/PRs and verified new issue links.
 - Outcome: completed with findings, completed with no new findings, or incomplete,

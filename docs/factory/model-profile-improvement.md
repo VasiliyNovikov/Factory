@@ -10,7 +10,7 @@ skip, and schedules may be delayed. The [host/target contract](target-context.md
 pins tooling and policy to `FACTORY_SHA` in `FACTORY_ROOT`; this worker stays
 host-local, with `TARGET_REPOSITORY` equal to `FACTORY_REPOSITORY`.
 Runs retain the `model-profile-improvement` concurrency group without cancelling
-active work. Budget the 30 minutes for setup, assessment, publication, and verification.
+active work.
 
 ## Assess and verify
 

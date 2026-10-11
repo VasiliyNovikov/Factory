@@ -10,7 +10,6 @@ or manually on the default branch; other refs skip. The
 in `FACTORY_ROOT`; this worker stays host-local, with `TARGET_REPOSITORY` equal to
 `FACTORY_REPOSITORY`. It retains the `owner-feedback` concurrency group and uses
 the shared [AI action](../examples/ai-tools.md#shared-factory-action) with `review`.
-Budget 30 minutes, including publication, verification, and reporting.
 
 ## Assess
 
