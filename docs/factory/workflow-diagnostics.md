@@ -1,7 +1,10 @@
 # Diagnose workflow runs
 
-[Workflow diagnostics](../../.github/workflows/workflow-diagnostics.yml) runs daily
-at **00:07 UTC** (`7 0 * * *`) or through **Actions → Workflow diagnostics → Run workflow**.
+[Workflow diagnostics](../../.github/workflows/workflow-diagnostics.yml) runs at
+**00:07 UTC** on days **1, 4, 7, ..., 28, and 31 when present** (`7 0 */3 * *`),
+or through **Actions → Workflow diagnostics → Run workflow**.
+This three-day calendar step restarts each month, so month/year boundary gaps are
+one to three days, not a rolling 72-hour timer.
 It uses the default branch; manual runs on other refs skip, and schedules may be
 delayed. Checkout is pinned to `github.workflow_sha`.
 
