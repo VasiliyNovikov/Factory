@@ -156,9 +156,6 @@ taste-only changes, or expand the work into unrelated refactoring.
   location. Do not mix current and original coordinates across revisions.
 - Unavailable required canonical metadata or failed reads are explicit evidence
   gaps; conflicting required metadata is a mismatch. Neither is a verified pass.
-- Complete work, reporting, and verification within the shared
-  [invocation budget](../examples/ai-tools.md#invocation-budget), without relaxing
-  required checks.
 
 App submissions trigger the router, which [verifies the source assessment](factory-router.md#feedback-and-event-handling).
 It runs at the PR merge revision, with the [accepted risk](factory-router.md#accepted-risk-router-changes-can-run-before-merge).

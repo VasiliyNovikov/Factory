@@ -275,9 +275,6 @@ the independent PR-review worker.
   including checked head/merge SHAs for CI evidence.
 - After mutations begin, verify and report partial outcomes, never a skip.
   API errors, denied permissions, and unverified outcomes are failures, not skips.
-- Complete work, reporting, and verification within the shared
-  [invocation budget](../examples/ai-tools.md#invocation-budget), without relaxing
-  required checks.
 
 ## Permissions and trust
 

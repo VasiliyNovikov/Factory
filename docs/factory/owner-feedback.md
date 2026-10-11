@@ -7,8 +7,7 @@ in instructions, docs, or prompts. Normal [triage](issue-triage.md) and
 The [workflow](../../.github/workflows/owner-feedback.yml) runs Mondays at **00:17 UTC**
 or manually on the default branch; other refs skip. It pins setup/guidance to
 `github.workflow_sha` and uses the shared [AI action](../examples/ai-tools.md#shared-factory-action)
-with `review`. Complete assessment, publication, verification, and reporting
-within the shared [invocation budget](../examples/ai-tools.md#invocation-budget).
+with `review`.
 
 ## Assess
 
