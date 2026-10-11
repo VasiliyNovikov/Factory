@@ -83,10 +83,10 @@ attempt's marker and receipt.
 
 ### Simplicity
 
-Always ask: can this implementation be simpler while meeting the same requirements?
-Apply the [shared simplicity principles](../../AGENTS.md#working-style): question
-unnecessary abstractions or indirection, duplication, and missed reuse of existing
-logic or tools. Include unnecessary prompt/doc procedures, repeated owning-guide
+Apply the [shared improvement loop](../../AGENTS.md#improvement-loop) and
+[working-style principles](../../AGENTS.md#working-style). Question unnecessary
+abstractions or indirection, duplication, and missed reuse of existing logic or
+tools. Include unnecessary prompt/doc procedures, repeated owning-guide
 requirements, and inflated specifications; consider shorter instructions or an
 owning-guide link.
 
