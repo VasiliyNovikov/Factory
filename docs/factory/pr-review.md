@@ -83,49 +83,44 @@ avoid speculative/style-only findings and unrelated refactoring.
 
 ## Publication
 
-AI prepares, submits, and reconciles through `gh`; there is no publication helper.
-Before POST:
+AI owns preparation, submission, and reconciliation through `gh`; there is no
+publication helper. Choose the approach, but preserve these outcomes:
 
-- Reconcile this attempt's marker and reviewer-owned pending reviews. Reuse an
-  exact submitted review; conflicting or pending reviews are failures.
-- Validate paths and line/side or diff-position coordinates against the current
-  diff; ranges must run forward within one hunk. Correct local errors or move
-  unverified inline locations into the body.
-- Recheck eligibility immediately before recording the attempt and submitting.
-  A known false result stops both state write and POST. Failed/incomplete reads
-  are errors, not ineligibility; HTTP 422 alone does not prove a broken gate,
-  since the head can move after a valid check.
+- **Publish only while eligible.** Recheck eligibility, including required owner
+  approval, immediately before recording an attempt and submitting. A known false
+  result stops both the state write and POST. Failed or incomplete reads are
+  errors, not proof of ineligibility. A head can move after a valid check, so
+  HTTP 422 alone does not prove the check was broken.
+- **Publish a valid review once.** Reconcile this attempt's marker and
+  reviewer-owned pending reviews; reuse an exact submitted review. Conflicting
+  or pending reviews are failures. Inline paths and line/side or diff-position
+  coordinates must match the current diff; ranges run forward within one hunk.
+  Correct local errors before submission or put uncertain locations in the body.
 
-The caller's `REVIEW_RECEIPT` starts empty. Append to `GITHUB_ENV`:
+### Keep publication outcomes visible
 
-- `REVIEW_RECEIPT=required` before POST, when reconciling an existing attempt,
-  or after a publication read error.
-- `REVIEW_RECEIPT=failed` after a rejected/uncertain POST or conflicting/pending
-  review. Report failure even if no review persisted or a matching one is found.
+The caller's `REVIEW_RECEIPT` starts empty. It needs the following state, appended
+to `GITHUB_ENV` without changing other entries:
 
-Never clear `failed` or overwrite it with `required`, including during recovery.
-Preserve other entries. `GITHUB_ENV` updates later steps, not the current shell;
-consult this attempt's history, not a stale variable. Record and POST together:
+| State to record | When it is required |
+|---|---|
+| `REVIEW_RECEIPT=required` | Before POST, when reconciling an existing attempt, or after a publication read error. |
+| `REVIEW_RECEIPT=failed` | After a rejected or uncertain POST, or a conflicting or pending review, even if nothing persisted or a matching review is later found. |
 
-```sh
-if grep -qx 'REVIEW_RECEIPT=failed' "$GITHUB_ENV"; then
-  echo 'Publication already failed; reconcile without another POST.' >&2
-  exit 1
-else
-  [[ $? == 1 ]] || exit 1
-fi
-printf 'REVIEW_RECEIPT=required\n' >> "$GITHUB_ENV" &&
-if ! gh api --method POST "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/reviews" --input review.json; then
-  printf 'REVIEW_RECEIPT=failed\n' >> "$GITHUB_ENV"
-  exit 1
-fi
-```
+A recorded failure is permanent for this attempt: never clear `failed` or replace
+it with `required`. Use the attempt's full history, not a stale shell variable;
+`GITHUB_ENV` updates later steps, not the current shell. If that history cannot be
+read, stop without submitting or overwriting it.
+
+### Recover without hiding failure
 
 Retry reads, never a POST already attempted. After an accepted POST, delayed or
-failed read-back stays unverified with `required`; an exact later read can recover.
-Ineligibility after a read error means incomplete publication without POST, not
-a skip. Replacement heads and reruns need their own assessment and marker;
-later success does not erase an earlier failure.
+failed read-back remains unverified with `required`; an exact later read can
+complete verification. If eligibility is lost after a read error, stop without
+POST and report incomplete publication, not a skip.
+
+Replacement heads and reruns need their own assessment and marker. Later success
+does not erase an earlier failed attempt.
 
 ## Skip and report
 
