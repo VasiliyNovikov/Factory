@@ -22,6 +22,9 @@
   capable models choose how to meet them with the available tools and context;
   design for future improvements without weakening permissions, safety checks,
   or result verification.
+- Every AI session has a time budget. Follow the shared
+  [invocation-budget guidance](docs/examples/ai-tools.md#invocation-budget),
+  including its subtask, verification, and reporting requirements.
 - Do not expand already-clear requests; add only missing context or decisions
   needed to act and verify. Keep detailed requirements in the owning guidance
   document and link to it instead of repeating them; prompts supply only the task
