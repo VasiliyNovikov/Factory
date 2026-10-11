@@ -37,6 +37,7 @@ jobs:
           permission-issues: write
 
       - name: Analyze workflows with parallel Copilot sessions
+        id: diagnostics
         uses: ./.github/actions/ai
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
@@ -46,3 +47,24 @@ jobs:
             Follow repository guidance and docs/factory/workflow-diagnostics.md.
             Current run ID: ${{ github.run_id }}; attempt: ${{ github.run_attempt }};
             Factory login: ${{ steps.factory-token.outputs.app-slug }}[bot].
+
+      - name: Report diagnostics interruption
+        if: ${{ failure() || cancelled() }}
+        timeout-minutes: 1
+        shell: bash
+        env:
+          DIAGNOSTICS_OUTCOME: ${{ steps.diagnostics.outcome }}
+        run: |
+          {
+            printf '## TL;DR\n\n'
+            printf 'Workflow diagnostics failed or was interrupted (AI step: %s).\n\n' \
+              "${DIAGNOSTICS_OUTCOME:-not started}"
+            printf 'Run: %s/%s/actions/runs/%s/attempts/%s\n\n' \
+              "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT"
+            printf '%s\n' \
+              'Analysis is failed/incomplete, not a clean result or a skip.' \
+              'A skipped AI step performed no analysis or publication in this attempt.' \
+              'Use any coordinator checkpoints and logs as partial evidence only. Missing coverage, assessment exits, model/delegation binding, and publication disposition remain unknown.' \
+              'This notice cannot reconstruct a lost final report or prove summary/log agreement or process cleanup.' \
+              'Before rerunning the original invocation, reconcile findings in all states and earlier attempts; do not blindly replay issue creation.'
+          } | tee -a "${GITHUB_STEP_SUMMARY:?summary path is required}"
