@@ -6,6 +6,7 @@ An agentic software factory experiment, starting with small CI milestones:
 - [x] Read and write repository content, issues, and PRs from CI
 - [x] Review PRs and post comments or approvals
 - [x] Turn issues and follow-up comments into PRs or Factory replies
+- [x] Check shell syntax, model JSON, and [launcher contracts offline](docs/examples/ai-tools.md#offline-checks)
 
 ## Factory workflow
 

@@ -85,6 +85,28 @@ every caller weekly and files evidence-backed, unlabeled issues for triage. Its
 evaluator owns live model discovery and compatibility checks; ordinary
 invocations remain unchanged.
 
+## Offline checks
+
+Run the same checks locally and in CI:
+
+```sh
+./scripts/check.sh
+```
+
+Using Bash, `jq`, and standard shell utilities, this checks each `scripts/*.sh`
+with `bash -n`, parses `.github/model-config.json` as one JSON object, and runs an
+unchanged copy of the launcher with fixed profile fixtures and stub Copilot/OpenCode CLIs. It checks
+default and named profiles, both Copilot context tiers, exact argument boundaries
+and literal multiline prompts, nonzero CLI exit status, and rejection of unknown
+profiles without invoking a CLI. Fixtures keep the checks independent of live
+model choices; the production configuration is not modified.
+
+[Offline CI](../../.github/workflows/offline-checks.yml) runs this command on pull
+requests and default-branch pushes, with read-only contents access and no persisted
+checkout credentials. No secrets, AI installations, model calls, or GitHub API
+calls are needed by the checks. They do not verify model availability, AI
+adherence, approval enforcement, or live GitHub delivery.
+
 ## Installation authentication
 
 The shared action supplies the built-in `github.token` as `GITHUB_TOKEN` only
