@@ -1,7 +1,8 @@
 # PR review
 
 [PR review](../../.github/workflows/pr-review.yml) handles assessments selected by
-the [router](factory-router.md). Budget 30 minutes, including verification and reporting.
+the [router](factory-router.md). Budget 30 minutes, including setup, verification,
+and reporting, without relaxing required checks.
 
 ## Assignment and boundaries
 
@@ -83,8 +84,8 @@ avoid speculative/style-only findings and unrelated refactoring.
 
 ## Publication
 
-AI owns preparation, submission, and reconciliation through `gh`; there is no
-publication helper. Choose the approach, but preserve these outcomes:
+AI owns preparation, submission, and reconciliation through `gh`. Choose the
+approach, but preserve these outcomes:
 
 - **Publish only while eligible.** Recheck eligibility, including required owner
   approval, immediately before recording an attempt and submitting. A known false
@@ -107,8 +108,9 @@ to `GITHUB_ENV` without changing other entries:
 | `REVIEW_RECEIPT=required` | Before POST, when reconciling an existing attempt, or after a publication read error. |
 | `REVIEW_RECEIPT=failed` | After a rejected or uncertain POST, or a conflicting or pending review, even if nothing persisted or a matching review is later found. |
 
-A recorded failure is permanent for this attempt: never clear `failed` or replace
-it with `required`. Use the attempt's full history, not a stale shell variable;
+Only POST after the `required` state write succeeds and no `failed` state has been
+recorded for this attempt. Never clear `failed` or replace it with `required`.
+Use the attempt's full history, not a stale shell variable;
 `GITHUB_ENV` updates later steps, not the current shell. If that history cannot be
 read, stop without submitting or overwriting it.
 
