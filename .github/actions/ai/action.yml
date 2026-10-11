@@ -63,6 +63,10 @@ runs:
         AI_BUDGET_MINUTES: ${{ inputs.budget }}
       run: |
         : "${GH_TOKEN:?gh-token is required}"
+        if [[ ! "$AI_PROMPT" =~ [^[:space:]] ]]; then
+          echo "::error::prompt must not be empty or whitespace-only"
+          exit 1
+        fi
         if [[ ! "$AI_BUDGET_MINUTES" =~ ^[1-9][0-9]{0,2}$ ]] ||
           (( AI_BUDGET_MINUTES > 360 )); then
           echo "::error::budget must be a whole number of minutes from 1 to 360"
