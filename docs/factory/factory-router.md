@@ -123,7 +123,7 @@ checkout or AI setup. Copilot decides the rest.
   - The body's full reviewed SHA matches that attempt's `PR_HEAD_SHA`, not a later
     API `commit_id` or the worker's default-branch `head_sha`.
   - The assessment succeeded without skipping, including its posted-review check.
-    If the event arrives first, wait for completion within the job budget.
+    If the event arrives first, wait for completion within the invocation budget.
 - Failed, incomplete, or conflicting source verification is failure, not a skip.
   Router reruns need the same source attempt to succeed. Failed, timed-out, or
   cancelled assessments need a [fresh assessment](pr-review.md#skip-and-report)
