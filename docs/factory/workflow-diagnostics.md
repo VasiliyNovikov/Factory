@@ -10,7 +10,8 @@ delayed. Checkout is pinned to `github.workflow_sha`.
 
 Copilot selects history, investigates, checks duplicates, creates issues, and
 verifies results. The shared [AI action](../examples/ai-tools.md#shared-factory-action)
-uses the `default` profile; the prompt supplies the run ID, attempt, and Factory login.
+uses the `default` profile; the prompt supplies the run ID, attempt, and
+Factory login (`FACTORY_LOGIN` for issue-author verification).
 For source analysis instead of run history, use [repository review](repository-review.md).
 
 This retrospective assessment complements, not replaces, workers' immediate
@@ -173,8 +174,9 @@ or reason to slow work.
 - Create one Factory issue per new actionable finding, with evidence links,
   impact, scope, acceptance criteria, and `<!-- factory-diagnostics:RUN_ID:ATTEMPT -->`
   using this run's ID and attempt.
-- Create issues **without labels** for normal [triage](issue-triage.md). Verify
-  creation responses and URLs; leave later labels and triage updates alone.
+- Create issues **without labels** for normal [triage](issue-triage.md). Follow
+  the [shared issue-creation checks](../../AGENTS.md#github-issue-creation);
+  leave later labels and triage updates alone.
   The [router](factory-router.md) job condition skips diagnostics completions.
 
 Within the invocation budget, write the complete, consistent report to both

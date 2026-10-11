@@ -41,9 +41,9 @@ with `review`.
   contrary evidence, gap, owning files and source permalinks at the evaluated SHA,
   scope, acceptance criteria, dependencies (or "none"), applicable dated provider evidence,
   and run-attempt URL.
-- Verify empty labels on creation and repository/author/body/URL through fresh reads.
-  Reconcile uncertain creation with fresh, paginated reads before retrying; leave
-  later labels alone. New issues enter normal [triage](issue-triage.md);
+- Follow the [shared issue-creation checks](../../AGENTS.md#github-issue-creation),
+  and verify empty labels on creation. Leave later labels alone.
+  New issues enter normal [triage](issue-triage.md);
   workflow completions are ignored by the [router](factory-router.md).
 
 ## Report

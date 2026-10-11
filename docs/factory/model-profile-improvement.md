@@ -62,10 +62,9 @@ Runs share one concurrency group without cancelling active work.
   scope, context, before/after settings, affected workflows and rationale, source
   permalinks at the evaluated SHA, dated evidence, compatibility checks and limits,
   acceptance criteria, dependencies (or "none"), and the run-attempt URL.
-- Fresh API reads must verify each issue's repository, `FACTORY_LOGIN` author,
-  body, URL, and initially empty labels; leave later triage updates alone.
-  Reconcile uncertain creation with fresh, paginated reads before retrying, not
-  search indexing alone. Never retry blindly or treat API errors as empty results.
+- Follow the [shared issue-creation checks](../../AGENTS.md#github-issue-creation).
+  Fresh API reads must also verify initially empty labels; leave later triage
+  updates alone.
 - Do not implement findings, create native children, or label issues.
   [Triage](issue-triage.md) and [implementation](issue-implementation.md) handle
   findings; the router ignores this workflow's completion.
