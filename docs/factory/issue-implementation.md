@@ -96,8 +96,9 @@ Commit identity does not establish GitHub authentication or permissions.
 - Before retries, reconcile the recorded split, issues, native relationships,
   and implementation work in all states. Reuse matching work, including closed
   children; never duplicate, reopen, or reparent it. Explain ambiguous scope or ownership.
-- Reconcile uncertain creation with fresh, paginated issue and relationship
-  reads, not search indexing alone. Never retry blindly.
+- Follow the [shared issue-creation checks](../../AGENTS.md#github-issue-creation),
+  including fresh, paginated native-relationship reads when reconciling uncertain
+  creation.
 - Verify every intended child's scope, dependencies, and native link, plus the
   open parent's labels. Report partial failures with child links and remaining
   work; parent comments can resume recovery.
