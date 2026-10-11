@@ -71,7 +71,8 @@ then submit a fresh review with this attempt's marker and receipt.
 
 ### Simplicity
 
-Always assess [simplicity](../../AGENTS.md#working-style): unnecessary abstractions,
+Apply the [shared improvement loop](../../AGENTS.md#improvement-loop) and
+[working-style principles](../../AGENTS.md#working-style): question unnecessary abstractions,
 indirection, duplication, missed reuse, prompt/doc procedures, repeated owning-guide
 requirements, and inflated specifications. Consider shorter instructions or an
 owning-guide link while keeping goals, constraints, required evidence, and safety

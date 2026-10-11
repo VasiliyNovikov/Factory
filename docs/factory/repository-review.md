@@ -31,7 +31,8 @@ run.
   full coverage nor that a read never happened.
 - Report distinct, evidenced, actionable improvements, not speculation, style
   churn, or unnecessary refactoring. Follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
-- Always assess [whether the implementation can be simpler](pr-review.md#simplicity).
+- Apply the [shared improvement loop](../../AGENTS.md#improvement-loop) to the source
+  assessment and recommendations, using the [simplicity criteria](pr-review.md#simplicity).
 - Run code, tests, or focused experiments when useful to verify a concrete
   question, including copied/adapted snippets and synthetic-input probes.
   Ordinary queries over fetched evidence remain allowed.

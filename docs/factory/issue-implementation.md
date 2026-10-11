@@ -112,8 +112,9 @@ Commit identity does not establish GitHub authentication or permissions.
 ## Implement or reply
 
 - Address the request and applicable outstanding feedback with focused, verified
-  changes. Use the [verified Factory commit identity](#commit-identity); avoid
-  speculative edits and empty commits.
+  changes, applying the [shared improvement loop](../../AGENTS.md#improvement-loop).
+  Use the [verified Factory commit identity](#commit-identity); avoid speculative
+  edits and empty commits.
 - Create or update one PR labeled `triaged` and `factory-issue-NUMBER`, with
   `Fixes #NUMBER`, a change summary, and actual verification results.
 - Answer ordinary comments and review summaries in their main conversation;
@@ -198,7 +199,8 @@ the independent PR-review worker.
   regressions, unmet requirements, and necessary coverage gaps. Follow the
   [test-value policy](../../AGENTS.md#test-value-and-verification); avoid speculative
   or style-only findings. Optional checks use the [shared safeguards](review-checks.md).
-- Always assess [whether the candidate can be simpler](pr-review.md#simplicity).
+- Apply the [shared improvement loop](../../AGENTS.md#improvement-loop) and
+  [simplicity criteria](pr-review.md#simplicity) to the candidate and recommendations.
 - Return findings to the implementer in the CLI response: reviewed SHAs and
   scope, actionable findings with paths/lines and impact, checks performed, and
   coverage gaps or blockers. Explicitly distinguish a complete review with no

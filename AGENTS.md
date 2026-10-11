@@ -44,6 +44,28 @@
   repository permissions, token boundaries, trust rules, decision markers, or
   verification contracts.
 
+### Improvement loop
+
+During implementation, internal review, PR review, and repository review,
+repeatedly challenge the current candidate and recommendations against the
+principles above: can they be simpler, more concise, easier for people to read,
+more AI-led, or clearer about what must be achieved rather than prescribing how?
+Do this even when the result already seems good.
+
+Act on concrete, beneficial improvements within the assignment and your role:
+implementers refine the candidate; reviewers refine their assessment and
+recommendations, not the reviewed source. Reassess after each refinement, including
+whether the proposed improvement itself adds avoidable complexity. Preserve
+intended behavior, quality, required evidence, and safety contracts; brevity alone
+is not an improvement.
+
+Stop refining when no concrete worthwhile improvement remains. Do not manufacture
+edits or findings, impose fixed pass counts, expand scope, or add orchestration for
+this loop. Stay within the [invocation budget](docs/examples/ai-tools.md#invocation-budget),
+reserving time for verification and reporting. If required assessment or work
+within your role remains unfinished at that boundary, report what is incomplete
+rather than claiming a clean result.
+
 ## Writing docs and comments
 
 - Be brief by default and use plain language in docs, issue/PR bodies, comments,
