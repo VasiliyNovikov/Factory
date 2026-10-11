@@ -72,7 +72,10 @@ gaps to the coordinator; it must not run the coordinator's publication steps.
 Use shell tools to run these sessions in parallel, track each process and CLI
 session, and collect its output and exit status outside the checkout. Choose
 `assessment_timeout` within the remaining shared investigation time, allowing for
-the termination grace period. Stop unfinished process trees at that deadline.
+the termination grace period. Start each timeout with its assessment so the bound
+does not depend on the coordinator remaining responsive. Do not detach assessment
+processes from their supervising shell. Stop unfinished process trees at that deadline
+and verify their termination; an unknown exit or surviving process is a failure.
 An exit of zero without a complete assessment is still a coverage gap.
 
 The runner binds each session's model, reasoning effort, and context tier to the
@@ -210,8 +213,33 @@ does not establish that it is missing.
 Coverage and creation checks are AI-owned: no JSON contract, report artifact, or
 separate verification job. Setup/CLI errors fail their steps, but a successful
 CLI exit proves neither complete analysis nor correct issue creation. Inspect
-the summary and logs; early failures may leave no summary. There are no automated
-workflow tests.
+the summary and logs. There are no automated workflow tests.
+
+### Interrupted coordinators
+
+The CLI's background-task drain is not the shared investigation deadline.
+A service error can end the coordinator's turn while outstanding work is still
+draining; waiting longer does not guarantee another turn or a final report.
+
+Before launching assessments, append an explicitly **incomplete** checkpoint to
+`GITHUB_STEP_SUMMARY` using the report fields above: retain known scope, assignments,
+settings evidence, and pending work; leave unverified exits, binding, and publication
+unknown. Update it at consolidation and around publication, recording intended
+findings before creation and verified issue links afterwards. Preserve earlier
+evidence and make each checkpoint's phase clear. These are partial reports, not
+proof that the final CLI response reached the log.
+
+If the coordinator can still act after an error, stop outstanding assessments,
+consolidate available evidence, and report the failure and coverage gaps without
+replaying mutations. On any earlier step failure or job cancellation, the workflow
+also attempts an interruption notice directly to its log and a separate step summary,
+without rerunning AI or creating issues.
+The notice preserves failed/incomplete status; it cannot recover missing assessment
+histories, verify process cleanup, or replace the AI-owned report.
+
+Hard cancellation, runner loss, or summary-upload failure can prevent that notice
+or checkpoint retention. A missing final report never establishes that no issues
+were created; retries still require the duplicate checks above.
 
 ## Permissions
 
