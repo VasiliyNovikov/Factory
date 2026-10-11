@@ -94,8 +94,9 @@ rather than claiming a clean result.
 ## Repository map
 
 This is an agentic software factory scaffold, with no application code or
-toolchain yet. [README.md](README.md) tracks completed CI milestones. There are no
-configured build/test/lint commands; automated workflow tests are deferred.
+toolchain yet. [README.md](README.md) tracks completed CI milestones.
+Run `./scripts/check.sh` for [offline launcher checks](docs/examples/ai-tools.md#offline-checks);
+live workflow tests remain deferred.
 
 Use the owning guide for each workflow's behavior, permissions, and verification:
 
