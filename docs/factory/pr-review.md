@@ -1,13 +1,13 @@
 # PR review
 
 [PR review](../../.github/workflows/pr-review.yml) handles assessments selected by
-the [router](factory-router.md). Follow the shared
+the [router](factory-router.md) or [maintenance](factory-maintenance.md). Follow the shared
 [invocation budget](../examples/ai-tools.md#invocation-budget).
 
 ## Assignment and boundaries
 
 - Use the dispatch inputs in `GITHUB_EVENT_PATH`; do not repeat routing.
-  The worker YAML and [router contract](factory-router.md#dispatch-and-reporting) own the schema.
+  The worker YAML and [shared dispatch contract](routing-policy.md#dispatch-contract) own the schema.
 - Before review or publication, verify through `gh`: open, non-draft,
   same-repository PR at `PR_HEAD_SHA`.
 - Read changes, context, full discussions, reviews, threads, and edit/deletion
@@ -165,7 +165,7 @@ does not erase an earlier failed attempt.
 - Missing required canonical metadata or failed reads are evidence gaps;
   conflicting metadata is a mismatch, never a pass.
 
-App submissions trigger [source verification](factory-router.md#feedback-and-event-handling)
+App submissions trigger [source verification](routing-policy.md#feedback-verification)
 at the PR merge revision, with the [documented risk](factory-router.md#accepted-risk-router-changes-can-run-before-merge).
 
 ## Identity and execution
