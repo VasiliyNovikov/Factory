@@ -3,13 +3,18 @@
 [PR review](../../.github/workflows/pr-review.yml) handles assessments selected by
 the [router](factory-router.md). Review proposed code and use focused checks when useful.
 
+Follow the [host/target contract](target-context.md). The PR, its code and project
+guidance, and review receipts belong to `TARGET_REPOSITORY`. The executing Factory
+guidance and tooling remain in `FACTORY_ROOT`; the workflow checkout is not the
+target PR tree.
+
 ## Assignment and boundaries
 
 - `GITHUB_EVENT_PATH` contains dispatch inputs, not the original webhook.
   See the worker YAML and [router contract](factory-router.md#dispatch-and-reporting);
   do not repeat routing analysis.
 - Before reviewing or posting, use `gh` to verify the PR is open, non-draft,
-  from this repository, and at the expected `PR_HEAD_SHA`.
+  from `TARGET_REPOSITORY`, and at the expected target `PR_HEAD_SHA`.
 - Read changes, context, and the current discussion through `gh`. New requests
   or clarification may require reassessment even at a reviewed head.
 - Paginate discussion and review reads completely, following the
@@ -73,6 +78,7 @@ attempt's marker and receipt.
   findings; follow the [test-value policy](../../AGENTS.md#test-value-and-verification).
 - Submit exactly one review while eligible, with:
   - `commit_id` set to `PR_HEAD_SHA`.
+  - The full target repository name.
   - The full reviewed SHA visible in the body.
   - The exact `REVIEW_MARKER` environment value in the body.
 - Use `COMMENT` for findings, with paths, lines, impact, and suggested fixes;
@@ -109,8 +115,10 @@ taste-only changes, or expand the work into unrelated refactoring.
 - In the review, report executed checks/experiments, checked revisions, inputs,
   observed results, and limitations; distinguish static inspection from runtime evidence.
 - Append every write to `GITHUB_STEP_SUMMARY`, preserving its content. Record the
-  review URL, decision, evidence, and outstanding work, including any required
-  owner-decision link and scope or approval hold.
+  target-qualified review URL, checked target head, decision, evidence, and
+  outstanding work, including any required owner-decision link and scope or
+  approval hold. Keep the Factory revision report separate; run-attempt links
+  belong to the Factory host.
 - Report incomplete reviews and API failures accurately; API errors are not skips.
 - Skip stale or covered assignments, or approval holds with no authorized review
   work remaining, only before mutation: write `skipped=true` to `GITHUB_OUTPUT`,
@@ -175,9 +183,11 @@ It runs at the PR merge revision, with the [accepted risk](factory-router.md#acc
   mutation targets. Delegated analysis has the same boundaries.
 - The default-branch worker is dispatch-only, checks out `github.workflow_sha`,
   and uses the `review` [profile](../../.github/model-config.json).
-- Same-PR/head jobs preserve active reviews through the receipt check; pending
-  jobs may be superseded. Different heads run independently. Check freshness and
-  outstanding requests before posting.
+- Same-target/PR/head jobs preserve active reviews through the receipt check;
+  host-local jobs keep `pr-review-NUMBER-HEAD_SHA` for
+  [rollout compatibility](target-context.md#assignment-and-identity).
+  Pending jobs may be superseded. Different heads run independently. Check
+  freshness and outstanding requests before posting.
 - The reviewer App's installation supplies repository writer qualification;
   the job token stays at Contents read and Pull requests write. Follow the
   [App setup](github-app.md#configure-the-apps), repository review policies, and
@@ -212,8 +222,9 @@ writes, or bypassing verification.
 
 ## Verification limits
 
-The read-only receipt check requires a submitted bot comment review or approval
-with the expected commit, visible full SHA, and run marker, unless skipped before
+The read-only receipt check queries the assigned target PR and requires a
+submitted bot comment review or approval with the expected commit, visible full
+SHA, and run marker, unless skipped before
 mutation. It proves neither review quality, required-review qualification, nor
 live event delivery.
 

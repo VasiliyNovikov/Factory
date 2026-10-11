@@ -124,8 +124,13 @@ limit; a hung vendor installer or version check waits for the caller's job timeo
     prompt: Reply with 'Hello from CI'. Do not use any tools.
 ```
 
-- Check out the repository first. Factory callers use `github.workflow_sha`;
-  implementation also needs App-authenticated checkout and full history.
+- Check out the repository first. Installed Factory workflows check out tooling
+  at `github.workflow_sha` in `factory/` and call
+  `./factory/.github/actions/ai`; the root-checkout example above still works.
+  The action anchors its working directory and scripts to its own checkout, so
+  target scripts, model configuration, and instructions cannot replace its setup.
+  See the [separate target checkout contract](../factory/target-context.md);
+  implementation needs App-authenticated full history there.
 - `prompt` and `gh-token` are required; `profile` defaults to `default`.
 - Prompts are data, not shell code. Use Actions expressions for runtime values,
   not shell variable expansion in the input.

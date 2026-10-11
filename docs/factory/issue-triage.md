@@ -4,6 +4,11 @@
 selected by the [router](factory-router.md). `triaged` means **ready to implement**,
 not just inspected. Do not implement code or create issues or PRs.
 
+Follow the [host/target contract](target-context.md): use `TARGET_REPOSITORY` for
+issues, native relationships, labels, project guidance, and source reads.
+The checkout in `FACTORY_ROOT` supplies executing policy, not necessarily current
+target code. Fetch relevant target code/instructions at a checked target revision.
+
 ## Assignment and readiness
 
 - `GITHUB_EVENT_PATH` contains dispatch inputs, not the original webhook.
@@ -91,8 +96,10 @@ block label changes; reconcile and verify first.
   comments for failure details after a marked decision.
 - Confirm the Factory decision and claimed label handoff in fresh state.
   Reconcile uncertain outcomes before retrying.
-- Record the decision, verification links, and outstanding work in
-  `GITHUB_STEP_SUMMARY`, including the owner decision or outstanding approval.
+- Include the target repository in the decision. Append the decision, checked
+  target revisions, verification links, outstanding work, and owner decision or
+  outstanding approval to `GITHUB_STEP_SUMMARY`, preserving the separate Factory
+  revision report.
   Include the first receipt check's endpoint, outcome, comment link, and
   `GITHUB_WORKFLOW_SHA`; distinguish any failed check from its recovery.
   API errors and unverified outcomes are failures, not skips.
@@ -107,12 +114,14 @@ block label changes; reconcile and verify first.
   A new issue comment can request reassessment after a blocker is resolved.
 - The default-branch worker is dispatch-only, checks out `github.workflow_sha`,
   and uses the `triage` [profile](../../.github/model-config.json).
-- Per-issue concurrency preserves active runs. Pending jobs may be superseded;
-  reassess the full discussion and current state.
+- Target-repository/issue concurrency preserves active runs. Host-local jobs keep
+  `issue-triage-NUMBER` for [rollout compatibility](target-context.md#assignment-and-identity).
+  Pending jobs may be superseded; reassess the full discussion and current state.
 
 ## Verification limits
 
-The read-only receipt check requires a Factory comment with this run's marker,
-unless Copilot skipped before mutation. Copilot verifies its content and label
+The read-only receipt check queries the assigned target issue and requires a
+Factory comment with this run's marker, unless Copilot skipped before mutation.
+Copilot verifies its content and label
 handoff; a green receipt alone proves neither label handoff nor implementation.
 Static checks do not prove AI adherence or event delivery.

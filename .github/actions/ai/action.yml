@@ -25,6 +25,7 @@ runs:
   steps:
     - name: Install selected AI harness
       shell: bash
+      working-directory: ${{ github.action_path }}/../../..
       env:
         AI_HARNESS: ${{ inputs.harness }}
         GITHUB_TOKEN: ${{ inputs.harness == 'copilot' && github.token || '' }}
@@ -50,6 +51,7 @@ runs:
     - name: Invoke AI
       id: invoke
       shell: bash
+      working-directory: ${{ github.action_path }}/../../..
       env:
         GITHUB_TOKEN: ${{ github.token }}
         COPILOT_GITHUB_TOKEN: ${{ github.token }}

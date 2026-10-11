@@ -6,16 +6,19 @@ not remove availability, context, rate, reliability, or deadline constraints.
 
 The [workflow](../../.github/workflows/model-profile-improvement.yml) runs Mondays
 at **00:07 UTC** (`7 0 * * 1`) or manually on the default branch; other manual refs
-skip, and schedules may be delayed. `github.workflow_sha` pins setup and guidance.
-Runs share one concurrency group without cancelling active work. Budget the
-30 minutes for setup, assessment, publication, and verification.
+skip, and schedules may be delayed. The [host/target contract](target-context.md)
+pins tooling and policy to `FACTORY_SHA` in `FACTORY_ROOT`; this worker stays
+host-local, with `TARGET_REPOSITORY` equal to `FACTORY_REPOSITORY`.
+Runs retain the `model-profile-improvement` concurrency group without cancelling
+active work. Budget the 30 minutes for setup, assessment, publication, and verification.
 
 ## Assess and verify
 
 - Apply [credential rules](#permissions-and-trust) before the first
   GitHub lookup, including optional run-history probes.
-- Evaluate the current remote default revision, read with `gh`, not the setup
-  snapshot. Keep configured tooling pinned to the invocation checkout.
+- Evaluate the current remote default revision of `TARGET_REPOSITORY`, read with
+  `gh`, not the setup snapshot. Keep tooling, model configuration, and policy
+  pinned to `FACTORY_ROOT`; read target project guidance at the evaluated revision.
 - Discover models available to this run's Copilot identity through a verified,
   non-interactive interface of the installed CLI, such as the
   [SDK's JSON-RPC interface](https://github.com/github/copilot-sdk/blob/a2b2c18eb5a20417fc613eaaa93199f55ad22ea4/nodejs/src/client.ts).
@@ -58,7 +61,7 @@ Runs share one concurrency group without cancelling active work. Budget the
   attempts and Factory findings. Read and paginate relevant discussions and resolutions;
   link covered work instead of duplicating it. Closed work does not permit
   duplication; explain materially new evidence for rejected choices.
-- Create one **unlabeled** issue in `GITHUB_REPOSITORY` as `FACTORY_LOGIN` per
+- Create one **unlabeled** issue in `TARGET_REPOSITORY` as `FACTORY_LOGIN` per
   cohesive improvement, keeping coupled profile/caller changes together. Include
   scope, context, before/after settings, affected workflows and rationale, source
   permalinks at the evaluated SHA, dated evidence, compatibility checks and limits,
@@ -82,12 +85,12 @@ evidence or repeating GitHub mutations:
   missing capabilities, research gaps, API errors, and verification failures are
   not no-change results. Publish no speculative findings or no-op comments;
   verify and report partial publication.
-- **Evidence:** run-attempt link, trusted workflow revision, exact evaluated SHA,
-  CLI version, discovery time, model IDs and policy/capability evidence, dated
-  sources, unavailable models, conflicts, gaps, and API invocation evidence
-  (endpoint/operation, credential role, and outcome, including the first optional
-  lookup). Use role/variable names, never token values; disclose any credential
-  deviation separately from later compliant reads.
+- **Evidence:** host run-attempt link, trusted `FACTORY_REPOSITORY@FACTORY_SHA`,
+  target repository and exact evaluated SHA, CLI version, discovery time, model IDs
+  and policy/capability evidence, dated sources, unavailable models, conflicts, gaps,
+  and API invocation evidence (endpoint/operation, credential role, and outcome,
+  including the first optional lookup). Use role/variable names, never token values;
+  disclose any credential deviation separately from later compliant reads.
 - **Decisions:** a row per workflow/invocation with current
   profile/model/reasoning/context settings, retain or proposed settings,
   rationale/evidence, and constraints. Explicitly identify workflows without AI.
@@ -109,9 +112,10 @@ live adherence; report unexercised paths and unavailable outcomes.
 
 ## Permissions and trust
 
-- The [Factory App](github-app.md) has Contents/Pull requests read and Issues write;
-  checkout does not persist credentials. The built-in token has Contents read and
-  `copilot-requests: write`, without Actions or workflow-write access.
+- The target-scoped [Factory App](github-app.md) has Contents/Pull requests read
+  and Issues write; the Factory checkout does not persist credentials. The built-in
+  token has Contents read and `copilot-requests: write`, without Actions or
+  workflow-write access.
 - Keep ambient App `GH_TOKEN` for every GitHub operation, including Actions
   run/job/log reads and permission probes. Diagnostics' and implementation's
   Actions-token exception does not apply. Never switch repository credentials,

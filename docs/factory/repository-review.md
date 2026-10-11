@@ -3,18 +3,22 @@
 [Repository review](../../.github/workflows/repository-review.yml) runs daily at
 **00:07 UTC** (`7 0 * * *`) or through **Actions -> Repository review -> Run workflow**.
 It uses the default branch; manual runs on other refs skip, and schedules may be
-delayed. `github.workflow_sha` pins source, guidance, and setup to this invocation.
+delayed. `github.workflow_sha` pins Factory guidance/setup and, for this local-only
+review, the separate target source snapshot to this invocation.
 
 Copilot reviews source, checks duplicates, publishes issues, and verifies results
 using the shared [AI action](../examples/ai-tools.md#shared-factory-action) and
-`review` profile. Scheduled and manual runs share one concurrency group, preserving
-active work and at most one pending run. The 30-minute budget includes setup and reporting.
+`review` profile. Scheduled and manual runs keep the host-only `repository-review`
+concurrency group, preserving active work across deployment and at most one pending
+run. The 30-minute budget includes setup and reporting.
 
 ## Review scope
 
-- Review the full checked-out repository snapshot from scratch.
+- Follow the [host/target contract](target-context.md). Review the full
+  `TARGET_ROOT` snapshot for `TARGET_REPOSITORY` from scratch; use `FACTORY_ROOT`
+  only for executing guidance and tooling. Preserve target project instructions.
 - Record the reviewed commit and get its file list and count from the Git tree:
-  `git ls-tree -r --full-tree --name-only -z <reviewed-commit>`.
+  `git -C "$TARGET_ROOT" ls-tree -r --full-tree --name-only -z <reviewed-commit>`.
 - Account for every file, including exclusions, as fully read, partially read,
   or unread/unreadable. The counts must add up to the tree total.
 - Count only content actually inspected. Listings, samples, filtered or
@@ -39,7 +43,7 @@ active work and at most one pending run. The 30-minute budget includes setup and
   resolutions; closed work is not permission to duplicate it.
 - Link existing work in the summary; never edit, comment on, reopen, or replace it.
   No new actionable findings means no new issues.
-- Create one issue per new finding in `GITHUB_REPOSITORY` as `FACTORY_LOGIN`, using
+- Create one issue per new finding in `TARGET_REPOSITORY` as `FACTORY_LOGIN`, using
   the Factory App token. Include:
   - Source permalinks with lines at the reviewed commit.
   - Evidence, impact, bounded scope, and verifiable acceptance criteria.
@@ -60,10 +64,11 @@ content, and include the same report in the final CLI response, which the
 [CLI writes to the Actions log](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions#run-copilot-cli).
 This applies to every outcome, including no-new-findings and incomplete/partial results:
 
-- Reviewed commit link, exact-tree tracked-file total, and reconciled
-  full/partial/unread counts, with remaining paths/ranges, exclusions, and
-  evidence gaps. Tie coverage claims to the invocation's read operations and
-  returned content/ranges, not just a list of intended reads.
+- Target repository and reviewed commit link, separately from the Factory
+  tooling revision; exact-tree tracked-file total and reconciled full/partial/unread
+  counts, with remaining paths/ranges, exclusions, and evidence gaps. Tie coverage
+  claims to the invocation's read operations and returned content/ranges,
+  not just a list of intended reads.
 - Executed checks/experiments, inputs, observed results, and limitations.
 - Existing findings/PRs and verified new issue links.
 - Outcome: completed with findings, completed with no new findings, or incomplete,

@@ -22,8 +22,15 @@ jobs:
       - name: Check out invocation revision
         uses: actions/checkout@v6
         with:
+          repository: ${{ github.repository }}
           ref: ${{ github.workflow_sha }}
+          path: factory
           persist-credentials: false
+
+      - name: Set target context
+        uses: ./factory/.github/actions/target-context
+        with:
+          target-repository: ${{ github.repository }}
 
       - name: Create Factory repository review token
         id: factory-token
@@ -31,18 +38,29 @@ jobs:
         with:
           client-id: ${{ vars.FACTORY_CLIENT_ID }}
           private-key: ${{ secrets.FACTORY_PRIVATE_KEY }}
+          owner: ${{ env.TARGET_OWNER }}
+          repositories: ${{ env.TARGET_NAME }}
           permission-contents: read
           permission-pull-requests: read
           permission-issues: write
 
+      - name: Check out target source snapshot
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ env.TARGET_REPOSITORY }}
+          ref: ${{ env.FACTORY_SHA }}
+          path: target
+          token: ${{ steps.factory-token.outputs.token }}
+          persist-credentials: false
+
       - name: Review the full repository with Copilot
-        uses: ./.github/actions/ai
+        uses: ./factory/.github/actions/ai
         env:
           FACTORY_LOGIN: ${{ steps.factory-token.outputs.app-slug }}[bot]
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
           profile: review
           prompt: >-
-            Review the full source snapshot of ${{ github.repository }} from scratch
+            Review the full target source snapshot in TARGET_ROOT for ${{ env.TARGET_REPOSITORY }} from scratch
             and create issues for actionable improvements.
-            Follow repository guidance and docs/factory/repository-review.md.
+            Follow AGENTS.md and docs/factory/repository-review.md in FACTORY_ROOT.
