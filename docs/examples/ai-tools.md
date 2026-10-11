@@ -128,6 +128,7 @@ limit; a hung vendor installer or version check waits for the caller's job timeo
 - Check out the repository first. Factory callers use `github.workflow_sha`;
   implementation also needs App-authenticated checkout and full history.
 - `prompt`, `gh-token`, and `budget` are required; `profile` defaults to `default`.
+  Empty or whitespace-only prompts fail before invocation.
 - Prompts are data, not shell code. Use Actions expressions for runtime values,
   not shell variable expansion in the input.
 - `harness` defaults to `copilot`, as used by current callers. Set
