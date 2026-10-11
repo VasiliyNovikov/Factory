@@ -10,7 +10,7 @@ There is no enrollment, forwarding, or external execution yet.
   `target_repository` as a canonical `owner/repository` name. Omitted or empty
   inputs retain the existing host-local behavior.
 - A PR-revision router can run before the default-branch workers are updated.
-  Follow the router's [deployed-schema compatibility rule](factory-router.md#dispatch-and-reporting):
+  Follow the shared [deployed-schema compatibility rule](routing-policy.md#dispatch-contract):
   omit the new input only for legacy host-local workers, and record that path.
 - The [context action](../../.github/actions/target-context/action.yml) rejects
   any other target before App-token creation, target checkout, or AI setup.
@@ -24,11 +24,13 @@ There is no enrollment, forwarding, or external execution yet.
   targets add `owner/repository-` between the worker prefix and issue/PR identity;
   the `/` prevents collisions with legacy groups. Non-host execution remains
   disabled. Host-only scheduled groups retain `repository-review`,
-  `workflow-diagnostics`, `model-profile-improvement`, and `owner-feedback`.
-- `source` event IDs belong to the target. When it includes a run ID, also supply
-  `run_repository`: target CI runs belong to the target, while producing Factory
-  worker attempts belong to the host. Legacy local assignments without that
-  field refer to the host. Never infer a run's repository from its number alone.
+  `workflow-diagnostics`, `model-profile-improvement`, `owner-feedback`, and
+  `factory-maintenance`.
+- `source` issue/PR/comment/review IDs belong to the target. When it includes a
+  run ID, also supply `run_repository`: target CI runs belong to the target,
+  while producing Factory worker and coordinator attempts belong to the host.
+  Legacy local assignments without that field refer to the host. Never infer
+  a run's repository from its number alone.
 
 ## Checkouts and guidance
 
@@ -38,7 +40,7 @@ There is no enrollment, forwarding, or external execution yet.
 | Editable target code | `TARGET_ROOT` (`target/`), live target default or owned issue branch | Implementation, project instructions, and project verification |
 | Repository-review source | `TARGET_ROOT`, explicitly checked target snapshot | Full-source review; optional [checks](review-checks.md) use temporary workspaces; currently the same SHA as Factory |
 | PR-review target context | API reads or temporary workspace at the checked target PR head | PR review and optional [local checks](pr-review.md#local-checks) |
-| API-only target context | Explicit repository and checked target revision | Router, triage, workflow diagnostics, model profile improvement, and owner feedback learning; no target checkout |
+| API-only target context | Explicit repository and checked target revision | Router, maintenance, triage, workflow diagnostics, model profile improvement, and owner feedback learning; no target checkout |
 
 The shared AI action runs from its own Factory checkout and anchors script/model
 loading there, not in the target working directory. Keep that checkout unchanged
