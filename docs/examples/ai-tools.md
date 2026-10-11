@@ -80,6 +80,11 @@ share `review`. Implementation stays on `implement` and invokes the same runner
 with `--profile review` for its internal pre-publication pass; it does not install
 another CLI or replace independent PR review.
 
+Factory's [cross-run context](../factory/cross-run-context.md) uses shared agent
+guidance and existing GitHub reads rather than harness-specific storage. The
+action and launcher do not save or restore CLI state; native Copilot Memory is
+not a dependency.
+
 [Model profile improvement](../factory/model-profile-improvement.md) evaluates
 every caller weekly and files evidence-backed, unlabeled issues for triage. Its
 evaluator owns live model discovery and compatibility checks; ordinary
