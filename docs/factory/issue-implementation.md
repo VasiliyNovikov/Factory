@@ -252,16 +252,24 @@ the independent PR-review worker.
 
 ## Skip and report
 
-- Skip before mutation only when no eligible work remains, including base merges.
-  For push-only maintenance, verify the head includes the current default branch
-  and there are no changes, unhandled feedback, errors, or blockers. Make no
-  GitHub changes or no-op comments on a skip.
+- Skip before mutation only when no eligible work remains, including base merges,
+  and no API operation, including reads, failed during the attempt. Recovery does
+  not restore skip eligibility. For push-only maintenance, verify the head
+  includes the current default branch and there are no changes, unhandled
+  feedback, errors, or blockers. A successful read showing ineligibility, or a
+  false eligibility predicate alone, is not an API failure. Make no GitHub
+  changes or no-op comments on a clean skip.
 - Otherwise post a new Factory comment in the triggering conversation (`source_pr`
   if supplied, else `issue_number`), even after mutation failure. Include:
   the outcome and producing workflow run-attempt link; the PR link when available;
   any child links and incomplete split work; addressed/outstanding feedback with
   thread links; and required owner approval with its source link and adopted scope,
   or the outstanding owner decision.
+- Recovered API failures with no eligible work are non-skip, reply-only results;
+  do not manufacture code changes or duplicate pushes. Retain the failed
+  operation and error, recovery evidence, and remaining impact in both the
+  conversation report and run summary. Recovery alone does not require a failed
+  workflow exit.
 - Verify claimed outcomes in fresh remote state: the checked commit and eligible
   PR metadata for code changes, native child links and eligible parent for splits,
   resolved threads, and Factory-authored replies/comments on the intended targets.
