@@ -138,7 +138,10 @@ outcomes. Required base maintenance still applies. The main worker stays on
   [internal reviewer contract](#internal-reviewer-contract) plus the context above
   and the original candidate checkout path. The temporary checkout supplies tools
   and guidance, not the review target. Choose `review_timeout` from the remaining
-  30-minute job budget, reserving time for fixes, checks, publication, and reporting:
+  [invocation budget](../examples/ai-tools.md#invocation-budget), reserving time for
+  fixes, checks, publication, and reporting. Include the inherited
+  `AI_DEADLINE_UTC` and the earlier review deadline in `review_prompt`; the review
+  does not receive a fresh budget:
 
   ```sh
   (
@@ -272,8 +275,6 @@ the independent PR-review worker.
   including checked head/merge SHAs for CI evidence.
 - After mutations begin, verify and report partial outcomes, never a skip.
   API errors, denied permissions, and unverified outcomes are failures, not skips.
-- Budget the 30-minute job for setup, work, reporting, and verification without
-  relaxing required checks.
 
 ## Permissions and trust
 

@@ -96,8 +96,6 @@ block label changes; reconcile and verify first.
   Include the first receipt check's endpoint, outcome, comment link, and
   `GITHUB_WORKFLOW_SHA`; distinguish any failed check from its recovery.
   API errors and unverified outcomes are failures, not skips.
-- Include setup, reporting, and verification in the 15-minute budget without
-  relaxing required checks.
 
 ## Tokens and execution
 

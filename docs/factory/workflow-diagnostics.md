@@ -100,7 +100,8 @@ deadline to recover coverage.
 
 ## Expected versus observed outcomes
 
-- Budget investigation within the remaining 30-minute job, accounting for setup.
+- Budget investigation within the remaining shared
+  [invocation budget](../examples/ai-tools.md#invocation-budget).
   Set a shared investigation deadline that reserves time for consolidation,
   duplicate checks, issue creation and verification, and final reporting.
   Assessment subprocesses must return findings and coverage gaps by that deadline;
@@ -130,6 +131,35 @@ deadline to recover coverage.
   discrepancies through the existing findings path below, within the same history,
   origin, read-only-analysis, and publication boundaries.
 
+## Time-budget utilization
+
+Within the same history window, eligibility rules, and investigation deadline,
+treat roughly **50% average utilization** as a headroom goal, not a per-run cutoff
+or reason to slow work.
+
+- Group comparable workloads by workflow and executed contract. Resolve historical
+  action `budget` or job/step `timeout-minutes`, including defaults/expressions,
+  and measure at that boundary. AI timings exclude checkout, installation, and
+  later receipts; job timings include setup/completion but not queueing. Do not
+  mix boundaries or substitute today's limits or outer composite-action duration
+  for missing invocation evidence.
+- Report sample size, mean elapsed/budget, runtime spread, and near-limit/timeout
+  counts with run-attempt links and the near-limit criterion. Separate verified
+  substantive completions from skips, failures, cancellations, unfinished work,
+  and unknown timings. Only verified completions justify reductions; green exits
+  alone do not.
+- Confirm timeouts with termination evidence, following the
+  [shared log guidance](actions-logs.md); a cancellation or exit status alone is
+  insufficient. Report timeouts separately as lower bounds on needed time.
+  Distinguish AI-budget pressure from enclosing limits, hangs, and fixable failures;
+  check job/runner headroom separately.
+- Recommend resizing for persistent substantial underuse or recurring near-limit
+  runs/timeouts, accounting for variability and all work within the boundary,
+  including AI-owned checks, publication, and reporting. Sparse, mixed, or missing
+  evidence does not justify resizing. Use the [findings path](#findings-and-reporting)
+  with a proposed value and boundary, rationale, evidence, and the owning caller
+  input or historical timeout plus shared budget guidance.
+
 ## Findings and reporting
 
 - Before creating issues, check issues and PRs in all states, including earlier
@@ -141,14 +171,15 @@ deadline to recover coverage.
   creation responses and URLs; leave later labels and triage updates alone.
   The [router](factory-router.md) job condition skips diagnostics completions.
 
-Within the 30-minute job, write the complete, consistent report to both
+Within the invocation budget, write the complete, consistent report to both
 `GITHUB_STEP_SUMMARY` and the coordinator's final CLI response, which the
 [CLI writes to the Actions log](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions#run-copilot-cli).
 Use concise tables and linked groups, not just totals or a summary link. Include:
 
 - **Coverage and outcomes:** history window, selection rationale, per-workflow
-  expected-versus-observed conclusions with evidence links, per-workflow
-  assessed/total run-attempt counts, exclusions, and existing/new issue links.
+  expected-versus-observed conclusions with evidence links, budget-utilization
+  results and sizing decisions, per-workflow assessed/total run-attempt counts,
+  exclusions, and existing/new issue links.
   Identify partially assessed and unassessed runs/attempts with links or clearly
   defined linked groups, explaining their coverage gaps.
 - **Execution binding:** trusted workflow revision, installed CLI version, resolved

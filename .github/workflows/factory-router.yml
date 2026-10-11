@@ -39,7 +39,6 @@ jobs:
          github.event.workflow_run.event != 'workflow_dispatch' &&
          github.event.workflow_run.event != 'schedule'))
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     permissions:
       actions: write
       contents: read
@@ -58,6 +57,7 @@ jobs:
         with:
           gh-token: ${{ github.token }}
           profile: route
+          budget: 30
           prompt: >-
             Route the event in GITHUB_EVENT_PATH for ${{ github.repository }}.
             Read and follow AGENTS.md and docs/factory/factory-router.md; complete and verify routing.
@@ -65,4 +65,3 @@ jobs:
             repository/GitHub changes beyond worker dispatch.
             Summarize the decision and evidence in GITHUB_STEP_SUMMARY.
             Report failures and partial outcomes accurately, not as skips.
-            Budget the 30-minute job including setup and reporting.
