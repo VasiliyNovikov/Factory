@@ -157,6 +157,17 @@ and [cursor pagination](https://docs.github.com/en/graphql/guides/using-paginati
   Missing, partial, or failed required provenance is a blocker, not evidence of
   no activity or grounds for a skip.
 
+## GitHub issue creation
+
+When a Factory workflow is allowed to create issues:
+
+- Before retrying uncertain creation, reconcile the attempt with fresh, fully
+  paginated issue reads in all states. Search indexing alone cannot prove nothing
+  was created. Never retry blindly or treat API errors as empty results.
+- Verify each created issue's repository, `FACTORY_LOGIN` author, body, and URL
+  through fresh reads. Keep the owning guide's additional checks, including
+  creation labels and native relationships; leave later automation updates alone.
+
 ## GitHub Actions logs
 
 For Actions-log reads in any Factory workflow, follow the

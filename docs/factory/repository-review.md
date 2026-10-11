@@ -60,11 +60,7 @@ run.
 - Create issues **without labels** for normal [triage](issue-triage.md). Do not
   self-triage or change later labels. The [router](factory-router.md) ignores all
   repository-review completions; they are not PR feedback.
-- Verify repository, author, body, and URL against fresh issue reads. Leave later
-  automation updates alone.
-- Reconcile uncertain creation with fresh, paginated issue reads before retrying.
-  Search indexing alone cannot prove nothing was created. Never retry blindly or
-  treat API errors as empty results.
+- Follow the [shared issue-creation checks](../../AGENTS.md#github-issue-creation).
 
 ## Reporting and verification
 
