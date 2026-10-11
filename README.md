@@ -91,7 +91,7 @@ the reviewed source.
 
 ```mermaid
 flowchart TD
-    trigger["Daily 00:07 UTC or manual<br/>Default branch"] --> review["Review with optional checks<br/>Full repository snapshot"]
+    trigger["Days 1, 4, ..., 31 at 00:07 UTC or manual<br/>Each month; default branch"] --> review["Review with optional checks<br/>Full repository snapshot"]
     review --> duplicates["Check issues and PRs<br/>All states"]
     duplicates -->|New actionable findings| issues["Create unlabeled issues"]
     issues --> router["Factory router"] --> triage["Issue triage"]
