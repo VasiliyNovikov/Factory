@@ -59,6 +59,9 @@ whether the proposed improvement itself adds avoidable complexity. Preserve
 intended behavior, quality, required evidence, and safety contracts; brevity alone
 is not an improvement.
 
+Apply the same loop to drafts before publishing issue/PR conversation comments,
+PR review comments, or replies, including triage and implementation responses.
+
 Stop refining when no concrete worthwhile improvement remains. Do not manufacture
 edits or findings, impose fixed pass counts, expand scope, or add orchestration for
 this loop. Stay within the [invocation budget](docs/examples/ai-tools.md#invocation-budget),
