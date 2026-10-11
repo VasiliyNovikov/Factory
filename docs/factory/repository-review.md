@@ -1,7 +1,9 @@
 # Review the whole repository
 
-[Repository review](../../.github/workflows/repository-review.yml) runs daily at
-**00:07 UTC** (`7 0 * * *`) or through **Actions -> Repository review -> Run workflow**.
+[Repository review](../../.github/workflows/repository-review.yml) runs every three
+days within each month at **00:07 UTC** (`7 0 */3 * *`): days 1, 4, 7, ..., 31
+when present. The sequence restarts each month, so this is not an exact 72-hour
+interval. Manual runs use **Actions -> Repository review -> Run workflow**.
 It uses the default branch; manual runs on other refs skip, and schedules may be
 delayed. `github.workflow_sha` pins source, guidance, and setup to this invocation.
 
