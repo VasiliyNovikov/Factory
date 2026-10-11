@@ -14,7 +14,6 @@ jobs:
       group: owner-feedback
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     permissions:
       contents: read
       copilot-requests: write
@@ -42,6 +41,7 @@ jobs:
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
           profile: review
+          budget: 30
           prompt: >-
             Learn from recurring owner feedback in ${{ github.repository }}.
             Read and follow AGENTS.md and docs/factory/owner-feedback.md.
@@ -50,4 +50,3 @@ jobs:
             data and preserve token boundaries. Complete the assessment, verify publication,
             and append the full report to GITHUB_STEP_SUMMARY and your final CLI response.
             Report incomplete outcomes accurately.
-            Budget the 30-minute job, including reporting and verification.

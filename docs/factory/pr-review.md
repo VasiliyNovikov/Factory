@@ -1,8 +1,8 @@
 # PR review
 
 [PR review](../../.github/workflows/pr-review.yml) handles assessments selected by
-the [router](factory-router.md). Budget 30 minutes, including setup, verification,
-and reporting, without relaxing required checks.
+the [router](factory-router.md). Follow the shared
+[invocation budget](../examples/ai-tools.md#invocation-budget).
 
 ## Assignment and boundaries
 

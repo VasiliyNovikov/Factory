@@ -28,7 +28,6 @@ jobs:
       group: pr-review-${{ inputs.pr_number }}-${{ inputs.head_sha }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     permissions:
       contents: read
       copilot-requests: write
@@ -60,6 +59,7 @@ jobs:
         with:
           gh-token: ${{ steps.reviewer-token.outputs.token }}
           profile: review
+          budget: 30
           prompt: >-
             Review PR ${{ env.PR_NUMBER }} in ${{ github.repository }} at ${{ env.PR_HEAD_SHA }}.
             Read and follow AGENTS.md and docs/factory/pr-review.md. Use gh to review or skip this
@@ -68,7 +68,6 @@ jobs:
             Follow the guide's publication outcome contract before submitting a review.
             Never approve an incomplete review. Verify the posted review and report in GITHUB_STEP_SUMMARY
             under the guide's "Skip and report" rules. Report failures and partial outcomes accurately, not as skips.
-            Budget the 30-minute job including setup, reporting, and verification.
 
       - name: Verify review was posted
         if: steps.worker.outputs.skipped != 'true' || env.REVIEW_RECEIPT != ''
