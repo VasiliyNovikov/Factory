@@ -14,7 +14,6 @@ jobs:
       group: factory-maintenance
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     permissions:
       actions: write
       contents: read
@@ -33,6 +32,7 @@ jobs:
         with:
           gh-token: ${{ github.token }}
           profile: route
+          budget: 30
           prompt: >-
             Recover unattended Factory lifecycle work in ${{ github.repository }}.
             Follow repository guidance and docs/factory/factory-maintenance.md.
@@ -41,4 +41,3 @@ jobs:
             do not execute PR code or make repository/GitHub changes beyond worker dispatch.
             Verify dispatch acceptance, reconcile retries, and record coverage, evidence,
             blocked work, and partial failures in GITHUB_STEP_SUMMARY.
-            Budget the 30-minute job including setup, reporting, and verification.

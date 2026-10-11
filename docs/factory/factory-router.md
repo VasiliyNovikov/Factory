@@ -79,7 +79,7 @@ Ignoring a completion event does not prevent periodic recovery when the
   `workflow_run` events, to avoid duplicate delivery.
 - Apply [shared feedback verification](routing-policy.md#feedback-verification)
   before routing reviewer-App findings. If the event arrives before the source
-  assessment completes, wait within the job budget for completion.
+  assessment completes, wait within the invocation budget for completion.
 - Router reruns need the same source attempt to succeed. A worker rerun or
   current-head review request can provide the fresh assessment required by the
   shared policy.

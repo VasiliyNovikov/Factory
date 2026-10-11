@@ -140,7 +140,10 @@ maintenance still applies. The main worker stays on `implement`; independent
   [internal reviewer contract](#internal-reviewer-contract) plus the context above
   and the original candidate checkout path. The temporary checkout supplies tools
   and guidance, not the review target. Choose `review_timeout` from the remaining
-  30-minute job budget, reserving time for fixes, checks, publication, and reporting:
+  [invocation budget](../examples/ai-tools.md#invocation-budget), reserving time for
+  fixes, checks, publication, and reporting. Include the inherited
+  `AI_DEADLINE_UTC` and the earlier review deadline in `review_prompt`; the review
+  does not receive a fresh budget:
 
   ```sh
   (
@@ -255,16 +258,24 @@ the independent PR-review worker.
 
 ## Skip and report
 
-- Skip before mutation only when no eligible work remains, including base merges.
-  For push-only maintenance or base-only recovery, verify the head includes the
-  current default branch and there are no changes, unhandled feedback, errors,
-  or blockers. Make no GitHub changes or no-op comments on a skip.
+- Skip before mutation only when no eligible work remains, including base merges,
+  and no API operation, including reads, failed during the attempt. Recovery does
+  not restore skip eligibility. For push-only maintenance or base-only recovery,
+  verify the head includes the current default branch and there are no changes, unhandled
+  feedback, errors, or blockers. A successful read showing ineligibility, or a
+  false eligibility predicate alone, is not an API failure. Make no GitHub
+  changes or no-op comments on a clean skip.
 - Otherwise post a new Factory comment in the triggering conversation (`source_pr`
   if supplied, else `issue_number`), even after mutation failure. Include:
   the outcome and producing workflow run-attempt link; the PR link when available;
   any child links and incomplete split work; addressed/outstanding feedback with
   thread links; and required owner approval with its source link and adopted scope,
   or the outstanding owner decision.
+- Recovered API failures with no eligible work are non-skip, reply-only results;
+  do not manufacture code changes or duplicate pushes. Retain the failed
+  operation and error, recovery evidence, and remaining impact in both the
+  conversation report and run summary. Recovery alone does not require a failed
+  workflow exit.
 - Verify claimed outcomes in fresh remote state: the checked commit and eligible
   PR metadata for code changes, native child links and eligible parent for splits,
   resolved threads, and Factory-authored replies/comments on the intended targets.
@@ -275,8 +286,6 @@ the independent PR-review worker.
   including checked head/merge SHAs for CI evidence.
 - After mutations begin, verify and report partial outcomes, never a skip.
   API errors, denied permissions, and unverified outcomes are failures, not skips.
-- Budget the 30-minute job for setup, work, reporting, and verification without
-  relaxing required checks.
 
 ## Permissions and trust
 

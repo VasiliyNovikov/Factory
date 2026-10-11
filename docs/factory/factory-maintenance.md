@@ -51,8 +51,8 @@ It dispatches existing workers, not repairs, findings issues, or another router.
   Defer dependent stages until their prerequisites produce verifiable state.
 - A `triaged` issue with invalid tracking labels has no eligible triage or
   implementation handoff. Report the blocker; the coordinator cannot repair it.
-- Budget the 30-minute job for discovery, dispatch verification, and reporting.
-  If pagination, required reads, or coverage cannot finish, identify unexamined
+- If pagination, required reads, or coverage cannot finish within the
+  [invocation budget](../examples/ai-tools.md#invocation-budget), identify unexamined
   targets/pages and remaining work. Never describe incomplete discovery as no work.
 
 ## Dispatch provenance and recovery
