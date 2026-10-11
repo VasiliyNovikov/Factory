@@ -24,7 +24,6 @@ jobs:
       group: issue-triage-${{ inputs.issue_number }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     permissions:
       contents: read
       copilot-requests: write
@@ -56,6 +55,7 @@ jobs:
         with:
           gh-token: ${{ steps.factory-token.outputs.token }}
           profile: triage
+          budget: 15
           prompt: >-
             Triage issue ${{ env.ISSUE_NUMBER }} in repository ${{ github.repository }}.
             Read and follow AGENTS.md and docs/factory/issue-triage.md, including token boundaries
@@ -65,7 +65,6 @@ jobs:
             for pre-mutation skips write skipped=true to GITHUB_OUTPUT.
             Verify GitHub outcomes; append decision and evidence to GITHUB_STEP_SUMMARY.
             Report failures and partial outcomes accurately, not as skips.
-            Budget the 15-minute job including setup, reporting, and verification.
 
       - name: Verify triage result
         if: steps.worker.outputs.skipped != 'true'

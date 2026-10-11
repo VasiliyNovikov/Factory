@@ -46,6 +46,10 @@ requests from other humans/bots need scoped
 approval before normal triage; approval neither marks an issue ready nor adopts
 unrelated feedback. This is an AI-owned hold, not a pre-Copilot gate or spending limit.
 
+Each shared AI action call sets its own [invocation budget](docs/examples/ai-tools.md#invocation-budget).
+The harness and its subtasks share that deadline; setup and receipt checks run
+outside it, under GitHub's default job limit.
+
 PR reviewers may run PR code, tests, and focused experiments under the
 [PR-review execution rules](docs/factory/pr-review.md#local-checks).
 
@@ -72,6 +76,8 @@ Removing environment variables does not isolate credentials.
 [Workflow diagnostics](docs/factory/workflow-diagnostics.md) uses parallel read-only
 sessions to compare same-repository runs and GitHub outcomes against each run's
 contracts, including successful runs and expected skips or handoffs.
+Diagnostics also assesses time-budget utilization and recommends evidence-backed
+timeout changes through the existing findings path.
 
 ```mermaid
 flowchart TD
