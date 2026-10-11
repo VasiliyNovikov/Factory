@@ -75,7 +75,7 @@ contracts, including successful runs and expected skips or handoffs.
 
 ```mermaid
 flowchart TD
-    trigger["Daily 00:07 UTC or manual<br/>Default branch"] --> diagnostics{"Workflow diagnostics"}
+    trigger["Every 3 days, restarting monthly<br/>00:07 UTC or manual; default branch"] --> diagnostics{"Workflow diagnostics"}
     diagnostics -->|First invocation| boundary["Record boundary only<br/>No analysis or findings"]
     diagnostics -->|Later invocations| analysis["Analyze same-repository runs<br/>Since previous invocation"]
     analysis --> duplicates["Check issues and PRs<br/>All states"]
