@@ -69,13 +69,8 @@ review, and merge protections.
 
 ## Find and contribute reusable code
 
-Search existing code and examples before recreating a solution:
-
-| Need | Existing location |
-|---|---|
-| Offline launcher and shell checks | [`scripts/check.sh`](../../scripts/check.sh), [contract and limits](../examples/ai-tools.md#offline-checks) |
-| AI installation and invocation | [`scripts/`](../../scripts/), [AI tools](../examples/ai-tools.md) |
-| GitHub issue/PR examples | [`docs/examples/`](../examples/), [issue](../examples/create-issue.md) and [PR](../examples/create-pull-request.md) snippets |
+Search the source tree and the [repository map](../../AGENTS.md#repository-map)
+for existing code and examples before recreating a solution.
 
 When implementation reveals genuinely reusable code, prefer improving an existing
 helper or extracting a focused one in the owning component. Include its purpose,
@@ -103,7 +98,7 @@ only copy of a durable decision or reusable code.
 are immutable and evictable: they are suitable for disposable acceleration, not
 the authoritative memory or snippet library.
 [Copilot Memory](https://docs.github.com/en/copilot/concepts/agents/copilot-memory)
-is optional, preview, user-enabled, and expires unused entries after 28 days.
+is optional and in preview; unused entries expire after 28 days.
 Its availability with Factory's unattended workflow-token authentication is not
 established; this design does not depend on it or change account settings.
 Never persist credentials, private keys, whole CLI home directories, or raw
