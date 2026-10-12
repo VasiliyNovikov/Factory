@@ -12,9 +12,9 @@ Copilot profile: non-interactive `--prompt` runs otherwise disable Memory.
 OpenCode receives no Copilot-specific flag. This invocation opt-in does not grant
 account access or override administrator policy.
 
-When native tools are available and the worker's mutation contract permits
-storage, retain concise, useful repository facts with current source citations,
-such as where a reusable helper lives and when to use it. Read-only roles and
+When native tools are available, only the main implementation worker may store
+concise, useful repository facts with current source citations, such as where a
+reusable helper lives and when to use it. Internal reviews, all other roles, and
 clean skips may recall facts, but not store them.
 Validate recalled facts against current source before applying them.
 Do not save secrets, raw transcripts, unverified claims, or participant approvals.
@@ -33,9 +33,10 @@ with Factory's unattended workflow authentication. Keep the existing
 [token roles](github-app.md#token-names-and-identities): model access uses the
 built-in token, not the Factory/reviewer App token. Do not add credentials, widen
 permissions, change account settings, or bypass a denial to enable Memory.
-If native tools are unavailable, report that limit in the normal result and use
-current source and GitHub context. Report service/API errors as failures, not
-empty memory; never hide a CLI failure by retrying with Memory disabled.
+If native tools are unavailable, continue from current source and GitHub context;
+mention it only when the task relied on Memory or verifies it. Report service/API
+errors as failures, not empty memory; never hide a CLI failure by retrying with
+Memory disabled.
 
 ## Find and use earlier context
 
