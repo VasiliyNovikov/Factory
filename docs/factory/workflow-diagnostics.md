@@ -66,9 +66,10 @@ CLI built-in subagents for other work either.
 Set `assessment_prompt` to the assigned workflow/run attempts, applicable
 contract and evidence references, shared investigation deadline, and this guide's
 assessment rules. Explicitly require direct read-only analysis: no further
-delegation, executing analyzed code, repository edits, GitHub mutations, or writes
-to runner command files. The subprocess returns findings, evidence, and coverage
-gaps to the coordinator; it must not run the coordinator's publication steps.
+delegation, executing analyzed code, repository edits, GitHub mutations other than
+[native Memory](cross-run-context.md#native-copilot-memory), or writes to runner
+command files. The subprocess returns findings, evidence, and coverage gaps to the
+coordinator; it must not run the coordinator's publication steps.
 
 Use shell tools to run these sessions in parallel, track each process and CLI
 session, and collect its output and exit status outside the checkout. Choose

@@ -29,10 +29,10 @@
   needed to act and verify. Keep detailed requirements in the owning guidance
   document and link to it instead of repeating them; prompts supply only the task
   and run-specific context.
-- Recall native Copilot Memory facts when available; only the main implementation
-  worker may store them. Follow [cross-run context](docs/factory/cross-run-context.md)
-  for validation, earlier outcomes, and reviewed helpers. Keep durable findings in
-  normal task reports and reusable code in the existing review path.
+- All Factory roles may recall and store native Copilot Memory facts when available.
+  Follow [cross-run context](docs/factory/cross-run-context.md) for validation,
+  clean-skip limits, earlier outcomes, and reviewed helpers. Keep durable findings
+  in normal task reports and reusable code in the existing review path.
 - Prescribe procedures only for a required contract, safety boundary, or known
   failure.
 - Strengthen shared rules when review reveals a gap, rather than adding a checklist
