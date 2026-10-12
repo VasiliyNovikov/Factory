@@ -92,6 +92,19 @@ missed or interrupted triage handoffs, implementation, reviews, feedback, and de
 then dispatches the existing workers using the router's
 [shared policy](docs/factory/routing-policy.md).
 
+```mermaid
+flowchart TD
+    trigger["Every 6 hours UTC or manual<br/>Default branch"] --> discover["Factory maintenance coordinator<br/>Discover unattended issue / PR work"]
+    discover --> policy{"Shared eligibility and owner approval<br/>Holds, duplicates and retry checks"}
+    discover -->|Incomplete discovery| incomplete["Report incomplete coverage / failures"]
+    policy -->|Missing or failed evidence| incomplete
+    policy -->|No action or blocked| noAction["Report no-action / blocked reasons"]
+    policy -->|Eligible; recheck live state| dispatch["Dispatch only the next needed stage"]
+    dispatch --> worker["Existing worker<br/>Triage, implementation or PR review"]
+    dispatch -->|Verify acceptance / run evidence| report["Report dispatch evidence<br/>Acceptance is not completed recovery"]
+    dispatch -->|Uncertain or failed| incomplete
+```
+
 The coordinator uses the built-in token for read-only discovery and workflow
 dispatch, not comments, labels, code changes, or new issues/PRs. It reconciles
 active/handled work across sweeps and ordinary routing, respects human/approval
