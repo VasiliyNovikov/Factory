@@ -80,10 +80,10 @@ share `review`. Implementation stays on `implement` and invokes the same runner
 with `--profile review` for its internal pre-publication pass; it does not install
 another CLI or replace independent PR review.
 
-Factory's [cross-run context](../factory/cross-run-context.md) uses shared agent
-guidance and existing GitHub reads rather than harness-specific storage. The
-action and launcher do not save or restore CLI state; native Copilot Memory is
-not a dependency.
+The Copilot launcher passes `--enable-memory` to opt into native Memory in
+non-interactive prompt mode; see [cross-run context](../factory/cross-run-context.md)
+for availability and safe use. OpenCode is unchanged. Neither the action nor the
+launcher saves/restores CLI state or changes account settings.
 
 [Model profile improvement](../factory/model-profile-improvement.md) evaluates
 every caller weekly and files evidence-backed, unlabeled issues for triage. Its
@@ -101,10 +101,11 @@ Run the same checks locally and in CI:
 Using Bash, `jq`, and standard shell utilities, this checks each `scripts/*.sh`
 with `bash -n`, parses `.github/model-config.json` as one JSON object, and runs an
 unchanged copy of the launcher with fixed profile fixtures and stub Copilot/OpenCode CLIs. It checks
-default and named profiles, both Copilot context tiers, exact argument boundaries
-and literal multiline prompts, nonzero CLI exit status, and rejection of unknown
-profiles without invoking a CLI. Fixtures keep the checks independent of live
-model choices; the production configuration is not modified.
+default and named profiles, both Copilot context tiers, Copilot's Memory opt-in
+(never sent to OpenCode), exact argument boundaries and literal multiline prompts,
+nonzero CLI exit status, and rejection of unknown profiles without invoking a CLI.
+Fixtures keep the checks independent of live model choices; the production
+configuration is not modified.
 
 [Offline CI](../../.github/workflows/offline-checks.yml) runs this command on pull
 requests and default-branch pushes, with read-only contents access and no persisted

@@ -51,9 +51,10 @@ Each shared AI action call sets its own [invocation budget](docs/examples/ai-too
 The harness and its subtasks share that deadline; setup and receipt checks run
 outside it, under GitHub's default job limit.
 
-Factory's [cross-run context](docs/factory/cross-run-context.md) keeps useful
-outcomes in existing issue/PR reports and reusable helpers in reviewed repository
-files. It uses native GitHub reads rather than cached CLI sessions.
+Factory opts Copilot invocations into native
+[Copilot Memory](docs/factory/cross-run-context.md#native-copilot-memory) for
+cross-run facts. Issue/PR reports and reviewed helpers remain the durable sources;
+memory never replaces live checks or requires cached CLI sessions.
 
 PR reviewers may run PR code, tests, and focused experiments under the
 [PR-review execution rules](docs/factory/pr-review.md#local-checks).
