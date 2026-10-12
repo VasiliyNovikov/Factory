@@ -82,8 +82,8 @@ another CLI or replace independent PR review.
 
 The Copilot launcher passes `--enable-memory` to opt into native Memory in
 non-interactive prompt mode; see [Copilot Memory](../factory/copilot-memory.md)
-for availability and safe use. OpenCode is unchanged. Neither the action nor the
-launcher saves/restores CLI state or changes account settings.
+for availability and safe use. Neither the action nor the launcher saves/restores
+CLI state or changes account settings.
 
 [Model profile improvement](../factory/model-profile-improvement.md) evaluates
 every caller weekly and files evidence-backed, unlabeled issues for triage. Its
