@@ -74,7 +74,7 @@ Set `assessment_prompt` to the assigned workflow/run attempts, applicable
 contract and evidence references, shared investigation deadline, and this guide's
 assessment rules. Explicitly require direct read-only analysis: no further
 delegation, executing analyzed code, repository edits, GitHub mutations other than
-[native Memory](cross-run-context.md#native-copilot-memory), or writes to runner
+[native Memory](copilot-memory.md), or writes to runner
 command files. The subprocess returns findings, evidence, and coverage gaps to the
 coordinator; it must not run the coordinator's publication steps.
 

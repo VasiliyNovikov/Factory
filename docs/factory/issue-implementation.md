@@ -209,7 +209,7 @@ the independent PR-review worker.
   coverage gaps or blockers. Explicitly distinguish a complete review with no
   findings from an incomplete review. Finish the assessment before returning;
   a progress note is not a result.
-- Apart from [native Memory](cross-run-context.md#native-copilot-memory), do not
+- Apart from [native Memory](copilot-memory.md), do not
   change GitHub state. Do not edit the candidate, commit, push, submit a review or
   approval, write runner reports, or invoke another reviewer. The implementer owns
   all fixes, publication, conversation replies, and reporting.

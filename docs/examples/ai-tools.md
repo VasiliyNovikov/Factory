@@ -81,7 +81,7 @@ with `--profile review` for its internal pre-publication pass; it does not insta
 another CLI or replace independent PR review.
 
 The Copilot launcher passes `--enable-memory` to opt into native Memory in
-non-interactive prompt mode; see [cross-run context](../factory/cross-run-context.md)
+non-interactive prompt mode; see [Copilot Memory](../factory/copilot-memory.md)
 for availability and safe use. OpenCode is unchanged. Neither the action nor the
 launcher saves/restores CLI state or changes account settings.
 
