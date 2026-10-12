@@ -57,6 +57,12 @@ Each shared AI action call sets its own [invocation budget](docs/examples/ai-too
 The harness and its subtasks share that deadline; setup and receipt checks run
 outside it, under GitHub's default job limit.
 
+Factory opts Copilot invocations into native
+[Copilot Memory](docs/factory/copilot-memory.md) for useful repository facts,
+including earlier decisions and reviewed helper locations. Memory is optional,
+never replaces live checks, and still needs storage/recall verification with
+Factory's workflow authentication.
+
 PR reviewers may run PR code, tests, and focused experiments under the
 [PR-review execution rules](docs/factory/pr-review.md#local-checks).
 

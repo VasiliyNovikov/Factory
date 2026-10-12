@@ -29,6 +29,9 @@
   needed to act and verify. Keep detailed requirements in the owning guidance
   document and link to it instead of repeating them; prompts supply only the task
   and run-specific context.
+- All Factory roles may recall and store native Copilot Memory facts when available.
+  Follow [Copilot Memory](docs/factory/copilot-memory.md) for useful facts,
+  validation, and clean-skip limits.
 - Prescribe procedures only for a required contract, safety boundary, or known
   failure.
 - Strengthen shared rules when review reveals a gap, rather than adding a checklist
@@ -115,6 +118,7 @@ Use the owning guide for each workflow's behavior, permissions, and verification
 | Full source analysis | [Repository review](docs/factory/repository-review.md) |
 | Model selection and improvement findings | [Model profile improvement](docs/factory/model-profile-improvement.md) |
 | Recurring owner feedback and guidance findings | [Owner feedback learning](docs/factory/owner-feedback.md) |
+| Native cross-run repository facts | [Copilot Memory](docs/factory/copilot-memory.md) |
 
 Participant approval is AI-owned: non-owner (external) requests need scoped owner
 approval; verified configured automation's own work is exempt under the shared

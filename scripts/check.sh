@@ -83,9 +83,9 @@ for harness in copilot opencode; do
   case "$harness" in
     copilot)
       default_args=(copilot --model fixture-default --reasoning-effort medium
-        --context default --prompt "$prompt" --yolo)
+        --context default --enable-memory --prompt "$prompt" --yolo)
       extended_args=(copilot --model fixture-extended --reasoning-effort high
-        --context long_context --prompt "$prompt" --yolo)
+        --context long_context --enable-memory --prompt "$prompt" --yolo)
       ;;
     opencode)
       default_args=(opencode run --model github-copilot/fixture-default

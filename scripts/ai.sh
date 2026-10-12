@@ -59,7 +59,7 @@ context=$(jq -r 'if .longContext then "long_context" else "default" end' <<< "$p
 case "$harness" in
   copilot)
     exec copilot --model "$model" --reasoning-effort "$reasoning" \
-      --context "$context" --prompt "$prompt" --yolo
+      --context "$context" --enable-memory --prompt "$prompt" --yolo
     ;;
   opencode)
     model="github-copilot/$model"
