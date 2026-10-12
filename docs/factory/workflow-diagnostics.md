@@ -14,6 +14,12 @@ uses the `default` profile; the prompt supplies the run ID, attempt, and
 Factory login (`FACTORY_LOGIN` for issue-author verification).
 For source analysis instead of run history, use [repository review](repository-review.md).
 
+The [host/target context](target-context.md) is explicit, but diagnostics remains
+Factory-local: `TARGET_REPOSITORY == FACTORY_REPOSITORY`. Use the target-qualified
+API paths for runs and findings, and preserve the tooling revision in the summary.
+No external run discovery, forwarding analysis, or cross-repository diagnostics
+is enabled.
+
 This retrospective assessment complements, not replaces, workers' immediate
 eligibility checks, mutation verification, and required receipt checks.
 
@@ -41,8 +47,9 @@ before the first GitHub lookup, including bootstrap metadata for the current run
   findings and report missing results as coverage gaps. Choose needed evidence
   from jobs, attempts, logs, code, and discussions; handle pagination and API limits.
 
-Scheduled and manual runs share one concurrency group, preserving active work
-and at most one pending run. Failed windows are not replayed automatically:
+Scheduled and manual runs keep the host-only `workflow-diagnostics` concurrency
+group, preserving active work across deployment and at most one pending run.
+Failed windows are not replayed automatically:
 the boundary is the preceding invocation, not the last successful analysis.
 Rerun the original invocation to retry. API failure is not empty history or initialization.
 

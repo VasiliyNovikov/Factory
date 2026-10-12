@@ -4,14 +4,18 @@
 issue/PR lifecycle work using the [shared routing policy](routing-policy.md).
 It dispatches existing workers, not repairs, findings issues, or another router.
 
+Follow the [host/target contract](target-context.md). Use API-only target context
+and keep the executing Factory checkout unchanged.
+
 ## Invocation and scope
 
 - Run every six hours at **00:00, 06:00, 12:00, and 18:00 UTC** (`0 */6 * * *`),
   or through **Actions -> Factory maintenance -> Run workflow** on the default
   branch. GitHub may delay scheduled runs; this is not a recovery-time guarantee.
-- Both entry points are default-branch-only. Checkout uses `github.workflow_sha`,
-  the shared AI action uses the existing `route` profile, and active sweeps are
-  serialized without cancellation.
+- Both entry points use the host's default branch. Checkout uses `github.workflow_sha`
+  in `factory/`; target validation precedes AI setup. The pinned shared AI action
+  uses the existing `route` profile, and active sweeps are serialized without
+  cancellation.
 - Use only the built-in token with Actions write for dispatch and
   Contents/Issues/Pull requests read for discovery, plus Copilot model access.
   No App token, new secret, or repository/App setting change is required.
@@ -78,8 +82,9 @@ It dispatches existing workers, not repairs, findings issues, or another router.
 ## Reporting and verification
 
 - Append a job summary covering examined issues/PRs and history, coverage gaps,
-  target/head/default revisions and source evidence, chosen workers, verified
-  acceptance/run links, skipped/blocked reasons, and outstanding work.
+  target repository/head/default revisions separately from the Factory revision,
+  source evidence, chosen workers, verified host acceptance/run links,
+  skipped/blocked reasons, and outstanding work.
 - The router ignores maintenance completions; worker events retain their ordinary
   routing. There is no receipt/report workflow or new feedback loop.
 
