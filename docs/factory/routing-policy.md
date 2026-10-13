@@ -111,25 +111,21 @@ local-only stage, but must not be inferred from the current directory.
 
 ### Delegated assessments
 
-Delegates collect and assess evidence; the coordinator owns dispatch. Give each
-delegate the target/request, required evidence, and remaining
-[budget](../examples/ai-tools.md#invocation-budget). Require a completed per-target
-assessment identifying checked head/default revisions, the supporting sources,
-completed body/discussion/edit/deletion-history inspection and terminal pagination,
-the scope/approval decision, and any failed or unfinished checks.
+Delegates assess evidence; the coordinator owns dispatch. Give them the target,
+request, required evidence, and remaining [budget](../examples/ai-tools.md#invocation-budget).
+Before accepting eligibility:
 
-Before accepting eligibility, read the complete returned assessment and reconcile
-its supporting evidence with known gaps and live state. An "eligible" conclusion,
-collection counts, or an idle/successful delegate alone cannot close an earlier
-hold. Identify the fresh evidence and completed inspection that close each gap;
-do not leave the failure/limitations assessment until after dispatch.
-
-Revision or discussion drift invalidates affected coverage. A fresh head lookup does
-not refresh an old discussion artifact. Finish the missing assessment yourself or
-through the delegate within existing permissions, then apply the immediate
-pre-dispatch reconciliation below. If verification remains incomplete, hold that
-target and report what remains; do not substitute promised
-follow-up or downstream worker checks. Independently verified targets may proceed.
+- Read each target's completed assessment: checked head and default-branch
+  revisions, sources, full inspection of bodies, discussions and edit/deletion
+  histories, terminal pagination, scope and approval decisions, and any failures
+  or gaps.
+- Confirm fresh evidence and completed inspection close known gaps. An "eligible"
+  answer, counts, or a finished delegate are not proof. Recheck affected evidence
+  when revisions or discussions change; a head lookup does not refresh old history.
+- Complete missing checks within existing permissions, then reconcile live state
+  before dispatch as required below. Otherwise, hold that target and report the
+  gap. Promised follow-up or worker checks cannot replace verification;
+  independently verified targets may proceed.
 
 ## Dispatch contract
 
