@@ -12,6 +12,111 @@ jq -se 'length == 1 and (.[0] | type == "object")' \
 }
 printf 'PASS: shell syntax and model JSON\n'
 
+# Read the block-style action inputs used in this repository, not prompt text.
+profile_references=$(awk '
+  function value(line) {
+    sub(/^[^:]*:[[:space:]]*/, "", line)
+    if (line ~ /^#/) return ""
+    sub(/[[:space:]]+#.*$/, "", line)
+    sub(/[[:space:]]+$/, "", line)
+    if (line ~ /^".*"$/ || line ~ /^\047.*\047$/)
+      line = substr(line, 2, length(line) - 2)
+    return line
+  }
+  function finish_step() {
+    if (action == "./factory/.github/actions/ai" || action == "./.github/actions/ai") {
+      if (inline_inputs != "") {
+        printf "FAIL: %s: shared AI inputs must use block-style YAML: %s\n", file, inline_inputs > "/dev/stderr"
+        failed = 1
+      }
+      if (has_profile)
+        printf "%s:%d\t%s\n", file, profile_line, profile
+    }
+  }
+  FNR == 1 {
+    finish_step()
+    file = FILENAME
+    step_indent = property_indent = with_indent = -1
+    action = profile = inline_inputs = ""
+    has_profile = 0
+  }
+  /^[[:space:]]*($|#)/ { next }
+  {
+    match($0, /[^ ]/)
+    indent = RSTART - 1
+    line = substr($0, RSTART)
+  }
+  FILENAME == ARGV[1] {
+    if (indent == 0) {
+      inputs = (line ~ /^inputs:/)
+      metadata_indent = -1
+      profile_input = 0
+      next
+    }
+    if (!inputs) next
+    if (metadata_indent < 0) metadata_indent = indent
+    if (indent == metadata_indent) {
+      profile_input = (line ~ /^profile:/)
+      default_indent = -1
+    } else if (profile_input) {
+      if (default_indent < 0) default_indent = indent
+      if (indent == default_indent && line ~ /^default:/) {
+        printf "%s:%d\t%s\n", FILENAME, FNR, value(line)
+        found_default = 1
+      }
+    }
+    next
+  }
+  {
+    if (indent <= step_indent) {
+      finish_step()
+      step_indent = property_indent = with_indent = -1
+      action = profile = inline_inputs = ""
+      has_profile = 0
+    }
+    if (step_indent < 0 && line ~ /^-( |$)/) {
+      step_indent = indent
+      match(line, /^- */)
+      indent += RLENGTH
+      line = substr(line, RLENGTH + 1)
+      if (line ~ /^($|#)/) next
+    }
+    if (step_indent < 0) next
+    if (property_indent < 0) property_indent = indent
+    if (indent == property_indent && line ~ /^uses:/) action = value(line)
+    if (indent <= with_indent) with_indent = -1
+    if (indent == property_indent && line ~ /^with:/) {
+      with_indent = indent
+      input_indent = -1
+      inline_inputs = value(line)
+    } else if (with_indent >= 0) {
+      if (input_indent < 0) input_indent = indent
+      if (indent == input_indent && line ~ /^profile:/) {
+        profile = value(line)
+        profile_line = FNR
+        has_profile = 1
+      }
+    }
+  }
+  END {
+    finish_step()
+    if (!found_default) {
+      printf "FAIL: %s: missing profile default\n", ARGV[1] > "/dev/stderr"
+      failed = 1
+    }
+    if (failed) exit 1
+  }
+' "$repo_root/.github/actions/ai/action.yml" "$repo_root"/.github/workflows/*.yml)
+
+while IFS=$'\t' read -r reference profile; do
+  jq -e --arg profile "$profile" 'has($profile)' \
+    "$repo_root/.github/model-config.json" > /dev/null || {
+    printf "FAIL: %s: unknown model profile '%s'\n" "$reference" "$profile" >&2
+    exit 1
+  }
+done <<< "$profile_references"
+printf 'PASS: shared AI action default and workflow model profiles\n'
+
 temp_dir=$(mktemp -d)
 trap 'rm -rf -- "$temp_dir"' EXIT
 mkdir -p "$temp_dir/bin" "$temp_dir/scripts" "$temp_dir/.github"

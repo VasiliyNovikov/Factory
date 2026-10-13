@@ -99,8 +99,16 @@ Run the same checks locally and in CI:
 ```
 
 Using Bash, `jq`, and standard shell utilities, this checks each `scripts/*.sh`
-with `bash -n`, parses `.github/model-config.json` as one JSON object, and runs an
-unchanged copy of the launcher with fixed profile fixtures and stub Copilot/OpenCode CLIs. It checks
+with `bash -n` and parses `.github/model-config.json` as one JSON object. It also
+requires the shared AI action's default profile and every explicit profile input
+to that action in `.github/workflows/*.yml` to exist as top-level configuration
+keys. Unknown references fail with the source file, line, and profile name.
+This reads the repository's block-style YAML with literal profile names, not
+general YAML or dynamic expressions; model IDs/settings and guide prose are
+not validated.
+
+An unchanged copy of the launcher runs with fixed profile fixtures and stub
+Copilot/OpenCode CLIs. It checks
 default and named profiles, both Copilot context tiers, Copilot's Memory opt-in
 (never sent to OpenCode), exact argument boundaries and literal multiline prompts,
 nonzero CLI exit status, and rejection of unknown profiles without invoking a CLI.
