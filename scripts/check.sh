@@ -14,6 +14,7 @@ printf 'PASS: shell syntax and model JSON\n'
 
 profile_references=$(
   yq -o=json -I=0 '
+    explode(.) |
     ((select(fileIndex == 0) | .inputs.profile.default),
      (select(fileIndex > 0) | .jobs[].steps[]? |
       select(.uses == "./factory/.github/actions/ai" or .uses == "./.github/actions/ai") |

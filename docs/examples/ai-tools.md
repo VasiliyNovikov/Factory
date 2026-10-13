@@ -109,10 +109,10 @@ profile value.
 
 Both local action paths (`./factory/.github/actions/ai` and `./.github/actions/ai`)
 are recognized. Block and flow mappings, quotes, and comments follow YAML syntax;
-unrelated actions and prompt text are ignored. Omitted profiles use the checked
-action default. Profile names must be literal strings: expressions are not
-evaluated. This is not general workflow-schema validation; model IDs/settings and
-guide prose are not checked.
+aliases are expanded before selecting references. Unrelated actions and prompt
+text are ignored. Omitted profiles use the checked action default. Profile names
+must be literal strings: expressions are not evaluated. This is not general
+workflow-schema validation; model IDs/settings and guide prose are not checked.
 
 An unchanged copy of the launcher runs with fixed profile fixtures and stub
 Copilot/OpenCode CLIs. It checks
