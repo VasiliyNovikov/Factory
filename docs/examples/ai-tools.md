@@ -98,15 +98,21 @@ Run the same checks locally and in CI:
 ./scripts/check.sh
 ```
 
-Using Bash, `jq`, and standard shell utilities, this checks each `scripts/*.sh`
-with `bash -n` and parses `.github/model-config.json` as one JSON object. It also
-requires the shared AI action's default profile and every `profile:` value
-in `.github/workflows/*.yml` to exist as top-level configuration
-keys. Unknown references fail with the source file, line, and profile name.
-Use block-style entries with literal profile names. This line-based scan also
-checks matching lines in non-AI inputs or prompt text; it does not inspect
-flow-style mappings or evaluate expressions. Model IDs/settings and guide prose
-are not validated.
+Requires Bash, `jq`, [Mike Farah's `yq` v4](https://github.com/mikefarah/yq), and
+standard shell utilities, all preinstalled on the Ubuntu CI runner.
+The checks validate each `scripts/*.sh` with `bash -n` and parse
+`.github/model-config.json` as one JSON object. YAML parsing requires the shared
+AI action's default and every explicit `with.profile` input to that action in
+`.github/workflows/*.yml` to exist as top-level configuration keys. Unknown or
+missing defaults and invalid references fail with the source file, line, and
+profile value.
+
+Both local action paths (`./factory/.github/actions/ai` and `./.github/actions/ai`)
+are recognized. Block and flow mappings, quotes, and comments follow YAML syntax;
+unrelated actions and prompt text are ignored. Omitted profiles use the checked
+action default. Profile names must be literal strings: expressions are not
+evaluated. This is not general workflow-schema validation; model IDs/settings and
+guide prose are not checked.
 
 An unchanged copy of the launcher runs with fixed profile fixtures and stub
 Copilot/OpenCode CLIs. It checks

@@ -12,27 +12,22 @@ jq -se 'length == 1 and (.[0] | type == "object")' \
 }
 printf 'PASS: shell syntax and model JSON\n'
 
-action_yml="$repo_root/.github/actions/ai/action.yml"
 profile_references=$(
-  awk '/^  [^ ]/ { profile = /^  profile:/ }
-    profile && /^    default:/ { print FILENAME ":" FNR "\t" $0; found = 1 }
-    END { exit !found }' "$action_yml" &&
-  awk '/^[[:space:]]*profile:/ { print FILENAME ":" FNR "\t" $0 }' \
-    "$repo_root"/.github/workflows/*.yml
-) || {
-  printf 'FAIL: unreadable profile references or missing profile default in %s\n' "$action_yml" >&2
-  exit 1
-}
-
-while IFS=$'\t' read -r reference text; do
-  profile=$(sed -E 's/^[^:]*:[[:space:]]*//; s/[[:space:]]+#.*$//;
-    s/[[:space:]]+$//; s/^(["'"'"'])(.*)\1$/\2/' <<< "$text")
-  jq -e --arg profile "$profile" 'has($profile)' \
-    "$repo_root/.github/model-config.json" > /dev/null || {
-    printf "FAIL: %s: unknown model profile '%s'\n" "$reference" "$profile" >&2
-    exit 1
-  }
-done <<< "$profile_references"
+  yq -o=json -I=0 '
+    ((select(fileIndex == 0) | .inputs.profile.default),
+     (select(fileIndex > 0) | .jobs[].steps[]? |
+      select(.uses == "./factory/.github/actions/ai" or .uses == "./.github/actions/ai") |
+      .with | select(has("profile")) | .profile)) |
+    {"file": filename, "line": line, "profile": .}
+  ' "$repo_root/.github/actions/ai/action.yml" "$repo_root"/.github/workflows/*.yml
+)
+jq -s --slurpfile profiles "$repo_root/.github/model-config.json" '
+  .[] | . as $reference |
+  if (.profile | type) == "string" and ($profiles[0] | has($reference.profile))
+  then empty
+  else error("\(.file):\(.line): unknown model profile \(.profile | tojson)")
+  end
+' <<< "$profile_references"
 printf 'PASS: shared AI action default and workflow model profiles\n'
 
 temp_dir=$(mktemp -d)
