@@ -98,8 +98,9 @@ rather than claiming a clean result.
 
 This is an agentic software factory scaffold, with no application code or
 toolchain yet. [README.md](README.md) tracks completed CI milestones.
-Run `./scripts/check.sh` for [offline launcher checks](docs/examples/ai-tools.md#offline-checks);
-live workflow tests remain deferred.
+Run `./scripts/check.sh` for [offline launcher checks](docs/examples/ai-tools.md#offline-checks)
+under the [verification policy](#test-value-and-verification); live workflow
+tests remain deferred.
 
 Use the owning guide for each workflow's behavior, permissions, and verification:
 
@@ -187,6 +188,11 @@ permissions, and verification.
 
 ## Test value and verification
 
+- The owning worker's execution permissions govern verification, including project
+  checks and dependency installation. Shared check guidance grants no additional
+  permissions. If verification would require prohibited source execution or
+  dependency installation, use permitted evidence for the assessment and report
+  runtime-dependent uncertainty instead.
 - Before adding or requesting a test, name the requirement or credible regression,
   its observable outcome, and the gap in existing coverage. Use the smallest
   useful check with existing tools, not tests or dependencies for their own sake.
