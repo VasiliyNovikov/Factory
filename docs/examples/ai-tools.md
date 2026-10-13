@@ -100,12 +100,13 @@ Run the same checks locally and in CI:
 
 Using Bash, `jq`, and standard shell utilities, this checks each `scripts/*.sh`
 with `bash -n` and parses `.github/model-config.json` as one JSON object. It also
-requires the shared AI action's default profile and every explicit profile input
-to that action in `.github/workflows/*.yml` to exist as top-level configuration
+requires the shared AI action's default profile and every `profile:` value
+in `.github/workflows/*.yml` to exist as top-level configuration
 keys. Unknown references fail with the source file, line, and profile name.
-This reads the repository's block-style YAML with literal profile names, not
-general YAML or dynamic expressions; model IDs/settings and guide prose are
-not validated.
+Use block-style entries with literal profile names. This line-based scan also
+checks matching lines in non-AI inputs or prompt text; it does not inspect
+flow-style mappings or evaluate expressions. Model IDs/settings and guide prose
+are not validated.
 
 An unchanged copy of the launcher runs with fixed profile fixtures and stub
 Copilot/OpenCode CLIs. It checks
