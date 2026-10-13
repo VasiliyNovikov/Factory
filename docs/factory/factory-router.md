@@ -58,7 +58,7 @@ checkout or AI setup. Copilot decides the rest.
 - Non-`triaged` issue-label events (job-filtered).
 - Fork PR lifecycle events and submitted reviews (job-filtered); fork detection
   for conversation comments remains AI-owned.
-- Successful CI without review findings.
+- Successful workflow completions (job-filtered).
 - Cancelled runs.
 - Router completions and completions triggered by `workflow_dispatch` or `schedule`
   are job-filtered regardless of conclusion, including future non-Factory workflows.
@@ -114,6 +114,8 @@ these event-specific `source` fields:
 - Static checks do not establish AI adherence or end-to-end event delivery.
   A PR cannot exercise its changed default-branch push or
   [`issue_comment`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issue_comment)
-  triggers.
+  triggers, or its
+  [`workflow_run`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_run)
+  filter.
 - Participant approval is AI-owned, not a workflow `if` guard. External events can
   start Copilot.
