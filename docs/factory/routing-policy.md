@@ -109,6 +109,28 @@ local-only stage, but must not be inferred from the current directory.
 - API errors and unavailable required evidence are failures or verification gaps,
   not proof that there is no work.
 
+### Delegated assessments
+
+Delegates collect and assess evidence; the coordinator owns dispatch. Give each
+delegate the target/request, required evidence, and remaining
+[budget](../examples/ai-tools.md#invocation-budget). Require a completed per-target
+assessment identifying checked head/default revisions, the supporting sources,
+completed body/discussion/edit/deletion-history inspection and terminal pagination,
+the scope/approval decision, and any failed or unfinished checks.
+
+Before accepting eligibility, read the complete returned assessment and reconcile
+its supporting evidence with known gaps and live state. An "eligible" conclusion,
+collection counts, or an idle/successful delegate alone cannot close an earlier
+hold. Identify the fresh evidence and completed inspection that close each gap;
+do not leave the failure/limitations assessment until after dispatch.
+
+Revision or discussion drift invalidates affected coverage. A fresh head lookup does
+not refresh an old discussion artifact. Finish the missing assessment yourself or
+through the delegate within existing permissions, then apply the immediate
+pre-dispatch reconciliation below. If verification remains incomplete, hold that
+target and report what remains; do not substitute promised
+follow-up or downstream worker checks. Independently verified targets may proceed.
+
 ## Dispatch contract
 
 - Dispatch existing workers in `FACTORY_REPOSITORY` on its current default branch.
@@ -162,6 +184,11 @@ local-only stage, but must not be inferred from the current directory.
 - Verify dispatch acceptance and correlate the resulting native run/attempt when
   observable. Record accepted-but-not-yet-linked work without repeating dispatch.
   Acceptance is not successful worker execution or completed recovery.
+- If dispatch preceded required verification, report the ordering failure with
+  the affected target/revisions, acceptance evidence, and checks still missing at
+  acceptance. Record later verification separately; it cannot retroactively
+  authorize that dispatch. Reconcile the accepted work and its outcomes under
+  these retry rules, without blind redispatch.
 - Reconcile uncertain responses before retrying; never blindly dispatch again.
   A terminal failed/timed-out/cancelled worker may justify recovery only after
   checking its partial mutations, current eligibility, and remaining work.
@@ -191,3 +218,9 @@ local-only stage, but must not be inferred from the current directory.
   Use native reruns for incomplete coordinator attempts, without
   depending on another event or claiming unverified work succeeded.
 - Include any required owner-decision link and adopted scope, or the approval hold.
+
+For changes to the assessment handoff, exercise incomplete and stale delegated
+results, completion before dispatch, and discovery of premature acceptance.
+Inspect the ordered assessment, hold/dispatch, and reconciliation results, not
+just matching guidance text. Controlled model exercises do not prove live GitHub
+delivery or future AI adherence; report those limits and any unavailable evidence.
