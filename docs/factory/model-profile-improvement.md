@@ -73,11 +73,8 @@ active work.
   [Triage](issue-triage.md) and [implementation](issue-implementation.md) handle
   findings; the router ignores this workflow's completion.
 
-For every outcome, append the complete report to `GITHUB_STEP_SUMMARY`, preserving
-existing content, and include the same report in the final CLI response, which
-the [CLI writes to the Actions log](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions#run-copilot-cli).
-Use concise tables and links, not just totals or a summary link, without omitting
-evidence or repeating GitHub mutations:
+Follow the [shared final-report and retention rule](actions-logs.md#final-reports-and-retention).
+Include:
 
 - **Outcome:** distinguish new findings, already covered, no change after a
   complete assessment, and incomplete/partial results. Empty/failed discovery,
@@ -95,13 +92,6 @@ evidence or repeating GitHub mutations:
   rationale/evidence, and constraints. Explicitly identify workflows without AI.
 - **Follow-up:** existing work and verified new issue links, checks actually run,
   limits, and outstanding work.
-
-Shell-tool output can be collapsed by the CLI. A local report write, `cat`, or
-local-file comparison does not prove log retention. When verifying retention,
-read the complete downloaded attempt logs using the [shared log guidance](actions-logs.md)
-and permitted credentials, then compare required evidence with the preserved job
-summary. Report unavailable destinations and unverified agreement explicitly;
-an unavailable summary does not establish that it is missing or incorrect.
 
 Verification is AI-owned: a successful CLI exit does not prove completion, nor
 do research and capability checks prove comparative quality or model-request success.

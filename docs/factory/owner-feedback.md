@@ -52,8 +52,8 @@ the shared [AI action](../examples/ai-tools.md#shared-factory-action) with `revi
 
 ## Report
 
-Finish before returning. Append the complete report to `GITHUB_STEP_SUMMARY`
-without replacing existing content, and repeat it in the **final CLI response**:
+Follow the [shared final-report and retention rule](actions-logs.md#final-reports-and-retention).
+Include:
 
 - Outcome: new findings, already covered, no actionable patterns after complete
   coverage, or incomplete/partial; include verified issues and outstanding work.
@@ -65,9 +65,7 @@ without replacing existing content, and repeat it in the **final CLI response**:
 
 Verify partial publication; missing evidence or failures are incomplete outcomes.
 CLI success/static checks cannot prove AI adherence or live operation; improvement
-claims need comparative evidence. Progress notes, shell output, or summary links
-cannot replace the full final report. Later retention checks follow
-[log guidance](actions-logs.md) without granting Actions access.
+claims need comparative evidence.
 
 ## Permissions and trust
 

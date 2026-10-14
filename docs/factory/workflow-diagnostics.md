@@ -187,10 +187,9 @@ or reason to slow work.
   leave later labels and triage updates alone.
   The [router](factory-router.md) job condition skips diagnostics completions.
 
-Within the invocation budget, write the complete, consistent report to both
-`GITHUB_STEP_SUMMARY` and the coordinator's final CLI response, which the
-[CLI writes to the Actions log](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions#run-copilot-cli).
-Use concise tables and linked groups, not just totals or a summary link. Include:
+Within the invocation budget, the coordinator follows the
+[shared final-report and retention rule](actions-logs.md#final-reports-and-retention).
+Include:
 
 - **Coverage and outcomes:** history window, selection rationale, per-workflow
   expected-versus-observed conclusions with evidence links, budget-utilization
@@ -211,14 +210,6 @@ Use concise tables and linked groups, not just totals or a summary link. Include
   Nested-delegation events, mismatched or unverified settings, and unverified
   delegation checks are coverage gaps. Missing evidence or API failures are not
   a clean result.
-
-Producing both report copies must not repeat issue creation or other GitHub
-mutations. Shell-tool output can be collapsed by the CLI: a local report write,
-`cat`, or spool comparison does not prove log retention. When verifying retention,
-read the complete downloaded log using the [shared log guidance](actions-logs.md)
-and compare its ledger with the preserved job summary. Report unavailable
-destinations and unverified agreement explicitly; inability to read a job summary
-does not establish that it is missing.
 
 Coverage and creation checks are AI-owned: no JSON contract, report artifact, or
 separate verification job. Setup/CLI errors fail their steps, but a successful
