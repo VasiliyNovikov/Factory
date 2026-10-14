@@ -64,10 +64,8 @@ run.
 
 ## Reporting and verification
 
-Append the complete report below to `GITHUB_STEP_SUMMARY`, preserving existing
-content, and include the same report in the final CLI response, which the
-[CLI writes to the Actions log](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions#run-copilot-cli).
-This applies to every outcome, including no-new-findings and incomplete/partial results:
+Follow the [shared final-report and retention rule](actions-logs.md#final-reports-and-retention).
+Include:
 
 - Target repository and reviewed commit link, separately from the Factory
   tooling revision; exact-tree tracked-file total and reconciled full/partial/unread
@@ -83,20 +81,9 @@ This applies to every outcome, including no-new-findings and incomplete/partial 
 - Outcome: completed with findings, completed with no new findings, or incomplete,
   including publication failures and outstanding work.
 
-The final response is the complete log copy, not just totals or a summary link.
-Keep both copies consistent without repeating issue creation or other GitHub
-mutations. Use concise tables and links without omitting required evidence.
-
-Shell-tool output can be collapsed by the CLI. A local report write, `cat`, or
-local-file comparison does not prove log retention or coverage accuracy. To
-verify later, read the complete downloaded attempt logs using the
-[shared log guidance](actions-logs.md) and permitted credentials. Reconcile the
-reported counts and completion claims with the exact reviewed tree and retained
-read evidence, then compare the complete report with the preserved job summary.
-Report unavailable read evidence or destinations and unverified agreement
-explicitly; missing evidence does not prove that a read never occurred, and an
-unavailable summary does not establish that it is missing or incorrect.
-This does not grant this workflow Actions access.
+Later coverage checks must reconcile reported counts and completion claims with
+the exact reviewed tree and retained read evidence. Local report writes, `cat`,
+or comparisons do not prove coverage accuracy.
 
 Reserve time for publication, verification, and reporting. Partial coverage or
 failed API calls are not a clean review. If later work fails, verify created issues
