@@ -12,6 +12,25 @@ jq -se 'length == 1 and (.[0] | type == "object")' \
 }
 printf 'PASS: shell syntax and model JSON\n'
 
+profile_references=$(
+  yq -o=json -I=0 '
+    explode(.) |
+    ((select(fileIndex == 0) | .inputs.profile.default),
+     (select(fileIndex > 0) | .jobs[].steps[]? |
+      select(.uses == "./factory/.github/actions/ai" or .uses == "./.github/actions/ai") |
+      .with | select(has("profile")) | .profile)) |
+    {"file": filename, "line": line, "profile": .}
+  ' "$repo_root/.github/actions/ai/action.yml" "$repo_root"/.github/workflows/*.yml
+)
+jq -s --slurpfile profiles "$repo_root/.github/model-config.json" '
+  .[] | . as $reference |
+  if (.profile | type) == "string" and ($profiles[0] | has($reference.profile))
+  then empty
+  else error("\(.file):\(.line): unknown model profile \(.profile | tojson)")
+  end
+' <<< "$profile_references"
+printf 'PASS: shared AI action default and workflow model profiles\n'
+
 temp_dir=$(mktemp -d)
 trap 'rm -rf -- "$temp_dir"' EXIT
 mkdir -p "$temp_dir/bin" "$temp_dir/scripts" "$temp_dir/.github"
