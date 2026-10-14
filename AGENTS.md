@@ -78,6 +78,8 @@ rather than claiming a clean result.
   and reviews. Include only useful scope, evidence, decisions, blockers, or next
   steps; avoid repeated context and process narration. Keep documentation aligned
   with the code and workflows.
+- When adding a Factory workflow, include its [README](README.md) section and
+  Mermaid diagram in the same PR; use judgment for CI-only checks.
 - Durable docs, guides, and prompts describe current behavior and decisions; put
   change history (superseded approaches, change-specific issue/PR/run/commit
   references, per-change verification evidence) in PR descriptions, comments, or
