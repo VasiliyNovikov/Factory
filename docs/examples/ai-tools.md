@@ -101,8 +101,20 @@ Run the same checks locally and in CI:
 Requires Bash, `jq`, [Mike Farah's `yq` v4](https://github.com/mikefarah/yq), and
 standard shell utilities, all preinstalled on the Ubuntu CI runner.
 The checks validate each `scripts/*.sh` with `bash -n` and parse
-`.github/model-config.json` as one JSON object. YAML parsing requires the shared
-AI action's default and every explicit `with.profile` input to that action in
+`.github/model-config.json` as one JSON object. They also syntax-check inline
+Bash `run:` blocks in `.github/actions/*/action.yml` and
+`.github/workflows/*.yml`, reporting the file, line, and step on failure.
+Step, job, and workflow shell settings take precedence in that order, including
+custom Bash commands. With no declared shell, checks cover known Ubuntu/macOS
+runners and self-hosted Linux labels outside containers. Other shells are not
+parsed as Bash; dynamic runner/shell expressions are not evaluated. Declare
+`shell: bash` when runner selection cannot establish the default shell.
+This is syntax-only: steps are not executed, and Actions expressions or runtime
+behavior are not validated. Fixtures cover shell selection, inherited defaults,
+and rejection of invalid inline Bash.
+
+YAML parsing also requires the shared AI action's default and every explicit
+`with.profile` input to that action in
 `.github/workflows/*.yml` to exist as top-level configuration keys. Unknown or
 missing defaults and invalid references fail with the source file, line, and
 profile value.
