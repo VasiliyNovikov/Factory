@@ -153,6 +153,9 @@ incompatible.
 Follow GitHub's [node limit](https://docs.github.com/en/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api#node-limit)
 and [cursor pagination](https://docs.github.com/en/graphql/guides/using-pagination-in-the-graphql-api).
 
+- For file-backed queries, use `gh api graphql -F query=@path`; `-F/--field`
+  [reads the file](https://cli.github.com/manual/gh_api), while `-f/--raw-field`
+  sends literal query text (`-f query='...'`) without loading `@path`.
 - Reuse verified schema information instead of unnecessary introspection. When
   discovery is needed, cap each introspection collection field (such as
   `__Type.fields` or `__Type.inputFields`) at two selections per request, including
