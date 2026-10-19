@@ -140,36 +140,17 @@ maintenance still applies. The main worker stays on `implement`; independent
   the previous published head when applicable, issue requirements, outstanding
   feedback, and validation results. Review the actual local candidate diff, not
   the old remote PR alone; keep it unchanged while the reviewer runs.
-- Use `git worktree add --detach` to create a temporary `review_checkout` under
-  `RUNNER_TEMP` at `GITHUB_WORKFLOW_SHA`. Run the installed harness there through
-  `scripts/ai.sh --profile review`, keeping the runner, model configuration, and
-  guidance at the trusted workflow revision, not their candidate versions. Do not
-  hard-code a model or use a default-profile subagent.
-- Set `review_prompt` to the trusted
+- Launch internal review with `nested_profile=review` using the
+  [shared nested launch rule](../examples/ai-tools.md#nested-ai-invocations).
+  Do not hard-code a model or use a default-profile subagent.
+- Set `nested_prompt` to the trusted
   [internal reviewer contract](#internal-reviewer-contract) plus the context above
-  and the original candidate checkout path. The temporary checkout supplies tools
-  and guidance, not the review target. Choose `review_timeout` from the remaining
-  [invocation budget](../examples/ai-tools.md#invocation-budget), reserving time for
-  fixes, checks, publication, and reporting. Include the inherited
-  `AI_DEADLINE_UTC` and the earlier review deadline in `review_prompt`; the review
-  does not receive a fresh budget:
-
-  ```sh
-  (
-    cd -- "$review_checkout" &&
-      COPILOT_GITHUB_TOKEN="${GITHUB_TOKEN:?built-in model token is required}" \
-      timeout --kill-after=30s "$review_timeout" \
-      ./scripts/ai.sh --harness "$AI_HARNESS" --profile review --prompt "$review_prompt"
-  )
-  ```
-
-  Bind model access explicitly as the shared action does: the parent CLI may omit
-  `COPILOT_GITHUB_TOKEN` from shell tools, and Copilot otherwise prefers `GH_TOKEN`
-  over `GITHUB_TOKEN`. Leave Factory App `GH_TOKEN` unchanged.
-
+  and the original candidate checkout path. The launch directory supplies tools
+  and guidance, not the review target. Reserve time for fixes, checks, publication,
+  and reporting.
 - Read the returned findings and exit status; preserve the output outside the
-  checkouts and remove the temporary worktree on success or failure. A successful
-  exit without a complete, correctly scoped result is not a clean review.
+  checkouts. A successful exit without a complete, correctly scoped result is not
+  a clean review.
   The implementer owns fixes and reruns relevant validation.
   Obtain review of subsequent changes so the final candidate is covered; reuse
   unchanged coverage rather than repeating the entire review unnecessarily.
