@@ -198,11 +198,11 @@ Start child `scripts/ai.sh` sessions with the installed harness from unchanged
 `FACTORY_ROOT`, keeping the runner, model configuration, and guidance at the
 trusted workflow revision rather than the target candidate.
 
-Set `nested_profile` and `nested_prompt` from the owning guide. Choose
-`nested_timeout` within the inherited [invocation budget](#invocation-budget),
-leaving the 30-second termination grace before a child deadline earlier than
-`AI_DEADLINE_UTC`. Include both deadlines in the prompt and reserve time for
-the caller to integrate results, verify outcomes, publish, and report.
+Set `nested_profile` and `nested_prompt` from the owning guide. Set
+`nested_timeout` to expire at the child deadline within the inherited
+[invocation budget](#invocation-budget). Reserve the 30-second kill grace and
+time for the caller to integrate results, verify outcomes, publish, and report
+between that deadline and `AI_DEADLINE_UTC`. Include both deadlines in the prompt.
 
 ```sh
 (

@@ -63,19 +63,19 @@ Use this path for all diagnostics delegation; the coordinator must not use
 CLI built-in subagents for other work either.
 
 Set `nested_prompt` to the assigned workflow/run attempts, applicable
-contract and evidence references, shared investigation deadline, and this guide's
-assessment rules. Explicitly require direct read-only analysis: no further
-delegation, executing analyzed code, repository edits, GitHub mutations other than
-[native Memory](copilot-memory.md), or writes to runner
-command files. The subprocess returns findings, evidence, and coverage gaps to the
+contract and evidence references, shared investigation and child deadlines, and
+this guide's assessment rules. Explicitly require direct read-only analysis: no
+further delegation, executing analyzed code, repository edits, GitHub mutations
+other than [native Memory](copilot-memory.md), or writes to runner command files.
+The subprocess returns findings, evidence, and coverage gaps to the
 coordinator; it must not run the coordinator's publication steps.
 
 Use shell tools to run these sessions in parallel, track each process and CLI
-session, and collect its output and exit status outside the checkout. Choose
-`nested_timeout` within the remaining shared investigation time, allowing for
-the termination grace period. Start each timeout with its assessment so the bound
-does not depend on the coordinator remaining responsive. Do not detach assessment
-processes from their supervising shell. Stop unfinished process trees at that deadline
+session, and collect its output and exit status outside the checkout. Set each
+child deadline at least 30 seconds before the shared investigation deadline.
+Start each timeout with its assessment so the bound does not depend on the
+coordinator remaining responsive. Do not detach assessment processes from their
+supervising shell. Stop unfinished process trees at the investigation deadline
 and verify their termination; an unknown exit or surviving process is a failure.
 An exit of zero without a complete assessment is still a coverage gap.
 
