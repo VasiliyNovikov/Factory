@@ -111,9 +111,10 @@ local-only stage, but must not be inferred from the current directory.
 
 ### Delegated assessments
 
-Delegates assess evidence; the coordinator owns dispatch. Give them the target,
-request, required evidence, and remaining [budget](../examples/ai-tools.md#invocation-budget).
-Before accepting eligibility:
+Delegates are child AI agents or sessions that the coordinator may start to assess
+evidence, not dispatched GitHub Actions workers. The coordinator owns dispatch.
+Give delegates the target, request, required evidence, and remaining
+[budget](../examples/ai-tools.md#invocation-budget). Before accepting eligibility:
 
 - Read each target's completed assessment: checked head and default-branch
   revisions, sources, full inspection of bodies, discussions and edit/deletion

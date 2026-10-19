@@ -117,6 +117,9 @@ Commit identity does not establish GitHub authentication or permissions.
   changes, applying the [shared improvement loop](../../AGENTS.md#improvement-loop).
   Use the [verified Factory commit identity](#commit-identity); avoid speculative
   edits and empty commits.
+- When feedback asks what durable text means, treat it as a clarity concern:
+  answer and clarify or remove the text in the candidate, unless the explanation
+  shows no change is needed. Explain the edit or why none was needed in the reply.
 - Create or update one PR labeled `triaged` and `factory-issue-NUMBER`, with
   `Fixes #NUMBER`, a change summary, and actual verification results.
 - Answer ordinary comments and review summaries in their main conversation;
