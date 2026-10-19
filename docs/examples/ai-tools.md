@@ -192,6 +192,32 @@ limit; a hung vendor installer or version check waits for the caller's job timeo
 Checkout, App permissions/token creation, Git identity, prompts, and receipt checks
 remain in the owning workflows.
 
+### Nested AI invocations
+
+Start child `scripts/ai.sh` sessions with the installed harness from unchanged
+`FACTORY_ROOT`, keeping the runner, model configuration, and guidance at the
+trusted workflow revision rather than the target candidate.
+
+Set `nested_profile` and `nested_prompt` from the owning guide. Set
+`nested_timeout` to expire at the child deadline within the inherited
+[invocation budget](#invocation-budget). Reserve the 30-second kill grace and
+time for the caller to integrate results, verify outcomes, publish, and report
+between that deadline and `AI_DEADLINE_UTC`. Include both deadlines in the prompt.
+
+```sh
+(
+  cd -- "$FACTORY_ROOT" &&
+    COPILOT_GITHUB_TOKEN="${GITHUB_TOKEN:?built-in model token is required}" \
+    timeout --kill-after=30s "$nested_timeout" \
+    ./scripts/ai.sh --harness "$AI_HARNESS" --profile "$nested_profile" \
+      --prompt "$nested_prompt"
+)
+```
+
+Keep App `GH_TOKEN` unchanged. Bind model access explicitly: shell tools may omit
+the parent's `COPILOT_GITHUB_TOKEN`, and Copilot otherwise prefers `GH_TOKEN` over
+`GITHUB_TOKEN`.
+
 ### Invocation budget
 
 Set `budget` to a whole number of minutes from 1 to 360. The action starts this
