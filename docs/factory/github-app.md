@@ -142,7 +142,7 @@ target explicitly. It revokes its token at job end. Generate a fresh token per j
 ## API evidence credentials
 
 [Diagnostics](workflow-diagnostics.md) and [implementation](issue-implementation.md),
-including their read-only analysis subprocesses, follow these rules from the first
+including their read-only child assessments, follow these rules from the first
 GitHub lookup. Each workflow's guide still owns source eligibility, permissions,
 and allowed mutations.
 
