@@ -1,12 +1,9 @@
 name: Run AI
-description: Install and invoke the selected AI harness with a named model profile
+description: Install and invoke Copilot with a named model profile
 
 inputs:
-  harness:
-    description: AI harness to install and invoke (copilot or opencode)
-    default: copilot
   prompt:
-    description: Task and invocation-specific context for the selected harness
+    description: Task and invocation-specific context for Copilot
     required: true
   profile:
     description: Model profile from .github/model-config.json
@@ -26,15 +23,14 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Install selected AI harness
+    - name: Install Copilot
       shell: bash
       working-directory: ${{ github.action_path }}/../../..
       env:
-        AI_HARNESS: ${{ inputs.harness }}
-        GITHUB_TOKEN: ${{ inputs.harness == 'copilot' && github.token || '' }}
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         for attempt in 1 2 3; do
-          if ./scripts/install-tools.sh "$AI_HARNESS"; then
+          if ./scripts/install-tools.sh; then
             exit 0
           else
             status=$?
@@ -59,7 +55,6 @@ runs:
         GITHUB_TOKEN: ${{ github.token }}
         COPILOT_GITHUB_TOKEN: ${{ github.token }}
         GH_TOKEN: ${{ inputs.gh-token }}
-        AI_HARNESS: ${{ inputs.harness }}
         AI_PROFILE: ${{ inputs.profile }}
         AI_PROMPT: ${{ inputs.prompt }}
         AI_BUDGET_MINUTES: ${{ inputs.budget }}
@@ -79,5 +74,5 @@ runs:
         budget_notice="Invocation budget: $AI_BUDGET_MINUTES minutes; finish by $AI_DEADLINE_UTC."
         printf '%s\n' "$budget_notice"
         timeout --verbose --kill-after=30s "${AI_BUDGET_MINUTES}m" \
-          ./scripts/ai.sh --harness "$AI_HARNESS" --profile "$AI_PROFILE" \
+          ./scripts/ai.sh --profile "$AI_PROFILE" \
             --prompt "$AI_PROMPT"$'\n\n'"$budget_notice"

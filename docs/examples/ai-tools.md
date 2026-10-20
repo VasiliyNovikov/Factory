@@ -1,4 +1,4 @@
-# Install AI tools and run a prompt
+# Install Copilot and run a prompt
 
 This reusable snippet installs standalone Copilot without Node.js/npm and runs a
 prompt. It is not an installed workflow. Direct script calls make one setup
@@ -23,7 +23,7 @@ jobs:
       - name: Install Copilot
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: ./scripts/install-tools.sh copilot
+        run: ./scripts/install-tools.sh
 
       - name: Run a prompt
         timeout-minutes: 5
@@ -31,47 +31,40 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
           ./scripts/ai.sh
-          --harness copilot
           --prompt "Reply with 'Hello from CI'. Do not use any tools."
 ```
 
 [`install-tools.sh`](../../scripts/install-tools.sh) uses the official
 [Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli)
-and [OpenCode](https://opencode.ai/docs/#install) scripts for their latest stable
-standalone binaries:
+installer for its latest stable standalone binary. Run it without arguments:
+`./scripts/install-tools.sh`.
 
-| Command | Installed CLIs |
-| --- | --- |
-| `./scripts/install-tools.sh copilot` | Copilot only |
-| `./scripts/install-tools.sh opencode` | OpenCode only |
-| `./scripts/install-tools.sh` | Both |
-
-The installer downloads and version-checks the selected CLIs and installs missing
+The installer downloads and version-checks Copilot and installs missing
 `jq`. Unsupported arguments fail before installation; download, install, or
 version-check errors fail setup.
 
-Bootstrap scripts run only after a successful, nonempty download.
+The bootstrap script runs only after a successful, nonempty download.
 
-Copilot installs to `$HOME/.local/bin` and OpenCode to `$HOME/.opencode/bin`.
+Copilot installs to `$HOME/.local/bin`.
 The installer updates its `PATH` and Actions' `GITHUB_PATH`, not shell startup
-files. For local use, add the installed directories to your shell (both shown):
+files. For local use, add the installed directory to your shell:
 
 ```sh
-export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-For OpenCode, install `opencode` and invoke `--harness opencode`. Both CLIs use
+The launcher uses
 [model profiles](../../.github/model-config.json). `--profile NAME` defaults to
 `default`; select other configured names explicitly:
 
 ```sh
-./scripts/ai.sh --harness copilot --profile route --prompt "Determine whether the event should start issue implementation."
-./scripts/ai.sh --harness copilot --profile triage --prompt "Assess whether the issue is ready for implementation."
-./scripts/ai.sh --harness copilot --profile implement --prompt "Implement the requested change."
-./scripts/ai.sh --harness opencode --profile review --prompt "Review the current diff."
+./scripts/ai.sh --profile route --prompt "Determine whether the event should start issue implementation."
+./scripts/ai.sh --profile triage --prompt "Assess whether the issue is ready for implementation."
+./scripts/ai.sh --profile implement --prompt "Implement the requested change."
+./scripts/ai.sh --profile review --prompt "Review the current diff."
 ```
 
-Profiles supply `model`, `reasoningEffort`, and Copilot-only `longContext`, without
+Profiles supply `model`, `reasoningEffort`, and `longContext`, without
 schema validation. Unknown profiles fail, with no fallback. PR review, repository
 review, model profile improvement,
 [owner feedback learning](../factory/owner-feedback.md), and
@@ -114,11 +107,10 @@ text are ignored. Omitted profiles use the checked action default. Profile names
 must be literal strings: expressions are not evaluated. This is not general
 workflow-schema validation; model IDs/settings and guide prose are not checked.
 
-An unchanged copy of the launcher runs with fixed profile fixtures and stub
-Copilot/OpenCode CLIs. It checks
-default and named profiles, both Copilot context tiers, Copilot's Memory opt-in
-(never sent to OpenCode), exact argument boundaries and literal multiline prompts,
-nonzero CLI exit status, and rejection of unknown profiles without invoking a CLI.
+An unchanged copy of the launcher runs with fixed profile fixtures and a stub
+Copilot CLI. It checks default and named profiles, both context tiers, Memory
+opt-in, exact argument boundaries and literal multiline prompts, nonzero CLI exit
+status, and rejection of unknown profiles or arguments without invoking Copilot.
 Fixtures keep the checks independent of live model choices; the production
 configuration is not modified.
 
@@ -130,8 +122,8 @@ adherence, approval enforcement, or live GitHub delivery.
 
 ## Installation authentication
 
-The shared action supplies the built-in `github.token` as `GITHUB_TOKEN` only
-when installing Copilot, not OpenCode. Its `gh-token` input remains invocation-only;
+The shared action supplies the built-in `github.token` as `GITHUB_TOKEN` when
+installing Copilot. Its `gh-token` input remains invocation-only;
 neither App token is passed to installation. Direct Copilot-install calls should
 bind the built-in token explicitly, as in the example above.
 
@@ -153,7 +145,7 @@ see [token roles](../factory/github-app.md#token-names-and-identities).
 ## Shared Factory action
 
 Factory workflows use [`.github/actions/ai`](../../.github/actions/ai/action.yml)
-to install and invoke a CLI. The installation step retries failures; AI invocation
+to install and invoke Copilot. The installation step retries failures; AI invocation
 is not retried and runs only after setup succeeds. Settings live in the action and
 [installer](../../scripts/install-tools.sh). Only bootstrap downloads have a time
 limit; a hung vendor installer or version check waits for the caller's job timeout.
@@ -179,9 +171,6 @@ limit; a hung vendor installer or version check waits for the caller's job timeo
   Empty or whitespace-only prompts fail before invocation.
 - Prompts are data, not shell code. Use Actions expressions for runtime values,
   not shell variable expansion in the input.
-- `harness` defaults to `copilot`, as used by current callers. Set
-  `harness: opencode` to select OpenCode. Only that CLI is installed and invoked;
-  other values fail before installation.
 - The caller chooses `gh-token`: built-in for routing and maintenance, reviewer
   App for PR review, Factory App for other workers. Only invocation receives it
   as `GH_TOKEN`;
@@ -194,7 +183,7 @@ remain in the owning workflows.
 
 ### Nested AI invocations
 
-Start child `scripts/ai.sh` sessions with the installed harness from unchanged
+Start child `scripts/ai.sh` sessions with the installed Copilot CLI from unchanged
 `FACTORY_ROOT`, keeping the runner, model configuration, and guidance at the
 trusted workflow revision rather than the target candidate.
 
@@ -209,7 +198,7 @@ between that deadline and `AI_DEADLINE_UTC`. Include both deadlines in the promp
   cd -- "$FACTORY_ROOT" &&
     COPILOT_GITHUB_TOKEN="${GITHUB_TOKEN:?built-in model token is required}" \
     timeout --kill-after=30s "$nested_timeout" \
-    ./scripts/ai.sh --harness "$AI_HARNESS" --profile "$nested_profile" \
+    ./scripts/ai.sh --profile "$nested_profile" \
       --prompt "$nested_prompt"
 )
 ```
@@ -221,7 +210,7 @@ the parent's `COPILOT_GITHUB_TOKEN`, and Copilot otherwise prefers `GH_TOKEN` ov
 ### Invocation budget
 
 Set `budget` to a whole number of minutes from 1 to 360. The action starts this
-budget immediately before invoking the harness, after installation. It exports
+budget immediately before invoking Copilot, after installation. It exports
 `AI_BUDGET_MINUTES` and the absolute `AI_DEADLINE_UTC` (UTC ISO 8601). One short
 budget/deadline notice is shared by the prompt and Actions log; the task and
 subtask rules stay in this guide. Child processes inherit the environment
@@ -243,7 +232,7 @@ finish its report. Direct `scripts/ai.sh` calls do not start a new budget or tim
 
 Factory jobs omit `timeout-minutes`, restoring GitHub's
 [default job limit](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idtimeout-minutes).
-Checkout, token creation, harness installation, and post-invocation receipt checks
+Checkout, token creation, Copilot installation, and post-invocation receipt checks
 are outside the AI budget, but remain subject to the job/runner limits. Any shorter
 enclosing limit still wins. The invocation boundary is inside the composite
 action so installation does not consume the AI budget.

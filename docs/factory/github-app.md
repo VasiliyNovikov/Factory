@@ -113,7 +113,7 @@ invocation credentials using the caller's `gh-token` input:
 `steps.factory-token.outputs.token`, `steps.reviewer-token.outputs.token`, or
 `github.token`. Token creation and Git identity stay in callers.
 The action also supplies the built-in `GITHUB_TOKEN` for
-[Copilot installation](../examples/ai-tools.md#installation-authentication), not OpenCode.
+[Copilot installation](../examples/ai-tools.md#installation-authentication).
 
 For direct App-based script calls, set these variables and keep the Git identity:
 

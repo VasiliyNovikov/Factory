@@ -18,7 +18,6 @@ Replace the basic prompt step with:
     GITHUB_TOKEN: ${{ github.token }}
   run: >-
     ./scripts/ai.sh
-    --harness copilot
     --prompt "Use the GitHub CLI (gh issue create) to create exactly one new issue in repository ${GITHUB_REPOSITORY}
     with the title 'test' and body 'Created by Copilot CLI in CI. Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}'.
     Actually create the issue, then report its URL. If creation fails, report the error."

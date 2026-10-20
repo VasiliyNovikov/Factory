@@ -54,7 +54,7 @@ approval before normal triage; approval neither marks an issue ready nor adopts
 unrelated feedback. This is an AI-owned hold, not a pre-Copilot gate or spending limit.
 
 Each shared AI action call sets its own [invocation budget](docs/examples/ai-tools.md#invocation-budget).
-The harness and its subtasks share that deadline; setup and receipt checks run
+Copilot and its subtasks share that deadline; setup and receipt checks run
 outside it, under GitHub's default job limit.
 
 Factory opts Copilot invocations into native
@@ -205,7 +205,7 @@ built-in token and need no PAT or custom secret. Factory uses
 [GitHub Apps](docs/factory/github-app.md) for downstream events and separate
 author/reviewer identities.
 
-1. [Install AI tools and run a prompt](docs/examples/ai-tools.md)
+1. [Install Copilot and run a prompt](docs/examples/ai-tools.md)
 2. [Create a pull request](docs/examples/create-pull-request.md) - tested successfully.
 3. [Create an issue](docs/examples/create-issue.md) - tested successfully.
 
