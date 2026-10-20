@@ -44,7 +44,7 @@ jobs:
           permission-pull-requests: read
           permission-issues: write
 
-      - name: Analyze workflows with parallel Copilot sessions
+      - name: Analyze workflows with parallel Copilot tasks
         id: diagnostics
         uses: ./factory/.github/actions/ai
         with:
@@ -73,7 +73,7 @@ jobs:
             printf '%s\n' \
               'Analysis is failed/incomplete, not a clean result or a skip.' \
               'A skipped AI step performed no analysis or publication in this attempt.' \
-              'Use any coordinator checkpoints and logs as partial evidence only. Missing coverage, assessment exits, model/delegation binding, and publication disposition remain unknown.' \
+              'Use any coordinator checkpoints and logs as partial evidence only. Missing coverage, assessment task statuses, model/delegation binding, and publication disposition remain unknown.' \
               'This notice cannot reconstruct a lost final report or prove summary/log agreement or process cleanup.' \
               'Before rerunning the original invocation, reconcile findings in all states and earlier attempts; do not blindly replay issue creation.'
           } | tee -a "${GITHUB_STEP_SUMMARY:?summary path is required}"

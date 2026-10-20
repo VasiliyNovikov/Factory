@@ -184,8 +184,9 @@ remain in the owning workflows.
 
 ### Nested AI invocations
 
-Use Copilot's native `task` subagents inside the root CLI running from unchanged
-`FACTORY_ROOT`. The owning guide selects the profile in
+Launch native subagents with Copilot's `task` tool inside the root CLI running
+from unchanged `FACTORY_ROOT`. Choose an agent type whose tools and role can
+complete the assigned assessment. The owning guide selects the profile in
 `FACTORY_ROOT/.github/model-config.json` at `FACTORY_SHA`. For every launch, pass
 that profile's values as explicit task parameters, using background mode so the
 caller can observe its cutoff while children run:

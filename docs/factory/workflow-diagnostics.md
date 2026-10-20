@@ -69,13 +69,8 @@ other than [native Memory](copilot-memory.md), or writes to runner command files
 The task returns findings, evidence, and coverage gaps to the
 coordinator; it must not run the coordinator's publication steps.
 
-Run these tasks in parallel, track each task ID, and collect full output, terminal
-status, and settings evidence outside the checkout. Set child deadlines before
-the shared investigation cutoff, leaving time to collect results. These deadlines
-are advisory, not independently armed process timeouts. At the cutoff, request
-unfinished tasks to stop and consolidate without waiting for late work. Report
-unfinished or unverified termination as coverage gaps, not successful cleanup;
-the root invocation timeout remains the outer bound.
+Run these tasks in parallel under the shared rule, with child deadlines before
+the shared investigation cutoff.
 
 Verify coordinator settings from `session.start` and each task's settings from
 the agent-correlated runtime evidence described in the shared rule. Inspect the

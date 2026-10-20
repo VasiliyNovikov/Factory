@@ -189,7 +189,7 @@ the independent PR-review worker.
   or style-only findings. Optional checks use the [shared safeguards](review-checks.md).
 - Apply the [shared improvement loop](../../AGENTS.md#improvement-loop) and
   [simplicity criteria](pr-review.md#simplicity) to the candidate and recommendations.
-- Return findings to the implementer in the CLI response: reviewed SHAs and
+- Return findings to the implementer in the task result: reviewed SHAs and
   scope, actionable findings with paths/lines and impact, checks performed, and
   coverage gaps or blockers. Explicitly distinguish a complete review with no
   findings from an incomplete review. Finish the assessment before returning;
