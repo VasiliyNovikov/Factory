@@ -58,8 +58,7 @@ set -euo pipefail
 printf '%s\0' "${0##*/}" "$@" >> "$AI_TEST_ARGS"
 exit "$AI_TEST_EXIT"
 SH
-cp -- "$temp_dir/bin/copilot" "$temp_dir/bin/opencode"
-chmod +x "$temp_dir/bin/copilot" "$temp_dir/bin/opencode"
+chmod +x "$temp_dir/bin/copilot"
 
 prompt=$'  "double quotes" and \'single quotes\'\n$HOME $(printf expanded) `printf expanded`; * ? [abc] | & < > \\\n--literal-option\n\n'
 
@@ -76,7 +75,6 @@ run_launcher() {
   actual_status=0
   PATH="$temp_dir/bin:$PATH" \
     AI_TEST_ARGS="$temp_dir/actual" AI_TEST_EXIT="$cli_status" \
-    OPENCODE_CONFIG_CONTENT='{}' \
     bash "$temp_dir/scripts/ai.sh" --prompt "$prompt" "$@" \
       > "$temp_dir/output" 2>&1 || actual_status=$?
 }
@@ -98,41 +96,34 @@ assert_args() {
 }
 
 cd -- "$temp_dir"
-for harness in copilot opencode; do
-  case "$harness" in
-    copilot)
-      default_args=(copilot --model fixture-default --reasoning-effort medium
-        --context default --enable-memory --prompt "$prompt" --yolo)
-      extended_args=(copilot --model fixture-extended --reasoning-effort high
-        --context long_context --enable-memory --prompt "$prompt" --yolo)
-      ;;
-    opencode)
-      default_args=(opencode run --model github-copilot/fixture-default
-        --variant medium --auto -- "$prompt")
-      extended_args=(opencode run --model github-copilot/fixture-extended
-        --variant high --auto -- "$prompt")
-      ;;
-  esac
+default_args=(copilot --model fixture-default --reasoning-effort medium
+  --context default --enable-memory --prompt "$prompt" --yolo)
+extended_args=(copilot --model fixture-extended --reasoning-effort high
+  --context long_context --enable-memory --prompt "$prompt" --yolo)
 
-  case_name="$harness default profile and literal prompt"
-  run_launcher 0 --harness "$harness"
-  assert_status 0
-  assert_args "${default_args[@]}"
+case_name='copilot default profile and literal prompt'
+run_launcher 0
+assert_status 0
+assert_args "${default_args[@]}"
 
-  case_name="$harness selected profile and literal prompt"
-  run_launcher 0 --harness "$harness" --profile extended
-  assert_status 0
-  assert_args "${extended_args[@]}"
+case_name='copilot selected profile and literal prompt'
+run_launcher 0 --profile extended
+assert_status 0
+assert_args "${extended_args[@]}"
 
-  case_name="$harness CLI failure"
-  run_launcher 37 --harness "$harness" --profile extended
-  assert_status 37
-  assert_args "${extended_args[@]}"
+case_name='copilot CLI failure'
+run_launcher 37 --profile extended
+assert_status 37
+assert_args "${extended_args[@]}"
 
-  case_name="$harness unknown profile"
-  run_launcher 0 --harness "$harness" --profile missing
-  (( actual_status != 0 )) || fail 'unknown profile succeeded'
-  [[ ! -s "$temp_dir/actual" ]] || fail 'unknown profile invoked a CLI'
+case_name='copilot unknown profile'
+run_launcher 0 --profile missing
+(( actual_status != 0 )) || fail 'unknown profile succeeded'
+[[ ! -s "$temp_dir/actual" ]] || fail 'unknown profile invoked a CLI'
 
-  printf 'PASS: %s profiles, literal prompt, exit status, and unknown profile\n' "$harness"
-done
+case_name='copilot unknown argument'
+run_launcher 0 --unknown
+(( actual_status != 0 )) || fail 'unknown argument succeeded'
+[[ ! -s "$temp_dir/actual" ]] || fail 'unknown argument invoked a CLI'
+
+printf 'PASS: copilot profiles, literal prompt, exit status, and invalid arguments\n'

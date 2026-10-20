@@ -28,7 +28,6 @@ Replace the basic prompt step with:
     GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
   run: >-
     ./scripts/ai.sh
-    --harness copilot
     --prompt "Create a test pull request in repository ${GITHUB_REPOSITORY}.
     Fetch origin master and create branch ci/test-pr-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT} from origin/master.
     Create or update ci-pr-test.md with a short note and this run URL: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}.

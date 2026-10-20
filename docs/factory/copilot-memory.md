@@ -8,8 +8,8 @@ cache, saved CLI session, or separate snippet library.
 
 The [shared launcher](../../scripts/ai.sh) passes `--enable-memory` for every
 Copilot profile: non-interactive `--prompt` runs otherwise disable Memory.
-OpenCode receives no Copilot-specific flag. This invocation opt-in does not grant
-account access or override administrator policy.
+This invocation opt-in does not grant account access or override administrator
+policy.
 
 [Copilot Memory](https://docs.github.com/en/copilot/concepts/agents/copilot-memory)
 is in public preview. Availability depends on the initiating user's
