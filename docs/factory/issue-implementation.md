@@ -143,17 +143,18 @@ maintenance still applies. The main worker stays on `implement`; independent
   the previous published head when applicable, issue requirements, outstanding
   feedback, and validation results. Review the actual local candidate diff, not
   the old remote PR alone; keep it unchanged while the reviewer runs.
-- Launch internal review with `nested_profile=review` using the
+- Launch a native internal-review task bound to the `review` profile using the
   [shared nested launch rule](../examples/ai-tools.md#nested-ai-invocations).
   Do not hard-code a model or use a default-profile subagent.
-- Set `nested_prompt` to the trusted
+- Give the task the trusted
   [internal reviewer contract](#internal-reviewer-contract) plus the context above
-  and the original candidate checkout path. The launch directory supplies tools
+  and the original candidate checkout path. The root's directory supplies tools
   and guidance, not the review target. Reserve time for fixes, checks, publication,
-  and reporting.
-- Read the returned findings and exit status; preserve the output outside the
-  checkouts. A successful exit without a complete, correctly scoped result is not
-  a clean review.
+  and reporting; the child deadline is advisory under the shared root timeout.
+- Read the returned findings, terminal task status, and verified runtime settings;
+  preserve the output outside the checkouts. Successful task completion without
+  a complete, correctly scoped result and verified profile binding is not a clean
+  review.
   The implementer owns fixes and reruns relevant validation.
   Obtain review of subsequent changes so the final candidate is covered; reuse
   unchanged coverage rather than repeating the entire review unnecessarily.
@@ -188,7 +189,7 @@ the independent PR-review worker.
   or style-only findings. Optional checks use the [shared safeguards](review-checks.md).
 - Apply the [shared improvement loop](../../AGENTS.md#improvement-loop) and
   [simplicity criteria](pr-review.md#simplicity) to the candidate and recommendations.
-- Return findings to the implementer in the CLI response: reviewed SHAs and
+- Return findings to the implementer in the task result: reviewed SHAs and
   scope, actionable findings with paths/lines and impact, checks performed, and
   coverage gaps or blockers. Explicitly distinguish a complete review with no
   findings from an incomplete review. Finish the assessment before returning;
