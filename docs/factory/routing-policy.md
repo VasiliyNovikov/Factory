@@ -115,10 +115,11 @@ local-only stage, but must not be inferred from the current directory.
 
 ### Delegated assessments
 
-Delegates are child AI agents or sessions that the coordinator may start to assess
+Delegates are native Copilot subagents that the coordinator may start to assess
 evidence, not dispatched GitHub Actions workers. The coordinator owns dispatch.
-Give delegates the target, request, required evidence, and remaining
-[budget](../examples/ai-tools.md#invocation-budget). Before accepting eligibility:
+Use the [shared nested launch rule](../examples/ai-tools.md#nested-ai-invocations)
+with the coordinator's workflow profile (`route` for both router and maintenance).
+Before accepting eligibility:
 
 - Read each target's completed assessment: checked head and default-branch
   revisions, sources, full inspection of bodies, discussions and edit/deletion
