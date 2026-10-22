@@ -8,7 +8,7 @@ on:
   issue_comment:
     types: [created, edited]
   pull_request_target:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
   # This event executes PR-revision router code before merge. See docs/factory/factory-router.md.
   pull_request_review:
     types: [submitted]
@@ -21,7 +21,8 @@ jobs:
   route:
     if: >-
       (github.event_name != 'issue_comment' ||
-        github.event.comment.user.login != 'factory-worker-bot[bot]') &&
+        github.event.comment.user.login != 'factory-worker-bot[bot]' ||
+        github.event.issue.pull_request) &&
       (github.event_name != 'pull_request_review' ||
         github.event.review.user.login != 'factory-worker-bot[bot]') &&
       (github.event_name != 'pull_request_review' ||

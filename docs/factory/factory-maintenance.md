@@ -37,8 +37,9 @@ and keep the executing Factory checkout unchanged.
     triage, or has an incomplete ready-comment/tracking-label handoff.
   - An eligible ready issue has no active/completed implementation, or verified
     partial work needs recovery rather than another response to an unchanged hold.
-  - An eligible PR lacks a successful current-head review, including after a
-    failed/skipped assessment, or has an outstanding reassessment request.
+  - An eligible PR lacks a successful assessment covering its current head and
+    [review context](pr-review.md#review-coverage), including after a failed/skipped
+    assessment or a verified same-head correction without an explicit review request.
   - An eligible Factory PR has outstanding implementation feedback, applicable
     current-revision CI failures, or lacks the current default-branch revision.
 - Apply shared eligibility, feedback-source verification, human holds, and duplicate
@@ -96,7 +97,12 @@ policy and entry-point wiring, not a wording-only test suite:
 | Ready comment and matching tracking label, no `triaged`, interrupted triage, no active equivalent | Dispatch triage to reassess and finish the handoff; do not label directly. |
 | Ready issue, no branch/PR/child-owned work or active implementation | Dispatch issue-only implementation. |
 | Review posted but source assessment failed its receipt check; retry gate permits recovery | Dispatch a fresh current-head review if still needed; do not forward its findings. |
-| Current successful review and no new reassessment request | No review dispatch. |
+| Current successful review covers the current code and review-relevant context | No review dispatch, including repeated reports of an already-assessed correction. |
+| Successful `COMMENTED` review, then a verified relevant description correction at the same head | Dispatch review if no equivalent work is active; an explicit human request is unnecessary. |
+| Factory PR reply demonstrates a finding was already satisfied; that evidence has not been reassessed | Verify the evidence and dispatch review, not another implementation or an approval. |
+| Description edit and Factory reply describe the same correction; an equivalent review is active | No duplicate dispatch; head equality alone is insufficient to establish equivalence. |
+| Cosmetic metadata edit or routine Factory report with no uncovered review context | No review dispatch. |
+| Same-head follow-up on a closed, draft, or fork PR, or only unapproved external scope | No review dispatch; preserve eligibility and owner-decision holds. |
 | Matching current assignment queued/running under the ordinary router | No equivalent recovery dispatch. |
 | Recovery failed/timed out/cancelled; same worker, target, revisions, and request in a later scheduled/manual sweep | Record the blocker and failed run links; no equivalent dispatch. |
 | After failed recovery, relevant revision or actionable feedback changes, or a human explicitly requests retry | Reassess eligibility, partial outcomes, and active work before dispatching remaining work. |

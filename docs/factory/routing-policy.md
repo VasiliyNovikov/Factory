@@ -48,9 +48,11 @@ local-only stage, but must not be inferred from the current directory.
 ### PR review
 
 - Select [review](pr-review.md) for an open, non-draft, same-repository PR at its
-  current head when it lacks a successful assessment or needs reassessment after
-  a new review request or clarification.
-- Apply the worker's [successful-assessment coverage rule](pr-review.md#skip-and-report).
+  current head when it lacks a successful assessment covering the current
+  [review context](pr-review.md#review-coverage). This includes verified same-head
+  corrections or already-addressed findings, without requiring a new commit or
+  explicit human review request.
+- Apply that coverage rule to both event routing and periodic recovery.
   A review object or green workflow alone does not establish coverage.
 - Prior approval does not cover a new head. Only the review worker may choose
   [scoped reassessment](pr-review.md#clean-default-branch-merges).
@@ -74,8 +76,10 @@ local-only stage, but must not be inferred from the current directory.
   does not establish current coverage. Newly actionable changes need routing;
   cosmetic edits or already-covered requests do not.
 - Factory-authored results are evidence of progress or partial work, not new
-  implementation requests. Already-handled feedback and completed work need no
-  dispatch; verify outcomes rather than inferring them from a successful CLI exit.
+  implementation requests. They can establish uncovered review context under the
+  [review coverage rule](pr-review.md#review-coverage). Already-covered results
+  need no dispatch; verify outcomes rather than inferring them from a successful
+  CLI exit.
 - Exclude closed targets and fork PRs; preserve each worker's draft and ownership
   boundaries. An ineligible target does not authorize a replacement target.
 - Do not dispatch ambiguous targets. Stale requests need no dispatch when no
@@ -166,6 +170,9 @@ Before accepting eligibility:
   current GitHub outcomes across ordinary routing, sweeps, and reruns:
   - Match worker, target, revision, and outstanding request/source; include the
     default-branch revision for base updates and review ID/source attempt for findings.
+    For same-head review follow-up, match the relevant correction or finding
+    disposition too: a metadata edit and its result reply can describe the same
+    work. A run for that head alone does not establish context coverage.
   - Paginate relevant run history. Include queued, pending, requested, waiting,
     and running jobs, not just completed runs.
   - Run titles help locate assignments but do not prove feedback coverage or
