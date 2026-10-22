@@ -34,7 +34,7 @@ synthetic probes, and required dependency installs.
 
 ## Review coverage
 
-Coverage includes the code and review-relevant context, not just the head SHA.
+Coverage includes code and review-relevant context.
 
 - Verify prior same-PR Factory coverage against a successful, non-skipped
   default-branch `pr-review.yml` assessment **and receipt**: author, full SHA/marker,
@@ -43,26 +43,19 @@ Coverage includes the code and review-relevant context, not just the head SHA.
   workflow/attempt/job evidence, and [safe logs](actions-logs.md) when needed.
   Approval or API `commit_id` alone is insufficient. Unverifiable coverage
   requires full review; older coverage never skips a new head.
-- Reassess at the same head when an authorized request, clarification, or verified
-  review-relevant metadata/discussion change is not covered. This includes
-  corrected PR-description evidence and evidence that a finding was already
-  satisfied, even without a new commit or explicit human review request.
-  A successful `COMMENTED` assessment covers what it inspected, not a later
-  correction of its findings.
-- Refresh the description, relevant source, full related discussion, and
-  edit/deletion provenance; independently assess the findings against that
-  context. An implementer's success report or resolved thread is neither review
-  coverage nor approval. Only a complete clean assessment may approve under the
-  [outcome contract](#review-outcome); remaining findings still need `COMMENT`.
-- Compare the changed context with prior verified assessments and active work.
-  Cosmetic edits, routine progress/base-maintenance reports, and repeated reports
-  of an already-assessed correction do not invalidate coverage. Missing approval
-  alone is not a reason to repeat an unchanged `COMMENTED` assessment.
-- Recheck context alongside head and eligibility before skipping or publishing;
-  reconcile relevant changes that arrived during review. In the review and
-  summary, identify the assessed correction/request and finding disposition with
-  source links and edit times where applicable, so later events and sweeps can
-  verify coverage without a new marker or acknowledgement protocol.
+- Reassess uncovered authorized requests, clarifications, or verified context
+  changes, even without a new commit or human review request. Examples include
+  PR-description corrections and evidence that a finding was already satisfied.
+  Refresh relevant source, description, full related discussion, and edit/deletion
+  provenance; independently assess findings under the [outcome contract](#review-outcome).
+  Implementer reports and resolved threads are neither coverage nor approval.
+- Compare with verified assessments and active work. Cosmetic edits, routine
+  progress/base-maintenance reports, and already-assessed corrections do not
+  invalidate coverage. Missing approval alone does not justify repeating an
+  unchanged `COMMENTED` assessment.
+- Recheck context, head, and eligibility before skipping or publishing; reconcile
+  intervening changes. In the review and summary, record the request/correction
+  and finding disposition with source links and applicable edit times.
 
 ## Clean default-branch merges
 
