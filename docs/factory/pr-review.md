@@ -17,7 +17,7 @@ target PR tree.
   PR from `TARGET_REPOSITORY` at the expected target `PR_HEAD_SHA`.
 - Read changes, context, full discussions, reviews, threads, and edit/deletion
   histories under the [pagination rules](../../AGENTS.md#github-cli-pagination).
-  New requests can require reassessment at the same head.
+  Apply [review coverage](#review-coverage) even when the head is unchanged.
 - Apply [participant approval](participant-approval.md) to the requested scope and
   each reassessment request. Unapproved external feedback is context, not a reason
   to review; an eligible PR or unrelated trusted comment does not adopt it.
@@ -32,13 +32,45 @@ Run useful checks at exactly `PR_HEAD_SHA` under the
 [shared safeguards](review-checks.md). They apply to PR code, copied snippets,
 synthetic probes, and required dependency installs.
 
+## Review coverage
+
+Coverage includes the code and review-relevant context, not just the head SHA.
+
+- Verify prior same-PR Factory coverage against a successful, non-skipped
+  default-branch `pr-review.yml` assessment **and receipt**: author, full SHA/marker,
+  source PR/head/marker bindings, submission timing, unchanged SHA/marker
+  provenance, and inherited coverage. Use reviewer-App `GH_TOKEN`, exact
+  workflow/attempt/job evidence, and [safe logs](actions-logs.md) when needed.
+  Approval or API `commit_id` alone is insufficient. Unverifiable coverage
+  requires full review; older coverage never skips a new head.
+- Reassess at the same head when an authorized request, clarification, or verified
+  review-relevant metadata/discussion change is not covered. This includes
+  corrected PR-description evidence and evidence that a finding was already
+  satisfied, even without a new commit or explicit human review request.
+  A successful `COMMENTED` assessment covers what it inspected, not a later
+  correction of its findings.
+- Refresh the description, relevant source, full related discussion, and
+  edit/deletion provenance; independently assess the findings against that
+  context. An implementer's success report or resolved thread is neither review
+  coverage nor approval. Only a complete clean assessment may approve under the
+  [outcome contract](#review-outcome); remaining findings still need `COMMENT`.
+- Compare the changed context with prior verified assessments and active work.
+  Cosmetic edits, routine progress/base-maintenance reports, and repeated reports
+  of an already-assessed correction do not invalidate coverage. Missing approval
+  alone is not a reason to repeat an unchanged `COMMENTED` assessment.
+- Recheck context alongside head and eligibility before skipping or publishing;
+  reconcile relevant changes that arrived during review. In the review and
+  summary, identify the assessed correction/request and finding disposition with
+  source links and edit times where applicable, so later events and sweeps can
+  verify coverage without a new marker or acknowledgement protocol.
+
 ## Clean default-branch merges
 
 For **scoped merge-only reassessment**, review incoming changes' interactions with
 the PR, including cross-file dependencies; reuse unaffected checks. Require all:
 
 - The PR targets and includes the latest default branch; an earlier head remains
-  approved with [verified coverage](#skip-and-report).
+  approved with [verified coverage](#review-coverage).
 - Every commit after that approval on the PR's first-parent path has exactly two
   parents: the previous PR head, then a commit on the default branch's first-parent
   history. Reproduce each with `git merge-tree --write-tree <parent1> <parent2>`:
@@ -142,17 +174,10 @@ does not erase an earlier failed attempt.
   publication. Keep the Factory revision report separate; run-attempt links
   belong to the Factory host.
 - Report incomplete reviews and API failures accurately; API errors are not skips.
-- Skip stale/covered assignments, or approval holds with no authorized review
-  work remaining, only before any POST attempt or publication read failure:
+- Skip stale or [covered](#review-coverage) assignments, or approval holds with no
+  authorized review work remaining, only before any POST attempt or publication read failure:
   write `skipped=true` to `GITHUB_OUTPUT`, explain in the summary, and make no
   GitHub changes. Do not submit a review merely to request owner approval.
-- Verify prior same-PR Factory coverage against a successful, non-skipped
-  default-branch `pr-review.yml` assessment **and receipt**: author, full SHA/marker,
-  source PR/head/marker bindings, submission timing, unchanged SHA/marker
-  provenance, and inherited coverage. Use reviewer-App `GH_TOKEN`, exact
-  workflow/attempt/job evidence, and [safe logs](actions-logs.md) when needed.
-  Approval or API `commit_id` alone is insufficient. Unverifiable coverage
-  requires full review; older coverage never skips a new head.
 - Eligible replacements/reruns reassess current code/discussion, retain applicable
   findings, and use their own marker. After an attempt, verify and report partial
   outcomes, not skips. Retry reporting or output formatting, not accepted submissions.

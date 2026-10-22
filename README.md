@@ -36,6 +36,8 @@ flowchart TD
     children -->|New issue| router
     implementation -->|Blocked or already satisfied| reply
     reply -->|Human or bot follow-up| feedback
+    implementation -->|Verified same-head review correction| reviewContext["PR metadata edit or result reply"]
+    reviewContext --> router
     pr -->|PR events| router
     router -->|Non-draft, same-repository PR| review["Review"]
     review -->|Findings| feedback
@@ -73,6 +75,11 @@ maintenance.
 Independent PR review still runs. Verified clean base-merge heads can reuse prior
 coverage for a [scoped reassessment](docs/factory/pr-review.md#clean-default-branch-merges),
 with a fresh review of the new head.
+Review-relevant PR metadata edits and Factory PR replies also reach the router:
+verified corrections or already-addressed findings can need
+[fresh review at the same head](docs/factory/pr-review.md#review-coverage).
+Cosmetic edits and already-covered or equivalent active work cause no redispatch;
+only the independent reviewer decides approval.
 See [implementation guidance](docs/factory/issue-implementation.md) for eligibility,
 parent/child ownership, split recovery, and verification.
 
@@ -99,7 +106,7 @@ flowchart TD
     discover -->|Incomplete discovery| incomplete["Report incomplete coverage / failures"]
     policy -->|Missing or failed evidence| incomplete
     policy -->|No action or blocked| noAction["Report no-action / blocked reasons"]
-    policy -->|Eligible; recheck live state| dispatch["Dispatch only the next needed stage"]
+    policy -->|Eligible; recheck live state| dispatch["Dispatch only the next needed stage<br/>Including uncovered same-head review context"]
     dispatch --> worker["Existing worker<br/>Triage, implementation or PR review"]
     dispatch -->|Verify acceptance / run evidence| report["Report dispatch evidence<br/>Acceptance is not completed recovery"]
     dispatch -->|Uncertain or failed| incomplete

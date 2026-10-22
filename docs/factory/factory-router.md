@@ -15,6 +15,8 @@ This guide owns event selection, push fan-out, and event-specific provenance.
 - A PR is opened, reopened, marked ready, or receives new commits, including
   clean default-branch merges.
 - A PR conversation comment requests review or gives new context for reassessment.
+- A PR metadata edit or Factory PR result comment exposes
+  [uncovered review context](pr-review.md#review-coverage), even at an unchanged head.
 
 ### [Issue / PR implementation](issue-implementation.md)
 
@@ -52,8 +54,9 @@ is not a trigger, so base-update discovery belongs in coordinators, not in each 
 The job condition makes the noted payload-only skips zero-step jobs, before
 checkout or AI setup. Copilot decides the rest.
 
-- `factory-worker-bot[bot]` conversation comments (created or edited) and submitted
-  reviews (job-filtered by author, including when someone else edits the comment).
+- `factory-worker-bot[bot]` issue conversation comments (created or edited) and
+  submitted reviews (job-filtered by author, including when someone else edits the
+  comment). Its PR conversation comments reach Copilot for review-coverage checks.
 - Approvals (job-filtered for submitted reviews, regardless of author).
 - Non-`triaged` issue-label events (job-filtered).
 - Fork PR lifecycle events and submitted reviews (job-filtered); fork detection
@@ -71,10 +74,16 @@ Ignoring a completion event does not prevent periodic recovery when the
 ## Feedback and event handling
 
 - Created or edited issue/PR conversation comments and submitted reviews trigger routing.
+- PR metadata edits arrive through `pull_request_target: edited`. Assess their
+  review relevance under the shared policy; cosmetic or already-covered edits
+  need no worker.
+- Factory PR replies are evidence for review follow-up, not new implementation
+  requests. Verify the reported correction or already-addressed finding against
+  live state; do not dispatch just because a result comment appeared.
 - Standalone inline comments and replies arrive as empty-body `COMMENTED`
   reviews through the existing `pull_request_review: submitted` trigger.
-- Edits to inline review comments, review bodies, and issue/PR bodies remain
-  unsupported as routing triggers.
+- Edits to inline review comments, review bodies, and issue bodies remain
+  unsupported as routing triggers; maintenance can discover uncovered context.
 - Reviewer-App submissions use `pull_request_review: submitted`, not PR-review
   `workflow_run` events, to avoid duplicate delivery.
 - Apply [shared feedback verification](routing-policy.md#feedback-verification)
@@ -92,6 +101,8 @@ these event-specific `source` fields:
 
 - Conversation-comment edits use `event: "issue_comment"`, `action: "edited"`,
   and the original `comment_id`, without new worker inputs.
+- PR metadata edits use `event: "pull_request_target"`, `action: "edited"`, and
+  `pr_number`; preserve the relevant changed-context evidence in the report.
 - Push maintenance includes `event: "push"`, `ref`, and `after` in `source` for
   provenance, not as live revision checks.
 
@@ -114,7 +125,7 @@ these event-specific `source` fields:
 - Static checks do not establish AI adherence or end-to-end event delivery.
   A PR cannot exercise its changed default-branch push or
   [`issue_comment`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issue_comment)
-  triggers, or its
+  triggers, its `pull_request_target: edited` handling, or its
   [`workflow_run`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_run)
   filter.
 - Participant approval is AI-owned, not a workflow `if` guard. External events can

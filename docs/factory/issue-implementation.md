@@ -126,6 +126,11 @@ Commit identity does not establish GitHub authentication or permissions.
   they are not resolvable threads.
 - Answer absorbed feedback where it was raised and in the triggering conversation.
   Verify each reply; a current PR can still have feedback from superseded jobs.
+- When review feedback is corrected or verified already addressed without a new
+  commit, use the normal result reply in that PR to link the finding, checked head,
+  and correction/evidence needing [independent reassessment](pr-review.md#review-coverage).
+  This also applies when the triggering conversation is the issue. Do not make an
+  empty commit or duplicate an equivalent reply; the result is not an approval.
 
 ## Internal self-review
 
