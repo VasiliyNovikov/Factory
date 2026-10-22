@@ -25,6 +25,8 @@
 - Every AI session has a time budget. Follow the shared
   [invocation-budget guidance](docs/examples/ai-tools.md#invocation-budget),
   including its subtask, verification, and reporting requirements.
+  When delegating, also follow the
+  [shared nested launch rule](docs/examples/ai-tools.md#nested-ai-invocations).
 - Do not expand already-clear requests; add only missing context or decisions
   needed to act and verify. Keep detailed requirements in the owning guidance
   document and link to it instead of repeating them; prompts supply only the task
