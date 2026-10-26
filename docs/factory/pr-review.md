@@ -109,8 +109,10 @@ work together. [Implementation owns decomposition and split recovery](issue-impl
 reviewers do not close or replace PRs.
 
 Findings need a concrete simpler alternative, practical benefit, and preserved
-requirements. Never sacrifice correctness, clarity, maintainability, or safety
-for fewer lines. An already-simple, concise, cohesive change needs no finding;
+requirements. Report materially shorter or plainer alternatives to new or changed
+prose that meet these criteria; they are actionable, not style-only findings.
+Never sacrifice correctness, clarity, maintainability, or safety for fewer lines.
+An already-simple, concise, cohesive change needs no finding;
 avoid speculative/style-only findings and unrelated refactoring.
 
 ## Publication
