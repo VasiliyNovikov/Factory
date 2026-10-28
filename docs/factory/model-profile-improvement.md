@@ -32,6 +32,13 @@ active work.
   [Anthropic effort](https://platform.claude.com/docs/en/build-with-claude/effort).
   Cite URLs, retrieval dates, and publication/update dates when available.
   Distinguish provider advice, measured results, and inference.
+- For optional timing evidence, follow the
+  [shared invocation-budget boundary](../examples/ai-tools.md#invocation-budget).
+  Run-metadata intervals such as `updated_at - run_started_at` are run-level
+  proxies, not job or AI-invocation durations. Compare only verified invocation
+  elapsed time with the AI budget from that run attempt's executed contract.
+  Without that evidence, report AI utilization and model-related deadline
+  pressure as unverified, even when presented as inference.
 - Assess **every workflow and AI invocation** individually, including implicit
   `default`, shared-profile consumers, and this evaluator's bootstrap `review`
   profile. Record current settings, deadlines, and owning guidance; explicitly
