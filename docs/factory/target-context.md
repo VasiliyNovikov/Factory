@@ -9,9 +9,8 @@ There is no enrollment, forwarding, or external execution yet.
 - Dispatch workers in the Factory host on its current default branch, supplying
   `target_repository` as a canonical `owner/repository` name. Omitted or empty
   inputs retain the existing host-local behavior.
-- A PR-revision router can run before the default-branch workers are updated.
-  Follow the shared [deployed-schema compatibility rule](routing-policy.md#dispatch-contract):
-  omit the new input only for legacy host-local workers, and record that path.
+- Follow the shared [dispatch contract](routing-policy.md#dispatch-contract)
+  for deployed worker inputs.
 - The [context action](../../.github/actions/target-context/action.yml) rejects
   any other target before App-token creation, target checkout, or AI setup.
   It also verifies the Factory checkout against `github.workflow_sha`.
