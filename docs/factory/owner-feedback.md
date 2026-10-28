@@ -19,9 +19,8 @@ the shared [AI action](../examples/ai-tools.md#shared-factory-action) with `revi
   issue/PR bodies, discussions, submitted reviews, and inline comments/replies,
   including others' targets and older/closed/merged work. Search results and parent
   timestamps alone cannot prove coverage.
-- Discover owner-authored material and verified owner edits regardless of original
-  author; do not limit edit-history discovery to owner-authored items. Attribute
-  only the owner's verified contribution, not surrounding text.
+- Include verified owner edits regardless of original author; attribute only the
+  owner's contribution, not surrounding text.
 - Read full relevant discussions, threads, and edit/deletion histories, including
   older context and later replies, under the [pagination rules](../../AGENTS.md#github-cli-pagination).
 - Read current remote default guidance and linked decisions/outcomes in
@@ -63,8 +62,7 @@ Include:
 - Host run-attempt URL, trusted `FACTORY_REPOSITORY@FACTORY_SHA`, target repository
   and evaluated default SHA, owner ID, UTC window, discovery methods, terminal
   pages, counts by surface, coverage of both owner-authored material and owner
-  edits to others' content, and unavailable history. Unavailable edit provenance or
-  other required history means partial coverage.
+  edits to others' content, and unavailable history.
 - Patterns, supporting/contrary feedback, guidance assessment, provider evidence
   and limits, existing work, checks, and publication failures/uncertain outcomes.
 
