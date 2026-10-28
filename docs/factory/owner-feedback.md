@@ -19,6 +19,8 @@ the shared [AI action](../examples/ai-tools.md#shared-factory-action) with `revi
   issue/PR bodies, discussions, submitted reviews, and inline comments/replies,
   including others' targets and older/closed/merged work. Search results and parent
   timestamps alone cannot prove coverage.
+- Include verified owner edits regardless of original author; attribute only the
+  owner's contribution, not surrounding text.
 - Read full relevant discussions, threads, and edit/deletion histories, including
   older context and later replies, under the [pagination rules](../../AGENTS.md#github-cli-pagination).
 - Read current remote default guidance and linked decisions/outcomes in
@@ -26,8 +28,8 @@ the shared [AI action](../examples/ai-tools.md#shared-factory-action) with `revi
   policy in `FACTORY_ROOT`; read target project instructions at the evaluated revision.
 - Require **two independent owner examples** and a durable, still-actionable gap.
   Check contrary evidence/resolutions; exclude one-off, superseded, or addressed
-  requests. Repeated replies on one request, quotations, or edits are not independent.
-  Do not duplicate already-clear rules.
+  requests. Repeated replies and edited versions of one request count as one source;
+  quotations are not independent examples. Do not duplicate already-clear rules.
 - Follow [provider-research guidance](../../AGENTS.md#ai-led-work), citing retrieval
   and available publication/update dates.
 
@@ -59,7 +61,8 @@ Include:
   coverage, or incomplete/partial; include verified issues and outstanding work.
 - Host run-attempt URL, trusted `FACTORY_REPOSITORY@FACTORY_SHA`, target repository
   and evaluated default SHA, owner ID, UTC window, discovery methods, terminal
-  pages, counts by surface, and unavailable history.
+  pages, counts by surface, coverage of both owner-authored material and owner
+  edits to others' content, and unavailable history.
 - Patterns, supporting/contrary feedback, guidance assessment, provider evidence
   and limits, existing work, checks, and publication failures/uncertain outcomes.
 
