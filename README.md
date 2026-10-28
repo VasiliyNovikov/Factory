@@ -180,9 +180,10 @@ per-workflow decisions, and dated evidence.
 
 [Owner feedback learning](docs/factory/owner-feedback.md) runs weekly on
 **Monday at 00:17 UTC** or manually on the default branch. It reviews the last
-**90 days** of the owner's issue/PR discussions and reviews, including inline
-feedback on older or closed work, for recurring preferences that current
-instructions, docs, or prompts do not yet address.
+**90 days** of owner-authored feedback and verified owner edits to others' content
+in issue/PR discussions and reviews, including inline feedback on older or closed
+work, for recurring preferences that current instructions, docs, or prompts do not
+yet address.
 
 ```mermaid
 flowchart TD
