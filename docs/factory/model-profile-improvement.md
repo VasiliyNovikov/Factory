@@ -64,19 +64,13 @@ active work.
 
 ## Publish and report
 
-- Before each finding, reconcile issues and PRs in **all states**, including prior
-  attempts and Factory findings. Read and paginate relevant discussions and resolutions;
-  link covered work instead of duplicating it. Closed work does not permit
-  duplication; explain materially new evidence for rejected choices.
-- Create one **unlabeled** issue in `TARGET_REPOSITORY` as `FACTORY_LOGIN` per
+- Follow the [shared findings-publication rules](../../AGENTS.md#github-issue-creation).
+- Create one issue in `TARGET_REPOSITORY` as `FACTORY_LOGIN` per
   cohesive improvement, keeping coupled profile/caller changes together. Include
   scope, context, before/after settings, affected workflows and rationale, source
   permalinks at the evaluated SHA, dated evidence, compatibility checks and limits,
   acceptance criteria, dependencies (or "none"), and the run-attempt URL.
-- Follow the [shared issue-creation checks](../../AGENTS.md#github-issue-creation).
-  Fresh API reads must also verify initially empty labels; leave later triage
-  updates alone.
-- Do not implement findings, create native children, or label issues.
+- Do not implement findings or create native children.
   [Triage](issue-triage.md) and [implementation](issue-implementation.md) handle
   findings; the router ignores this workflow's completion.
 

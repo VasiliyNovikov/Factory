@@ -41,26 +41,20 @@ run.
 
 ## Findings and duplicate prevention
 
-- Before publishing each finding, check issues and PRs in **all states**, including prior
-  attempts and diagnostics. Handle pagination and read relevant discussions and
-  resolutions; closed work is not permission to duplicate it.
+- Follow the [shared findings-publication rules](../../AGENTS.md#github-issue-creation).
 - Retrieval alone is not inspection. Failed parsing, filtering, or rendering of
   required evidence leaves the dependent assessment incomplete. Recover and inspect
   the primary content from saved data or another authorized representation; related
   summaries do not replace required discussion reads. Defer dependent publication
   until recovery completes. If recovery cannot finish within the budget, report
   incomplete analysis while preserving independently verified outcomes.
-- Link existing work in the summary; never edit, comment on, reopen, or replace it.
-  No new actionable findings means no new issues.
 - Create one issue per new finding in `TARGET_REPOSITORY` as `FACTORY_LOGIN`, using
   the Factory App token. Include:
   - Source permalinks with lines at the reviewed commit.
   - Evidence, impact, bounded scope, and verifiable acceptance criteria.
   - The producing run attempt URL.
-- Create issues **without labels** for normal [triage](issue-triage.md). Do not
-  self-triage or change later labels. The [router](factory-router.md) ignores all
+- The [router](factory-router.md) ignores all
   repository-review completions; they are not PR feedback.
-- Follow the [shared issue-creation checks](../../AGENTS.md#github-issue-creation).
 
 ## Reporting and verification
 
