@@ -64,9 +64,9 @@ The launcher uses
 ./scripts/ai.sh --profile review --prompt "Review the current diff."
 ```
 
-Profiles supply `model`, `reasoningEffort`, and `longContext`, without
-schema validation. Unknown profiles fail, with no fallback. PR review, repository
-review, model profile improvement,
+Profiles supply `model`, `reasoningEffort`, and `longContext`. Field validation
+runs in the [offline checks](#offline-checks), not at launch. Unknown profiles
+fail, with no fallback. PR review, repository review, model profile improvement,
 [owner feedback learning](../factory/owner-feedback.md), and
 [implementation self-review](../factory/issue-implementation.md#internal-self-review)
 share `review`. Implementation stays on `implement` and binds its
@@ -94,9 +94,12 @@ Run the same checks locally and in CI:
 
 Requires Bash, `jq`, [Mike Farah's `yq` v4](https://github.com/mikefarah/yq), and
 standard shell utilities, all preinstalled on the Ubuntu CI runner.
-The checks validate each `scripts/*.sh` with `bash -n` and parse
-`.github/model-config.json` as one JSON object. YAML parsing requires the shared
-AI action's default and every explicit `with.profile` input to that action in
+The checks validate each `scripts/*.sh` with `bash -n` and require
+`.github/model-config.json` to contain one JSON object. Each profile must be an
+object with non-empty string `model` and `reasoningEffort` fields and a boolean
+`longContext`. Invalid entries fail with all offending profile names; extra keys
+are allowed. YAML parsing requires the shared AI action's default and every
+explicit `with.profile` input to that action in
 `.github/workflows/*.yml` to exist as top-level configuration keys. Unknown or
 missing defaults and invalid references fail with the source file, line, and
 profile value.
@@ -106,14 +109,16 @@ are recognized. Block and flow mappings, quotes, and comments follow YAML syntax
 aliases are expanded before selecting references. Unrelated actions and prompt
 text are ignored. Omitted profiles use the checked action default. Profile names
 must be literal strings: expressions are not evaluated. This is not general
-workflow-schema validation; model IDs/settings and guide prose are not checked.
+workflow-schema validation; model IDs, availability, supported reasoning values,
+and guide prose are not checked.
 
 An unchanged copy of the launcher runs with fixed profile fixtures and a stub
 Copilot CLI. It checks default and named profiles, both context tiers, Memory
 opt-in, exact argument boundaries and literal multiline prompts, nonzero CLI exit
 status, and rejection of unknown profiles or arguments without invoking Copilot.
 Fixtures keep the checks independent of live model choices; the production
-configuration is not modified.
+configuration is not modified. Separate schema fixtures check malformed profiles,
+profile-specific diagnostics, both boolean values, and acceptance of extra keys.
 
 [Offline CI](../../.github/workflows/offline-checks.yml) runs this command on pull
 requests and default-branch pushes, with read-only contents access and no persisted

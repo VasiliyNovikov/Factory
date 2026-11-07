@@ -5,12 +5,30 @@ repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 for script in "$repo_root"/scripts/*.sh; do
   bash -n "$script"
 done
-jq -se 'length == 1 and (.[0] | type == "object")' \
-  "$repo_root/.github/model-config.json" > /dev/null || {
-  printf 'FAIL: model-config.json must contain one JSON object\n' >&2
-  exit 1
+
+check_model_config() {
+  jq -se 'length == 1 and (.[0] | type == "object")' "$1" > /dev/null || {
+    printf 'FAIL: model-config.json must contain one JSON object\n' >&2
+    return 1
+  }
+  jq '
+    [
+      to_entries[] |
+      select(.value | if type == "object" then
+        (.model | type == "string" and length > 0) and
+        (.reasoningEffort | type == "string" and length > 0) and
+        (.longContext | type == "boolean")
+      else false end | not) |
+      .key
+    ] |
+    if length == 0 then empty
+    else error("model-config.json: invalid profiles \(map(tojson) | join(", ")); " +
+      "expected objects with non-empty string model and reasoningEffort and boolean longContext")
+    end
+  ' "$1"
 }
-printf 'PASS: shell syntax and model JSON\n'
+check_model_config "$repo_root/.github/model-config.json"
+printf 'PASS: shell syntax and model profile schema\n'
 
 profile_references=$(
   yq -o=json -I=0 '
@@ -127,3 +145,30 @@ run_launcher 0 --unknown
 [[ ! -s "$temp_dir/actual" ]] || fail 'unknown argument invoked a CLI'
 
 printf 'PASS: copilot profiles, literal prompt, exit status, and invalid arguments\n'
+
+case_name='model profile schema'
+jq '.default.extra = "allowed"' "$temp_dir/.github/model-config.json" \
+  > "$temp_dir/valid-profiles.json"
+check_model_config "$temp_dir/valid-profiles.json" > "$temp_dir/output" 2>&1 \
+  || fail 'valid profiles or extra keys were rejected'
+
+jq '.default as $profile | {
+  "string-context": ($profile | .longContext = "false"),
+  "missing-reasoning": ($profile | del(.reasoningEffort)),
+  "misspelled-model": ($profile | .modle = .model | del(.model)),
+  "non-object": false,
+  "empty-model": ($profile | .model = ""),
+  "empty-reasoning": ($profile | .reasoningEffort = ""),
+  "number-model": ($profile | .model = 42),
+  "number-reasoning": ($profile | .reasoningEffort = 42),
+  "missing-context": ($profile | del(.longContext)),
+  "null-context": ($profile | .longContext = null)
+}' "$temp_dir/.github/model-config.json" > "$temp_dir/invalid-profiles.json"
+if check_model_config "$temp_dir/invalid-profiles.json" > "$temp_dir/output" 2>&1; then
+  fail 'invalid profiles were accepted'
+fi
+while IFS= read -r profile; do
+  grep -Fq -- "\"$profile\"" "$temp_dir/output" \
+    || fail "invalid profile $profile was not named"
+done < <(jq -r 'keys[]' "$temp_dir/invalid-profiles.json")
+printf 'PASS: malformed model profiles and profile-specific diagnostics\n'
