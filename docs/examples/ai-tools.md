@@ -96,18 +96,13 @@ workflow profiles and native-subagent bindings remain direct-model selections.
 ```
 
 Fusion profiles use `model: "fusion"` and `fusionTier: "standard"`, `"high"`, or
-`"max"` instead of `reasoningEffort`. The launcher forwards
+`"max"` instead of `reasoningEffort`. The launcher forwards the
+[documented](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/choose-a-model#choosing-a-model-from-the-command-line)
 `--model fusion --fusion-tier TIER`, without `--reasoning-effort`: Fusion chooses
-individual models' reasoning effort. `longContext` still controls `--context`;
-the supplied Fusion profiles use `false`, and available context depends on the
-models Fusion selects.
-
-Use a CLI supporting the
-[Fusion command-line contract](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/choose-a-model#choosing-a-model-from-the-command-line).
-The launcher does not change persistent settings or retry with another model or
-tier. CLI validation and availability errors
-propagate unchanged. These launcher profiles do not replace the required
-[native subagent profile binding](#nested-ai-invocations) or independent PR review.
+individual models' reasoning effort. `longContext` still controls `--context`, but
+available context depends on the models Fusion selects. CLI errors propagate
+unchanged, without retrying another model or tier; these profiles do not replace
+independent PR review.
 
 ## Offline checks
 
