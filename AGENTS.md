@@ -186,6 +186,20 @@ When a Factory workflow is allowed to create issues:
   through fresh reads. Keep the owning guide's additional checks, including
   creation labels and native relationships; leave later automation updates alone.
 
+For repository review, workflow diagnostics, model profile improvement, and owner
+feedback learning, also follow these findings-publication rules:
+
+- Before each finding, reconcile issues and PRs in **all states**, including prior
+  attempts, assessments, and other Factory findings. Paginate and inspect relevant
+  discussions, resolutions, and adopted guidance; search alone is insufficient.
+  Link covered work in the report without editing, commenting on, reopening, or
+  replacing it.
+- For closed or rejected work, explain the materially new evidence; another
+  occurrence is not enough. No new actionable finding means no new issue.
+- Create issues **without labels** for normal [triage](docs/factory/issue-triage.md).
+  Verify initially empty labels through fresh API reads; do not self-triage or
+  change later labels or triage updates.
+
 ## GitHub Actions logs
 
 For Actions-log reads in any Factory workflow, follow the

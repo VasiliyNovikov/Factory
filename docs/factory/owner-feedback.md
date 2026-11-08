@@ -38,19 +38,13 @@ the shared [AI action](../examples/ai-tools.md#shared-factory-action) with `revi
 - Before each finding, reread cited feedback and recheck the default SHA; reconcile
   edits, deletions, and drift. Incomplete recurrence, applicability, research, or
   duplicate evidence blocks publication; do not claim unread revisions.
-- Reconcile issues/PRs in **all states**, prior attempts/assessments, discussions,
-  resolutions, and adopted guidance with paginated reads, not search alone. Link
-  covered work; closed/rejected proposals need materially new evidence, not another
-  occurrence. No new actionable finding means no mutation.
-- Create one **unlabeled** issue per cohesive finding in `TARGET_REPOSITORY` as
+- Follow the [shared findings-publication rules](../../AGENTS.md#github-issue-creation).
+- Create one issue per cohesive finding in `TARGET_REPOSITORY` as
   `FACTORY_LOGIN`. Include preference, original feedback links/dates, context and
   contrary evidence, gap, owning files and source permalinks at the evaluated SHA,
   scope, acceptance criteria, dependencies (or "none"), applicable dated provider evidence,
   and run-attempt URL.
-- Follow the [shared issue-creation checks](../../AGENTS.md#github-issue-creation),
-  and verify empty labels on creation. Leave later labels alone.
-  New issues enter normal [triage](issue-triage.md);
-  workflow completions are ignored by the [router](factory-router.md).
+- Workflow completions are ignored by the [router](factory-router.md).
 
 ## Report
 
