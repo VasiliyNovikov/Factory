@@ -146,15 +146,11 @@ or reason to slow work.
 
 ## Findings and reporting
 
-- Before creating issues, check issues and PRs in all states, including earlier
-  attempts. Link duplicates without changing them. No new findings means no new issues.
+- Follow the [shared findings-publication rules](../../AGENTS.md#github-issue-creation).
 - Create one Factory issue per new actionable finding, with evidence links,
   impact, scope, acceptance criteria, and `<!-- factory-diagnostics:RUN_ID:ATTEMPT -->`
   using this run's ID and attempt.
-- Create issues **without labels** for normal [triage](issue-triage.md). Follow
-  the [shared issue-creation checks](../../AGENTS.md#github-issue-creation);
-  leave later labels and triage updates alone.
-  The [router](factory-router.md) job condition skips diagnostics completions.
+- The [router](factory-router.md) job condition skips diagnostics completions.
 
 Within the invocation budget, the coordinator follows the
 [shared final-report and retention rule](actions-logs.md#final-reports-and-retention).
