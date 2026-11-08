@@ -140,11 +140,12 @@ flowchart TD
 
 [Repository review](docs/factory/repository-review.md) reads the whole source
 snapshot from scratch and may run focused checks or experiments without changing
-the reviewed source.
+the reviewed source. It also researches new GitHub and GitHub Copilot features
+for source-grounded simplifications; adoption remains separate, triaged work.
 
 ```mermaid
 flowchart TD
-    trigger["Days 1, 4, ..., 31 at 00:07 UTC or manual<br/>Each month; default branch"] --> review["Review with optional checks<br/>Full repository snapshot"]
+    trigger["Days 1, 4, ..., 31 at 00:07 UTC or manual<br/>Each month; default branch"] --> review["Full source review and optional checks<br/>GitHub / Copilot feature research"]
     review --> duplicates["Check issues and PRs<br/>All states"]
     duplicates -->|New actionable findings| issues["Create unlabeled issues"]
     issues --> router["Factory router"] --> triage["Issue triage"]
