@@ -23,5 +23,20 @@
     "model": "claude-opus-5.5",
     "reasoningEffort": "max",
     "longContext": true
+  },
+  "fusion-standard": {
+    "model": "fusion",
+    "fusionTier": "standard",
+    "longContext": false
+  },
+  "fusion-high": {
+    "model": "fusion",
+    "fusionTier": "high",
+    "longContext": false
+  },
+  "fusion-max": {
+    "model": "fusion",
+    "fusionTier": "max",
+    "longContext": false
   }
 }

@@ -50,10 +50,12 @@ active work.
   use a small representative comparison when it resolves a real uncertainty.
   Repository-wide prompt/provider guidance is separate work.
 - Verify proposed settings against the profile schema, wrapper, and live catalog:
-  policy-enabled model IDs, tool calls, supported reasoning values, boolean
-  context selection, and positive evidence for any long-context tier. The wrapper
-  always passes reasoning; models without configurable reasoning need a separate
-  wrapper change. Provider API options do not establish CLI support.
+  policy-enabled model IDs, tool calls, supported reasoning or Fusion tier values,
+  boolean context selection, and positive evidence for any long-context tier.
+  The wrapper forwards `reasoningEffort`, or `fusionTier` for
+  [Fusion profiles](../examples/ai-tools.md#opt-in-fusion-profiles); other models
+  without configurable reasoning need a separate wrapper change. Provider API
+  options do not establish CLI support.
 - Check all profile references, including implicit `default`, direct `scripts/ai.sh`
   calls, shared callers, and proposed wiring. They must resolve, with valid YAML
   and unchanged permissions, triggers, and deadlines. Follow the
