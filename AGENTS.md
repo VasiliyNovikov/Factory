@@ -217,6 +217,12 @@ permissions, and verification.
 - Before adding or requesting a test, name the requirement or credible regression,
   its observable outcome, and the gap in existing coverage. Use the smallest
   useful check with existing tools, not tests or dependencies for their own sake.
+- Treat failures that surface immediately and visibly at runtime and are reported
+  by [workflow diagnostics](docs/factory/workflow-diagnostics.md) as existing
+  coverage; do not add or request checks solely to catch them earlier. Checks
+  remain appropriate for silent or wrong-but-successful behavior, required safety,
+  permission, and token boundaries, and failures diagnostics cannot detect or that
+  are costly before detection.
 - Test behavior or required contracts, not incidental wording, copied logic, or
   mock setup. Tests should catch the regression and survive harmless refactoring.
 - Use static checks when the representation is the contract, such as a schema,
