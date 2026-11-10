@@ -11,8 +11,8 @@ Copilot profile: non-interactive `--prompt` runs otherwise disable Memory.
 This invocation opt-in does not grant account access or override administrator
 policy.
 
-[Copilot Memory](https://docs.github.com/en/copilot/concepts/agents/copilot-memory)
-is in public preview. Availability depends on the initiating user's
+[Copilot Memory](https://docs.github.com/en/copilot/concepts/prompting-and-context/copilot-memory)
+is generally available on paid Copilot plans. Availability depends on the initiating user's
 [Memory settings](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/copilot-memory/manage-for-yourself)
 and, for managed plans, administrator policy. Repository owners can inspect/delete
 repository facts under repository Settings > Copilot > Memory.
@@ -47,8 +47,9 @@ unverified claims, or participant approvals.
 
 ## Retention and verification
 
-Memories unused for 28 days expire; successful validation and use may reset that
-timer. Memory is optional, not the only copy of a decision or reusable code.
+Memories expire after 90 days by default. The expiry period starts at creation and
+resets when Copilot upvotes the memory; retrieval alone does not reset it.
+Memory is optional, not the only copy of a decision or reusable code.
 If native tools or useful facts are unavailable, expired, or stale, continue from
 current source and the task's required GitHub evidence. Mention unavailability
 only when the task relied on Memory or verifies it. Missing required evidence
