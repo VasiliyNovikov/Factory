@@ -123,6 +123,8 @@ failures in the job summary. Dispatch acceptance is not completed recovery.
 [Workflow diagnostics](docs/factory/workflow-diagnostics.md) uses parallel read-only
 native subagents to compare same-repository runs and GitHub outcomes against each
 run's contracts, including successful runs and expected skips or handoffs.
+It investigates why actionable independent-review findings survived self-review,
+distinguishing supported causes from changed context or missing evidence.
 Diagnostics also assesses time-budget utilization and recommends evidence-backed
 timeout changes through the existing findings path.
 

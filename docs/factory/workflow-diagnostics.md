@@ -115,6 +115,18 @@ settings, failed tasks, and incomplete results cannot establish full coverage.
   discrepancies through the existing findings path below, within the same history,
   origin, read-only-analysis, and publication boundaries.
 
+### Self-review gaps
+
+For assessed independent-review findings, explain why actionable issues survived
+[internal self-review](issue-implementation.md#internal-self-review). Link each
+[verified reviewed SHA](routing-policy.md#feedback-verification) to its
+implementation attempt and internal task, then compare candidate, published, and
+reviewed trees and both reviews' contracts, context, findings, dispositions, and
+verified model settings; matching models guarantee neither matching coverage nor
+findings. Distinguish misses or unfixed findings from later code/context changes,
+absent/incomplete/exempt self-review, and disputed/invalid findings. Differing
+results alone are not a new finding.
+
 ## Time-budget utilization
 
 Within the same history window, eligibility rules, and investigation deadline,
@@ -159,7 +171,7 @@ Include:
 - **Coverage and outcomes:** history window, selection rationale, per-workflow
   expected-versus-observed conclusions with evidence links, budget-utilization
   results and sizing decisions, per-workflow assessed/total run-attempt counts,
-  exclusions, and existing/new issue links.
+  exclusions, self-review gap conclusions, and existing/new issue links.
   Identify partially assessed and unassessed runs/attempts with links or clearly
   defined linked groups, explaining their coverage gaps.
 - **Execution binding:** trusted workflow revision, installed CLI version, resolved
