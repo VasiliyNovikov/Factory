@@ -117,33 +117,25 @@ settings, failed tasks, and incomplete results cannot establish full coverage.
 
 ### Self-review gaps
 
-For assessed independent PR reviews with findings, explain why actionable issues
-survived [internal self-review](issue-implementation.md#internal-self-review).
-Use the same history, origin, and investigation limits; report unassessed
-comparisons as coverage gaps. Matching models alone guarantees neither identical
-coverage nor identical findings.
+For assessed independent-review findings, explain why actionable issues survived
+[internal self-review](issue-implementation.md#internal-self-review), within the
+existing investigation limits.
 
-- Correlate each finding's [verified reviewed SHA](routing-policy.md#feedback-verification)
-  with the relevant implementation run/attempt and internal-review task. Establish
-  the internal base/candidate, published head, and independently reviewed revision.
-  Compare trees/diffs, not just commit IDs: publication squashing may preserve
-  content, while later fixes, base merges, or context changes may alter the review.
-- Compare the historical review contracts/prompts, supplied and inspected context,
-  scope, checks, completion, findings, and implementer dispositions. Verify each
-  review's actual model, reasoning effort, and context tier from its runtime
-  binding evidence, not today's profile or the parent implementer's settings.
-- Distinguish an in-scope miss or identified-but-unfixed problem from subsequent
-  code/context changes, absent or incomplete self-review, and disputed or invalid
-  later findings. Check the finding against the reviewed source and subsequent
-  discussion/fixes; a review comment is not itself proof of a defect. Respect
-  historical self-review exemptions.
-- Explain supported causes, such as omitted review context or an ineffective fix.
-  Separate evidence from hypotheses and identify missing revision, task-output,
-  settings, or disposition evidence. Missing evidence is a coverage gap, not a
-  diagnosis of model failure or a self-review miss.
+- Link each [verified reviewed SHA](routing-policy.md#feedback-verification) to
+  the implementation attempt and internal task. Compare internal base/candidate,
+  published, and reviewed trees/diffs, accounting for squashes and later changes.
+- Compare historical contracts/prompts, supplied and inspected context, scope,
+  checks, completion, findings, and dispositions. Verify each review's runtime
+  model, reasoning effort, and context tier; matching models guarantee neither
+  matching coverage nor findings.
+- Validate findings against source and later discussion/fixes. Distinguish misses
+  or unfixed findings from code/context changes, absent/incomplete or historically
+  exempt self-review, and disputed/invalid findings.
 
-Use the existing [findings path](#findings-and-reporting) for new actionable
-improvements; differing review results alone do not justify a new issue.
+Separate supported causes from hypotheses. Missing evidence and unassessed
+comparisons are coverage gaps, not proof of a miss. Use the
+[existing findings path](#findings-and-reporting) only for new actionable
+improvements, not differing results alone.
 
 ## Time-budget utilization
 
