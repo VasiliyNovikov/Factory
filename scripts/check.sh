@@ -48,6 +48,20 @@ cat > "$temp_dir/.github/model-config.json" <<'JSON'
     "model": "fixture-extended",
     "reasoningEffort": "high",
     "longContext": true
+  },
+  "fusion-standard": {
+    "model": "fusion",
+    "reasoningEffort": "standard",
+    "longContext": false
+  },
+  "fusion-high": {
+    "model": "fusion",
+    "reasoningEffort": "high",
+    "longContext": true
+  },
+  "fusion-max": {
+    "model": "fusion",
+    "reasoningEffort": "max"
   }
 }
 JSON
@@ -56,6 +70,9 @@ cat > "$temp_dir/bin/copilot" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 printf '%s\0' "${0##*/}" "$@" >> "$AI_TEST_ARGS"
+if [[ "$AI_TEST_EXIT" != 0 ]]; then
+  printf 'fixture CLI failure\n' >&2
+fi
 exit "$AI_TEST_EXIT"
 SH
 chmod +x "$temp_dir/bin/copilot"
@@ -116,6 +133,23 @@ run_launcher 37 --profile extended
 assert_status 37
 assert_args "${extended_args[@]}"
 
+for selection in 'standard default' 'high long_context' 'max default'; do
+  read -r tier context <<< "$selection"
+  case_name="copilot Fusion $tier profile and literal prompt"
+  run_launcher 0 --profile "fusion-$tier"
+  assert_status 0
+  assert_args copilot --model fusion --fusion-tier "$tier" \
+    --context "$context" --enable-memory --prompt "$prompt" --yolo
+done
+
+case_name='copilot Fusion CLI failure'
+run_launcher 37 --profile fusion-max
+assert_status 37
+assert_args copilot --model fusion --fusion-tier max \
+  --context default --enable-memory --prompt "$prompt" --yolo
+grep -qx 'fixture CLI failure' "$temp_dir/output" \
+  || fail 'CLI error was not preserved'
+
 case_name='copilot unknown profile'
 run_launcher 0 --profile missing
 (( actual_status != 0 )) || fail 'unknown profile succeeded'
@@ -126,4 +160,4 @@ run_launcher 0 --unknown
 (( actual_status != 0 )) || fail 'unknown argument succeeded'
 [[ ! -s "$temp_dir/actual" ]] || fail 'unknown argument invoked a CLI'
 
-printf 'PASS: copilot profiles, literal prompt, exit status, and invalid arguments\n'
+printf 'PASS: copilot direct/Fusion profiles, literal prompt, exit status, and invalid arguments\n'

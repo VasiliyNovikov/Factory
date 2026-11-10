@@ -48,5 +48,12 @@ model=$(jq -r '.model' <<< "$profile_config")
 reasoning=$(jq -r '.reasoningEffort' <<< "$profile_config")
 context=$(jq -r 'if .longContext then "long_context" else "default" end' <<< "$profile_config")
 
-exec copilot --model "$model" --reasoning-effort "$reasoning" \
+model_args=(--model "$model")
+if [[ "$model" == fusion ]]; then
+  model_args+=(--fusion-tier "$reasoning")
+else
+  model_args+=(--reasoning-effort "$reasoning")
+fi
+
+exec copilot "${model_args[@]}" \
   --context "$context" --enable-memory --prompt "$prompt" --yolo
