@@ -62,6 +62,5 @@ jobs:
           budget: 30
           prompt: >-
             Review the full target source snapshot in TARGET_ROOT for ${{ env.TARGET_REPOSITORY }} from scratch
-            and investigate new GitHub/GitHub Copilot features that could simplify Factory.
-            Create issues for actionable improvements.
+            and create issues for actionable improvements.
             Follow AGENTS.md and docs/factory/repository-review.md in FACTORY_ROOT.
