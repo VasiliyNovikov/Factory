@@ -118,24 +118,14 @@ settings, failed tasks, and incomplete results cannot establish full coverage.
 ### Self-review gaps
 
 For assessed independent-review findings, explain why actionable issues survived
-[internal self-review](issue-implementation.md#internal-self-review), within the
-existing investigation limits.
-
-- Link each [verified reviewed SHA](routing-policy.md#feedback-verification) to
-  the implementation attempt and internal task. Compare internal base/candidate,
-  published, and reviewed trees/diffs, accounting for squashes and later changes.
-- Compare historical contracts/prompts, supplied and inspected context, scope,
-  checks, completion, findings, and dispositions. Verify each review's runtime
-  model, reasoning effort, and context tier; matching models guarantee neither
-  matching coverage nor findings.
-- Validate findings against source and later discussion/fixes. Distinguish misses
-  or unfixed findings from code/context changes, absent/incomplete or historically
-  exempt self-review, and disputed/invalid findings.
-
-Separate supported causes from hypotheses. Missing evidence and unassessed
-comparisons are coverage gaps, not proof of a miss. Use the
-[existing findings path](#findings-and-reporting) only for new actionable
-improvements, not differing results alone.
+[internal self-review](issue-implementation.md#internal-self-review). Link each
+[verified reviewed SHA](routing-policy.md#feedback-verification) to its
+implementation attempt and internal task, then compare candidate, published, and
+reviewed trees and both reviews' contracts, context, findings, dispositions, and
+verified model settings; matching models guarantee neither matching coverage nor
+findings. Distinguish misses or unfixed findings from later code/context changes,
+absent/incomplete/exempt self-review, and disputed/invalid findings. Differing
+results alone are not a new finding.
 
 ## Time-budget utilization
 
@@ -181,12 +171,9 @@ Include:
 - **Coverage and outcomes:** history window, selection rationale, per-workflow
   expected-versus-observed conclusions with evidence links, budget-utilization
   results and sizing decisions, per-workflow assessed/total run-attempt counts,
-  exclusions, and existing/new issue links.
+  exclusions, self-review gap conclusions, and existing/new issue links.
   Identify partially assessed and unassessed runs/attempts with links or clearly
   defined linked groups, explaining their coverage gaps.
-- **Self-review gaps:** comparison conclusions and limitations, with links to the
-  implementation and independent-review attempts, internal task evidence,
-  candidate/published/reviewed revisions, later findings, and their dispositions.
 - **Execution binding:** trusted workflow revision, installed CLI version, resolved
   coordinator and assessment-task model, reasoning effort, and context tier;
   assignments, root session/task IDs, terminal statuses, settings evidence, and
