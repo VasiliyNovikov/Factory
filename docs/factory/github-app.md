@@ -54,11 +54,9 @@ events it runs default-branch code and job-filters fork PRs before checkout.
 These controls do not make fetched content trusted or remove the separate
 [submitted-review risk](factory-router.md#accepted-risk-router-changes-can-run-before-merge).
 
-Verify the policy's active state and workflow scope, then record an eligible
-same-repository `pull_request_target` router run that executes during enforcement
-(a [scheduled brownout or permanent enforcement](https://github.blog/changelog/2026-11-02-pull_request_target-blocked-by-default-december-2/)).
-A skipped job or a run while the default policy is in evaluate mode does not prove
-the allowance works. Documentation and static checks cannot establish enforcement.
+After configuring it, confirm the policy is active and scoped to the router, and
+that a same-repository `pull_request_target` router run executes while the default
+policy is enforced. Skipped jobs and static checks do not prove the allowance.
 
 ## Use the App in a workflow
 
