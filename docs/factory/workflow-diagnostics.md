@@ -115,6 +115,36 @@ settings, failed tasks, and incomplete results cannot establish full coverage.
   discrepancies through the existing findings path below, within the same history,
   origin, read-only-analysis, and publication boundaries.
 
+### Self-review gaps
+
+For assessed independent PR reviews with findings, explain why actionable issues
+survived [internal self-review](issue-implementation.md#internal-self-review).
+Use the same history, origin, and investigation limits; report unassessed
+comparisons as coverage gaps. Matching models alone guarantees neither identical
+coverage nor identical findings.
+
+- Correlate each finding's [verified reviewed SHA](routing-policy.md#feedback-verification)
+  with the relevant implementation run/attempt and internal-review task. Establish
+  the internal base/candidate, published head, and independently reviewed revision.
+  Compare trees/diffs, not just commit IDs: publication squashing may preserve
+  content, while later fixes, base merges, or context changes may alter the review.
+- Compare the historical review contracts/prompts, supplied and inspected context,
+  scope, checks, completion, findings, and implementer dispositions. Verify each
+  review's actual model, reasoning effort, and context tier from its runtime
+  binding evidence, not today's profile or the parent implementer's settings.
+- Distinguish an in-scope miss or identified-but-unfixed problem from subsequent
+  code/context changes, absent or incomplete self-review, and disputed or invalid
+  later findings. Check the finding against the reviewed source and subsequent
+  discussion/fixes; a review comment is not itself proof of a defect. Respect
+  historical self-review exemptions.
+- Explain supported causes, such as omitted review context or an ineffective fix.
+  Separate evidence from hypotheses and identify missing revision, task-output,
+  settings, or disposition evidence. Missing evidence is a coverage gap, not a
+  diagnosis of model failure or a self-review miss.
+
+Use the existing [findings path](#findings-and-reporting) for new actionable
+improvements; differing review results alone do not justify a new issue.
+
 ## Time-budget utilization
 
 Within the same history window, eligibility rules, and investigation deadline,
@@ -162,6 +192,9 @@ Include:
   exclusions, and existing/new issue links.
   Identify partially assessed and unassessed runs/attempts with links or clearly
   defined linked groups, explaining their coverage gaps.
+- **Self-review gaps:** comparison conclusions and limitations, with links to the
+  implementation and independent-review attempts, internal task evidence,
+  candidate/published/reviewed revisions, later findings, and their dispositions.
 - **Execution binding:** trusted workflow revision, installed CLI version, resolved
   coordinator and assessment-task model, reasoning effort, and context tier;
   assignments, root session/task IDs, terminal statuses, settings evidence, and
