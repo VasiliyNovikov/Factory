@@ -3,6 +3,9 @@
 [Router](../../.github/workflows/factory-router.yml) uses Copilot to dispatch
 workers or skip an event.
 
+Public repositories require the narrowly scoped
+[router event policy](github-app.md#router-event-policy) for `pull_request_target`.
+
 Apply the [shared routing policy](routing-policy.md) for eligibility, actionable
 work, holds, feedback verification, dispatch, concurrency, and reporting.
 [Periodic maintenance](factory-maintenance.md) uses the same policy for missed work.
