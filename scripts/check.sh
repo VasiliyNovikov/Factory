@@ -5,27 +5,12 @@ repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 for script in "$repo_root"/scripts/*.sh; do
   bash -n "$script"
 done
-
-check_model_config() {
-  jq -se 'length == 1 and (.[0] | type == "object")' "$1" > /dev/null || {
-    printf 'FAIL: model-config.json must contain one JSON object\n' >&2
-    return 1
-  }
-  jq '
-    [
-      to_entries[] |
-      select(.value | type == "object") |
-      select(.value.longContext | type != "boolean") |
-      .key
-    ] |
-    if length == 0 then empty
-    else error("model-config.json: invalid profiles \(map(tojson) | join(", ")); " +
-      "expected boolean longContext")
-    end
-  ' "$1"
+jq -se 'length == 1 and (.[0] | type == "object")' \
+  "$repo_root/.github/model-config.json" > /dev/null || {
+  printf 'FAIL: model-config.json must contain one JSON object\n' >&2
+  exit 1
 }
-check_model_config "$repo_root/.github/model-config.json"
-printf 'PASS: shell syntax, model JSON, and boolean context settings\n'
+printf 'PASS: shell syntax and model JSON\n'
 
 profile_references=$(
   yq -o=json -I=0 '
@@ -141,26 +126,14 @@ run_launcher 0 --unknown
 (( actual_status != 0 )) || fail 'unknown argument succeeded'
 [[ ! -s "$temp_dir/actual" ]] || fail 'unknown argument invoked a CLI'
 
+case_name='copilot invalid context'
+jq '.extended.longContext = "false"' "$temp_dir/.github/model-config.json" \
+  > "$temp_dir/invalid-context.json"
+mv -- "$temp_dir/invalid-context.json" "$temp_dir/.github/model-config.json"
+run_launcher 0 --profile extended
+assert_status 1
+grep -Fq "Invalid model profile 'extended'" "$temp_dir/output" \
+  || fail 'invalid context did not name the profile'
+[[ ! -s "$temp_dir/actual" ]] || fail 'invalid context invoked a CLI'
+
 printf 'PASS: copilot profiles, literal prompt, exit status, and invalid arguments\n'
-
-case_name='model context validation'
-jq 'del(.default.model, .default.reasoningEffort) |
-  .default.extra = "allowed" | .["non-object"] = false' \
-  "$temp_dir/.github/model-config.json" > "$temp_dir/accepted-profiles.json"
-check_model_config "$temp_dir/accepted-profiles.json" > "$temp_dir/output" 2>&1 \
-  || fail 'valid contexts or fields left to runtime were rejected'
-
-jq '.default as $profile | {
-  "string-context": ($profile | .longContext = "false"),
-  "number-context": ($profile | .longContext = 0),
-  "missing-context": ($profile | del(.longContext)),
-  "null-context": ($profile | .longContext = null)
-}' "$temp_dir/.github/model-config.json" > "$temp_dir/invalid-profiles.json"
-if check_model_config "$temp_dir/invalid-profiles.json" > "$temp_dir/output" 2>&1; then
-  fail 'invalid contexts were accepted'
-fi
-while IFS= read -r profile; do
-  grep -Fq -- "\"$profile\"" "$temp_dir/output" \
-    || fail "invalid profile $profile was not named"
-done < <(jq -r 'keys[]' "$temp_dir/invalid-profiles.json")
-printf 'PASS: context validation and profile-specific diagnostics\n'

@@ -64,9 +64,8 @@ The launcher uses
 ./scripts/ai.sh --profile review --prompt "Review the current diff."
 ```
 
-Profiles supply `model`, `reasoningEffort`, and `longContext`. The
-[offline checks](#offline-checks) validate boolean context selection, not
-runtime-checked model or reasoning settings. Unknown profiles fail, with no
+Profiles supply `model`, `reasoningEffort`, and `longContext`. The launcher rejects
+non-boolean `longContext` before invoking Copilot. Unknown profiles fail, with no
 fallback. PR review, repository review, model profile improvement,
 [owner feedback learning](../factory/owner-feedback.md), and
 [implementation self-review](../factory/issue-implementation.md#internal-self-review)
@@ -95,14 +94,9 @@ Run the same checks locally and in CI:
 
 Requires Bash, `jq`, [Mike Farah's `yq` v4](https://github.com/mikefarah/yq), and
 standard shell utilities, all preinstalled on the Ubuntu CI runner.
-The checks validate each `scripts/*.sh` with `bash -n` and require
-`.github/model-config.json` to contain one JSON object. Profile objects must
-provide boolean `longContext`; failures name every offending profile. This
-prevents values such as `"false"` from silently selecting long context. Other
-profile-field and non-object errors are left to runtime and
-[workflow diagnostics](../factory/workflow-diagnostics.md); extra keys are allowed.
-YAML parsing requires the shared AI action's default and every explicit
-`with.profile` input to that action in
+The checks validate each `scripts/*.sh` with `bash -n` and parse
+`.github/model-config.json` as one JSON object. YAML parsing requires the shared
+AI action's default and every explicit `with.profile` input to that action in
 `.github/workflows/*.yml` to exist as top-level configuration keys. Unknown or
 missing defaults and invalid references fail with the source file, line, and
 profile value.
@@ -112,16 +106,15 @@ are recognized. Block and flow mappings, quotes, and comments follow YAML syntax
 aliases are expanded before selecting references. Unrelated actions and prompt
 text are ignored. Omitted profiles use the checked action default. Profile names
 must be literal strings: expressions are not evaluated. This is not general
-workflow-schema validation; model IDs, availability, supported reasoning values,
-and guide prose are not checked.
+workflow-schema validation; model IDs/settings and guide prose are not checked.
 
 An unchanged copy of the launcher runs with fixed profile fixtures and a stub
 Copilot CLI. It checks default and named profiles, both context tiers, Memory
 opt-in, exact argument boundaries and literal multiline prompts, nonzero CLI exit
-status, and rejection of unknown profiles or arguments without invoking Copilot.
+status, and rejection of unknown profiles, invalid context values, or arguments
+without invoking Copilot.
 Fixtures keep the checks independent of live model choices; the production
-configuration is not modified. Context fixtures check invalid or missing booleans,
-profile-specific diagnostics, both valid tiers, and fields left to runtime.
+configuration is not modified.
 
 [Offline CI](../../.github/workflows/offline-checks.yml) runs this command on pull
 requests and default-branch pushes, with read-only contents access and no persisted
