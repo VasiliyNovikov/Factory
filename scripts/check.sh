@@ -160,4 +160,16 @@ run_launcher 0 --unknown
 (( actual_status != 0 )) || fail 'unknown argument succeeded'
 [[ ! -s "$temp_dir/actual" ]] || fail 'unknown argument invoked a CLI'
 
+for context in '"false"' null; do
+  case_name="copilot invalid context $context"
+  jq --argjson context "$context" '.extended.longContext = $context' \
+    "$temp_dir/.github/model-config.json" > "$temp_dir/invalid-context.json"
+  mv -- "$temp_dir/invalid-context.json" "$temp_dir/.github/model-config.json"
+  run_launcher 0 --profile extended
+  assert_status 1
+  grep -Fq "Invalid model profile 'extended'" "$temp_dir/output" \
+    || fail 'invalid context did not name the profile'
+  [[ ! -s "$temp_dir/actual" ]] || fail 'invalid context invoked a CLI'
+done
+
 printf 'PASS: copilot direct/Fusion profiles, literal prompt, exit status, and invalid arguments\n'

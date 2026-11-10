@@ -65,8 +65,9 @@ The launcher uses
 ```
 
 Profiles supply `model`, `reasoningEffort`, and optional `longContext` (default
-`false`), without schema validation. Unknown profiles fail, with no fallback. PR
-review, repository review, model profile improvement,
+`false`). The launcher rejects explicit non-boolean `longContext` values before
+invoking Copilot. Unknown profiles fail, with no fallback. PR review, repository
+review, model profile improvement,
 [owner feedback learning](../factory/owner-feedback.md), and
 [implementation self-review](../factory/issue-implementation.md#internal-self-review)
 share `review`. Implementation stays on `implement` and binds its
@@ -131,8 +132,8 @@ workflow-schema validation; model IDs/settings and guide prose are not checked.
 An unchanged copy of the launcher runs with fixed profile fixtures and a stub
 Copilot CLI. It checks direct-model profiles and all three Fusion tiers, both
 context tiers, Memory opt-in, exact argument boundaries and literal multiline
-prompts, CLI error/exit-status propagation, and rejection of unknown profiles or
-arguments without invoking Copilot.
+prompts, CLI error/exit-status propagation, and rejection of unknown profiles,
+invalid context values, or arguments without invoking Copilot.
 Fixtures keep the checks independent of live model choices; the production
 configuration is not modified.
 
