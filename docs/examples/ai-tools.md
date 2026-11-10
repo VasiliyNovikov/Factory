@@ -64,9 +64,9 @@ The launcher uses
 ./scripts/ai.sh --profile review --prompt "Review the current diff."
 ```
 
-Profiles supply `model`, `reasoningEffort`, and `longContext`, without
-schema validation. Unknown profiles fail, with no fallback. PR review, repository
-review, model profile improvement,
+Profiles supply `model`, `reasoningEffort`, and optional `longContext` (default
+`false`), without schema validation. Unknown profiles fail, with no fallback. PR
+review, repository review, model profile improvement,
 [owner feedback learning](../factory/owner-feedback.md), and
 [implementation self-review](../factory/issue-implementation.md#internal-self-review)
 share `review`. Implementation stays on `implement` and binds its
@@ -83,6 +83,26 @@ CLI state or changes account settings.
 every caller weekly and files evidence-backed, unlabeled issues for triage. Its
 evaluator owns live model discovery and compatibility checks; ordinary
 invocations remain unchanged.
+
+### Opt-in Fusion profiles
+
+`fusion-standard`, `fusion-high`, and `fusion-max` select
+[Copilot Fusion](https://docs.github.com/en/copilot/concepts/models/copilot-fusion)
+with the corresponding effort. No workflow selects these profiles; existing
+workflow profiles and native-subagent bindings remain direct-model selections.
+
+```sh
+./scripts/ai.sh --profile fusion-high --prompt "YOUR TASK"
+```
+
+Fusion profiles use `model: "fusion"` and `reasoningEffort: "standard"`, `"high"`, or
+`"max"`. For Fusion, the launcher maps `reasoningEffort` to the
+[documented](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/choose-a-model#choosing-a-model-from-the-command-line)
+`--fusion-tier` flag, not `--reasoning-effort`: Fusion chooses
+individual models' reasoning effort. `longContext` still controls `--context`, but
+available context depends on the models Fusion selects. CLI errors propagate
+unchanged, without retrying another model or tier; these profiles do not replace
+independent PR review.
 
 ## Offline checks
 
@@ -109,9 +129,10 @@ must be literal strings: expressions are not evaluated. This is not general
 workflow-schema validation; model IDs/settings and guide prose are not checked.
 
 An unchanged copy of the launcher runs with fixed profile fixtures and a stub
-Copilot CLI. It checks default and named profiles, both context tiers, Memory
-opt-in, exact argument boundaries and literal multiline prompts, nonzero CLI exit
-status, and rejection of unknown profiles or arguments without invoking Copilot.
+Copilot CLI. It checks direct-model profiles and all three Fusion tiers, both
+context tiers, Memory opt-in, exact argument boundaries and literal multiline
+prompts, CLI error/exit-status propagation, and rejection of unknown profiles or
+arguments without invoking Copilot.
 Fixtures keep the checks independent of live model choices; the production
 configuration is not modified.
 
