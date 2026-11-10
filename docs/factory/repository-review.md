@@ -56,7 +56,6 @@ Copilot capabilities that could simplify Factory:
   does not establish support in Factory.
 
 Use the findings path below; adoption remains separate, normally triaged work.
-No worthwhile new opportunity means no new issue.
 
 ## Findings and duplicate prevention
 
@@ -90,8 +89,8 @@ Include:
   and affected findings. Complete source-file counts or successful publication
   do not establish completed prior-work assessment.
 - Feature research: dated sources, capabilities considered, applicability, and
-  decisions, including already-covered work. Report unavailable research or
-  unfinished assessment as incomplete, not evidence that no opportunity exists.
+  decisions. Report unavailable research or unfinished assessment as incomplete,
+  not evidence that no opportunity exists.
 - Executed checks/experiments, inputs, observed results, and limitations.
 - Existing findings/PRs and verified new issue links.
 - Outcome: completed with findings, completed with no new findings, or incomplete,
