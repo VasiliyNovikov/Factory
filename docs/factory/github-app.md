@@ -54,9 +54,11 @@ events it runs default-branch code and job-filters fork PRs before checkout.
 These controls do not make fetched content trusted or remove the separate
 [submitted-review risk](factory-router.md#accepted-risk-router-changes-can-run-before-merge).
 
-After configuring it, confirm the policy is active and scoped to the router, and
-that a same-repository `pull_request_target` router run executes while the default
-policy is enforced. Skipped jobs and static checks do not prove the allowance.
+Verify the policy is active, targets only the router, and allows its events.
+Confirm a same-repository `pull_request_target` router job executes. An applicable
+explicit event policy is not replaced by GitHub's default, so verification need
+not wait for default-policy enforcement. A successful run alone does not prove
+policy configuration; skipped jobs and static checks do not prove execution.
 
 ## Use the App in a workflow
 
