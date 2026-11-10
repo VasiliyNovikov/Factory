@@ -64,9 +64,9 @@ The launcher uses
 ./scripts/ai.sh --profile review --prompt "Review the current diff."
 ```
 
-Profiles supply `model`, `reasoningEffort`, and `longContext`, without
-schema validation. Unknown profiles fail, with no fallback. PR review, repository
-review, model profile improvement,
+Profiles supply `model`, `reasoningEffort`, and optional `longContext` (default
+`false`), without schema validation. Unknown profiles fail, with no fallback. PR
+review, repository review, model profile improvement,
 [owner feedback learning](../factory/owner-feedback.md), and
 [implementation self-review](../factory/issue-implementation.md#internal-self-review)
 share `review`. Implementation stays on `implement` and binds its

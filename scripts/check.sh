@@ -61,8 +61,7 @@ cat > "$temp_dir/.github/model-config.json" <<'JSON'
   },
   "fusion-max": {
     "model": "fusion",
-    "reasoningEffort": "max",
-    "longContext": false
+    "reasoningEffort": "max"
   }
 }
 JSON

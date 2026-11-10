@@ -26,17 +26,14 @@
   },
   "fusion-standard": {
     "model": "fusion",
-    "reasoningEffort": "standard",
-    "longContext": false
+    "reasoningEffort": "standard"
   },
   "fusion-high": {
     "model": "fusion",
-    "reasoningEffort": "high",
-    "longContext": false
+    "reasoningEffort": "high"
   },
   "fusion-max": {
     "model": "fusion",
-    "reasoningEffort": "max",
-    "longContext": false
+    "reasoningEffort": "max"
   }
 }
