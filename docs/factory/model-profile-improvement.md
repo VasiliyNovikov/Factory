@@ -52,7 +52,7 @@ active work.
 - Verify proposed settings against the profile schema, wrapper, and live catalog:
   policy-enabled model IDs, tool calls, supported reasoning or Fusion tier values,
   boolean context selection, and positive evidence for any long-context tier.
-  The wrapper forwards `reasoningEffort`, or `fusionTier` for
+  The wrapper forwards `reasoningEffort` as `--reasoning-effort`, or `--fusion-tier` for
   [Fusion profiles](../examples/ai-tools.md#opt-in-fusion-profiles); other models
   without configurable reasoning need a separate wrapper change. Provider API
   options do not establish CLI support.

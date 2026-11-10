@@ -64,7 +64,7 @@ The launcher uses
 ./scripts/ai.sh --profile review --prompt "Review the current diff."
 ```
 
-Direct-model profiles supply `model`, `reasoningEffort`, and `longContext`, without
+Profiles supply `model`, `reasoningEffort`, and `longContext`, without
 schema validation. Unknown profiles fail, with no fallback. PR review, repository
 review, model profile improvement,
 [owner feedback learning](../factory/owner-feedback.md), and
@@ -95,10 +95,10 @@ workflow profiles and native-subagent bindings remain direct-model selections.
 ./scripts/ai.sh --profile fusion-high --prompt "YOUR TASK"
 ```
 
-Fusion profiles use `model: "fusion"` and `fusionTier: "standard"`, `"high"`, or
-`"max"` instead of `reasoningEffort`. The launcher forwards the
+Fusion profiles use `model: "fusion"` and `reasoningEffort: "standard"`, `"high"`, or
+`"max"`. For Fusion, the launcher maps `reasoningEffort` to the
 [documented](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/choose-a-model#choosing-a-model-from-the-command-line)
-`--model fusion --fusion-tier TIER`, without `--reasoning-effort`: Fusion chooses
+`--fusion-tier` flag, not `--reasoning-effort`: Fusion chooses
 individual models' reasoning effort. `longContext` still controls `--context`, but
 available context depends on the models Fusion selects. CLI errors propagate
 unchanged, without retrying another model or tier; these profiles do not replace

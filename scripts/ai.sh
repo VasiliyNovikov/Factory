@@ -45,14 +45,13 @@ profile_config=$(jq -ce --arg profile "$profile" '.[$profile]' "$config") \
   || fail "Cannot load model profile '$profile' from $config"
 
 model=$(jq -r '.model' <<< "$profile_config")
+reasoning=$(jq -r '.reasoningEffort' <<< "$profile_config")
 context=$(jq -r 'if .longContext then "long_context" else "default" end' <<< "$profile_config")
 
 model_args=(--model "$model")
 if [[ "$model" == fusion ]]; then
-  tier=$(jq -r '.fusionTier' <<< "$profile_config")
-  model_args+=(--fusion-tier "$tier")
+  model_args+=(--fusion-tier "$reasoning")
 else
-  reasoning=$(jq -r '.reasoningEffort' <<< "$profile_config")
   model_args+=(--reasoning-effort "$reasoning")
 fi
 

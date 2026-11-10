@@ -51,17 +51,17 @@ cat > "$temp_dir/.github/model-config.json" <<'JSON'
   },
   "fusion-standard": {
     "model": "fusion",
-    "fusionTier": "standard",
+    "reasoningEffort": "standard",
     "longContext": false
   },
   "fusion-high": {
     "model": "fusion",
-    "fusionTier": "high",
+    "reasoningEffort": "high",
     "longContext": true
   },
   "fusion-max": {
     "model": "fusion",
-    "fusionTier": "max",
+    "reasoningEffort": "max",
     "longContext": false
   }
 }

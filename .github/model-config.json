@@ -26,17 +26,17 @@
   },
   "fusion-standard": {
     "model": "fusion",
-    "fusionTier": "standard",
+    "reasoningEffort": "standard",
     "longContext": false
   },
   "fusion-high": {
     "model": "fusion",
-    "fusionTier": "high",
+    "reasoningEffort": "high",
     "longContext": false
   },
   "fusion-max": {
     "model": "fusion",
-    "fusionTier": "max",
+    "reasoningEffort": "max",
     "longContext": false
   }
 }
