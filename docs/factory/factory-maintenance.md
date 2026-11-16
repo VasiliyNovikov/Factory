@@ -84,8 +84,8 @@ and keep the executing Factory checkout unchanged.
 
 - Append a job summary covering examined issues/PRs and history, coverage gaps,
   target repository/head/default revisions separately from the Factory revision,
-  source evidence, chosen workers, verified host acceptance/run links,
-  skipped/blocked reasons, and outstanding work.
+  source evidence, chosen workers, verified dispatch acceptance, returned host
+  worker links or reconciliation gaps, skipped/blocked reasons, and outstanding work.
 - The router ignores maintenance completions; worker events retain their ordinary
   routing. There is no receipt/report workflow or new feedback loop.
 
