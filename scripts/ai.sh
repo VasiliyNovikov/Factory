@@ -56,4 +56,5 @@ else
 fi
 
 exec copilot "${model_args[@]}" \
-  --context "$context" --enable-memory --prompt "$prompt" --yolo
+  --context "$context" --disable-builtin-mcps --enable-memory \
+  --prompt "$prompt" --yolo
