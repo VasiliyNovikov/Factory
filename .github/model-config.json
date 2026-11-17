@@ -1,21 +1,20 @@
 {
   "default": {
-    "model": "gpt-6-astra",
+    "model": "gpt-6.2-astra",
     "reasoningEffort": "high",
     "longContext": true
   },
   "triage": {
-    "model": "gpt-6-astra",
+    "model": "gpt-6.2-astra",
     "reasoningEffort": "max",
     "longContext": true
   },
   "route": {
-    "model": "gpt-6.1-sol",
-    "reasoningEffort": "high",
-    "longContext": false
+    "model": "mai-code-2",
+    "reasoningEffort": "max"
   },
   "implement": {
-    "model": "gpt-6-astra",
+    "model": "gpt-6.2-astra",
     "reasoningEffort": "max",
     "longContext": true
   },
