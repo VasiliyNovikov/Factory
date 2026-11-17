@@ -66,14 +66,21 @@ The launcher uses
 
 Profiles supply `model`, `reasoningEffort`, and optional `longContext` (default
 `false`). The launcher rejects explicit non-boolean `longContext` values before
-invoking Copilot. Unknown profiles fail, with no fallback. PR review, repository
-review, model profile improvement,
+invoking Copilot, which receives only the converted tier: `"false"` would
+otherwise silently become the valid `long_context` argument. Unknown profiles
+fail, with no fallback. PR review, repository review, model profile improvement,
 [owner feedback learning](../factory/owner-feedback.md), and
 [implementation self-review](../factory/issue-implementation.md#internal-self-review)
 share `review`. Implementation stays on `implement` and binds its
 [native review subagent](#nested-ai-invocations) to `review` for the internal
 pre-publication pass; it does not install another CLI or replace independent
 PR review.
+
+The launcher passes `--disable-builtin-mcps` for every profile, disabling the
+built-in GitHub MCP servers (`github-mcp-server` and `githubiq`). GitHub access
+uses `gh` with the caller's `GH_TOKEN`, subject to the
+[endpoint credential rules](../factory/github-app.md#api-evidence-credentials).
+This is not credential or write isolation.
 
 The Copilot launcher passes `--enable-memory` to opt into native Memory in
 non-interactive prompt mode; see [Copilot Memory](../factory/copilot-memory.md)
@@ -131,9 +138,9 @@ workflow-schema validation; model IDs/settings and guide prose are not checked.
 
 An unchanged copy of the launcher runs with fixed profile fixtures and a stub
 Copilot CLI. It checks direct-model profiles and all three Fusion tiers, both
-context tiers, Memory opt-in, exact argument boundaries and literal multiline
-prompts, CLI error/exit-status propagation, and rejection of unknown profiles,
-invalid context values, or arguments without invoking Copilot.
+context tiers, disabled built-in MCPs, Memory opt-in, exact argument boundaries
+and literal multiline prompts, CLI error/exit-status propagation, and rejection
+of unknown profiles, invalid context values, or arguments without invoking Copilot.
 Fixtures keep the checks independent of live model choices; the production
 configuration is not modified.
 

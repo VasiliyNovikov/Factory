@@ -137,7 +137,9 @@ Before accepting eligibility:
 
 - Dispatch existing workers in `FACTORY_REPOSITORY` on its current default branch.
   Use `gh workflow run --repo "$FACTORY_REPOSITORY"` or an explicit host API
-  endpoint, not an implicit checkout repository.
+  endpoint, not an implicit checkout repository. `gh workflow run` requests run
+  details on GitHub.com; direct REST dispatches using API `2022-11-28` need
+  top-level `return_run_details: true`, not an extra workflow input.
 - Worker YAML on the host's current default revision owns the input schema, not
   a PR-revision copy. Read that schema before dispatch and always set
   `target_repository=TARGET_REPOSITORY`. Never send unknown inputs, invent a new
@@ -184,15 +186,18 @@ Before accepting eligibility:
   discussion and outstanding feedback.
 - Worker concurrency is not dispatch deduplication; independent coordinators can
   race, so recheck and retain worker freshness guards.
-- Verify dispatch acceptance and correlate the resulting native run/attempt when
-  observable. Record accepted-but-not-yet-linked work without repeating dispatch.
+- Verify dispatch acceptance from the response and record its worker link: the
+  URL returned by `gh workflow run`, or REST `workflow_run_id`, `run_url`, and
+  `html_url`. Use that link in reports instead of searching run history for it.
   Acceptance is not successful worker execution or completed recovery.
 - If dispatch preceded required verification, report the ordering failure with
   the affected target/revisions, acceptance evidence, and checks still missing at
   acceptance. Record later verification separately; it cannot retroactively
   authorize that dispatch. Reconcile the accepted work and its outcomes under
   these retry rules, without blind redispatch.
-- Reconcile uncertain responses before retrying; never blindly dispatch again.
+- Reconcile errors, timeouts, missing run details, or other uncertain responses
+  before retrying; never blindly dispatch again. A missing link or not-yet-visible
+  run is not grounds to repeat an accepted dispatch.
   A terminal failed/timed-out/cancelled worker may justify recovery only after
   checking its partial mutations, current eligibility, and remaining work.
 - Do not automatically repeat an unsuccessful recovery (failure, timeout, or
