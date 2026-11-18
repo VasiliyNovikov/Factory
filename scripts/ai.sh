@@ -46,7 +46,10 @@ profile_config=$(jq -ce --arg profile "$profile" '.[$profile]' "$config") \
 
 model=$(jq -r '.model' <<< "$profile_config")
 reasoning=$(jq -r '.reasoningEffort' <<< "$profile_config")
-context=$(jq -r 'if .longContext then "long_context" else "default" end' <<< "$profile_config")
+context=$(jq -r 'if has("longContext") then .longContext else false end |
+  if type != "boolean" then error("longContext must be boolean")
+  elif . then "long_context" else "default" end' <<< "$profile_config") \
+  || fail "Invalid model profile '$profile' in $config"
 
 model_args=(--model "$model")
 if [[ "$model" == fusion ]]; then
