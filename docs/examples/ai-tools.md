@@ -120,7 +120,7 @@ Run the same checks locally and in CI:
 ./scripts/check.sh
 ```
 
-Requires Bash, `jq`, [Mike Farah's `yq` v4](https://github.com/mikefarah/yq), and
+Requires Bash, Node.js, `jq`, [Mike Farah's `yq` v4](https://github.com/mikefarah/yq), and
 standard shell utilities, all preinstalled on the Ubuntu CI runner.
 The checks validate each `scripts/*.sh` with `bash -n` and parse
 `.github/model-config.json` as one JSON object. YAML parsing requires the shared
@@ -143,6 +143,13 @@ and literal multiline prompts, CLI error/exit-status propagation, and rejection
 of unknown profiles, invalid context values, or arguments without invoking Copilot.
 Fixtures keep the checks independent of live model choices; the production
 configuration is not modified.
+
+The [owner-feedback shadow](../factory/owner-feedback.md#staged-shadow-experiment)
+also checks its manual/reusable admission, absent secret inheritance,
+read-only repository permissions, staged outputs, and profile forwarding.
+A fixture native harness verifies literal arguments, the shared absolute deadline,
+the GNU timeout invocation, and error propagation without a model or GitHub call.
+These checks do not establish live isolation or elapsed-time enforcement.
 
 [Offline CI](../../.github/workflows/offline-checks.yml) runs this command on pull
 requests and default-branch pushes, with read-only contents access and no persisted

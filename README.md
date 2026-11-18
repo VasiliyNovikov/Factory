@@ -209,6 +209,29 @@ and implementation. It does not directly edit guidance or existing discussions.
 No new actionable pattern means no new issue; incomplete coverage and failures
 are reported explicitly in the job summary and retained log.
 
+### Manual staged comparison
+
+The [owner-feedback shadow experiment](docs/factory/owner-feedback.md#staged-shadow-experiment)
+tries a pinned gh-aw workflow without replacing production. A default-branch
+manual caller supplies the `review` profile and a fixed feedback window/revision,
+passes no repository secrets, and permits only repository reads. Findings are
+staged previews; no issues are created.
+
+```mermaid
+flowchart TD
+    manual["Manual; default branch<br/>Shared owner-feedback concurrency"] --> caller["Pinned Factory profile<br/>No inherited secrets; read-only repository token"]
+    caller --> analysis["gh-aw analysis<br/>30-minute invocation and native task evidence"]
+    analysis --> detection["Threat detection"]
+    detection --> preview["Staged finding or no-finding report<br/>No repository writes"]
+    analysis --> incomplete["Report incomplete coverage or failures"]
+    preview --> compare["Inspect live evidence and matched baseline<br/>Adoption remains a separate decision"]
+```
+
+Offline checks protect the secret/permission boundary and deadline-wrapper
+contract. A live run is still required to establish useful analysis, runtime
+fidelity, report retention, and no unintended mutations; the shadow does not
+solve production publication or cross-job deadline integration.
+
 ## CI examples
 
 These are reusable snippets, not installed workflows. Basic examples use the

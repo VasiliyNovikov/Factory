@@ -76,3 +76,86 @@ claims need comparative evidence.
   repository data to external providers, execute analyzed/downloaded code, or
   install dependencies outside configured setup. Read-only queries are allowed;
   use `RUNNER_TEMP` for temporary data. These rules are not credential isolation.
+
+## Staged shadow experiment
+
+The manual [shadow caller](../../.github/workflows/owner-feedback-shadow.yml)
+evaluates [gh-aw](https://github.github.com/gh-aw/) without changing the production
+workflow above. It calls the compiled
+[analysis workflow](../../.github/workflows/owner-feedback-shadow.md) at the same
+commit, **without passing or inheriting repository secrets**. Its built-in token
+permits repository reads and Copilot inference, not repository writes. Do not add
+App credentials, environments, secret inheritance, or writable token fallbacks.
+The compiler's optional secret references therefore resolve empty; only the
+built-in token is available. This is a configuration boundary to verify live,
+not a claim that the pilot has demonstrated isolation.
+
+The caller reads the current `review` profile from the pinned Factory checkout;
+the native harness receives its exact model, effort, context, and Memory opt-in.
+No aliases, routing, fallback models, or additional CLI sessions are allowed.
+The small [deadline wrapper](../../scripts/owner-feedback-shadow.cjs) delegates
+to the pinned native harness under GNU `timeout`, setting one absolute
+`AI_DEADLINE_UTC` for the 30-minute analysis and its native tasks. Setup and
+gh-aw's separate detection, preview rendering, and artifact processing are
+outside that invocation, and must be measured separately. This does not solve
+the cross-job deadline requirement for a production publisher.
+
+The caller shares production's `owner-feedback` concurrency group and preserves
+the single-pending, non-cancelling behavior. Only default-branch manual runs are
+admitted. Factory tooling remains at `github.workflow_sha`; the live target
+default must equal the supplied `expected_sha` before analysis.
+
+### Assess and preview
+
+Apply **Assess** above, participant approval, complete edit/deletion histories,
+and the all-state findings reconciliation, but use the supplied 90-day
+`SHADOW_WINDOW_START` / `SHADOW_WINDOW_END` comparison window. Read current target
+guidance at `SHADOW_TARGET_SHA` and recheck that default SHA and cited feedback
+before finishing; drift or incomplete evidence means incomplete coverage.
+`min-integrity: none` lets the read proxy return all provenance, not just
+trusted-author content; it grants no approval or additional mutation authority.
+Provider documentation is fetched only from the configured research domains.
+Denied or filtered evidence must be reported, never treated as empty.
+
+**Do not execute Publish or make any GitHub mutation.** Instead, after completing
+the report and all native tasks, send at most one genuinely new finding with
+empty labels to the staged `create_issue` tool. For complete coverage with no
+new finding, use `noop`; for failed or missing evidence, use `report_incomplete`.
+All diagnostic issue writers are disabled; threat detection remains enforced.
+The preview is not a created issue, and does not prove Factory authorship,
+initially empty live labels, recovery, or publication verification.
+
+Apply **Report** above to the assessment, replacing publication results with
+preview/no-finding/incomplete results. Include the caller run-attempt URL, actual
+CLI/profile settings, analysis deadline/duration, comparison inputs, native-task
+IDs and verified runtime bindings, coverage, and network/API failures. Retain the
+full report in both the agent summary and final CLI response. Native gh-aw
+`agent`, `activation`, `detection`, `usage`, and firewall artifacts supplement
+these reports; missing native `events.jsonl`, terminal results, usage, or retention
+evidence are explicit gaps, not a clean run.
+
+### Compile and try
+
+Use **gh-aw v1.2.2** and regenerate the lock file rather than editing it:
+
+```sh
+gh aw compile owner-feedback-shadow --action-mode release \
+  --action-tag 399a445fe2d8926c616b54b1b82a16b5b2be4445 --no-check-update
+./scripts/check.sh
+```
+
+After merge, run **Owner feedback shadow**, not its reusable analysis workflow.
+Supply the live default's full `expected_sha` and a non-future `window_end` in
+`YYYY-MM-DDTHH:MM:SSZ` format. For a matched comparison, copy both from a retained
+production baseline whose default revision is still current. Without such a
+baseline, an initial run can use the current UTC time, but is not a measured
+comparison.
+
+Before claiming the shadow succeeded, inspect the complete live attempt:
+read-only generated permissions, no inherited secrets/App token, no unintended
+repository mutations, complete reports/provenance, exact model/task bindings, and
+the staged preview or honest incomplete result. Compare useful findings,
+coverage, analysis and detection overhead, and recorded usage against the matched
+baseline; missing measurements do not imply savings. Compilation and mocks alone
+prove none of those live outcomes. A trusted, recovery-safe publisher and
+production migration require a separate decision after this evidence.

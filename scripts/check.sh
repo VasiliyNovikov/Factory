@@ -31,6 +31,43 @@ jq -s --slurpfile profiles "$repo_root/.github/model-config.json" '
 ' <<< "$profile_references"
 printf 'PASS: shared AI action default and workflow model profiles\n'
 
+shadow_workflows=$(
+  yq -o=json -I=0 'explode(.)' \
+    "$repo_root/.github/workflows/owner-feedback-shadow.yml" \
+    "$repo_root/.github/workflows/owner-feedback-shadow.lock.yml" | jq -s .
+)
+jq -e '
+  .[0] as $caller | .[1] as $compiled |
+  ($caller.on | keys == ["workflow_dispatch"]) and
+  ($compiled.on | keys == ["workflow_call"]) and
+  ($caller.concurrency == {"group":"owner-feedback","cancel-in-progress":false}) and
+  ($caller.jobs.profile.if ==
+    "github.ref == format('\''refs/heads/{0}'\'', github.event.repository.default_branch)") and
+  ($caller.jobs.shadow.uses == "./.github/workflows/owner-feedback-shadow.lock.yml") and
+  ($caller.jobs.shadow.needs == "profile") and
+  ($caller.jobs.shadow.with.model == "${{ needs.profile.outputs.model }}") and
+  ($caller.jobs.shadow.with.effort == "${{ needs.profile.outputs.effort }}") and
+  ($caller.jobs.shadow.with.context == "${{ needs.profile.outputs.context }}") and
+  ($caller | tostring | contains("secrets.") | not) and
+  all(.[]; all(.jobs[]; .secrets == null and .environment == null)) and
+  all(.[]; all((.permissions // {}), (.jobs[].permissions // {});
+    type == "object" and
+    all(to_entries[]; .value == "read" or .value == "none" or
+      (.key == "copilot-requests" and .value == "write")))) and
+  ($compiled.jobs.safe_outputs.env.GH_AW_SAFE_OUTPUTS_STAGED == "true") and
+  ($compiled.jobs.agent.steps | map(select(.id == "agentic_execution")) | length == 1) and
+  ($compiled.jobs.agent.steps[] | select(.id == "agentic_execution") |
+    .env.COPILOT_MODEL == "${{ inputs.model }}" and
+    .env.SHADOW_REVIEW_EFFORT == "${{ inputs.effort }}" and
+    .env.SHADOW_REVIEW_CONTEXT == "${{ inputs.context }}" and
+    .env.GH_AW_ENGINE_CWD == "factory" and
+    (.run | contains("factory_shadow_harness.cjs")))
+' <<< "$shadow_workflows" > /dev/null || {
+  printf 'FAIL: shadow admission, secret/permission boundary, staging, or profile binding\n' >&2
+  exit 1
+}
+printf 'PASS: shadow admission, no inherited secrets, read-only permissions and staged outputs\n'
+
 temp_dir=$(mktemp -d)
 trap 'rm -rf -- "$temp_dir"' EXIT
 mkdir -p "$temp_dir/bin" "$temp_dir/scripts" "$temp_dir/.github"
@@ -177,3 +214,51 @@ for context in '"false"' null; do
 done
 
 printf 'PASS: copilot direct/Fusion profiles, literal prompt, exit status, and invalid arguments\n'
+
+cp "$repo_root/scripts/owner-feedback-shadow.cjs" "$temp_dir/scripts/factory_shadow_harness.cjs"
+cat > "$temp_dir/scripts/copilot_harness.cjs" <<'JS'
+const { writeFileSync } = require("node:fs");
+writeFileSync(process.env.SHADOW_TEST_CAPTURE, JSON.stringify({
+  args: process.argv.slice(2),
+  budget: process.env.AI_BUDGET_MINUTES,
+  deadline: process.env.AI_DEADLINE_UTC,
+  now: Date.now(),
+}));
+process.exit(Number(process.env.SHADOW_TEST_EXIT));
+JS
+cat > "$temp_dir/bin/timeout" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\0' "$@" > "$SHADOW_TEST_TIMEOUT"
+shift 3
+exec "$@"
+SH
+chmod +x "$temp_dir/bin/timeout"
+
+case_name='shadow native harness arguments, deadline and failure propagation'
+shadow_status=0
+PATH="$temp_dir/bin:$PATH" SHADOW_REVIEW_EFFORT=max SHADOW_REVIEW_CONTEXT=long_context \
+  SHADOW_TEST_TIMEOUT="$temp_dir/timeout-args" SHADOW_TEST_CAPTURE="$temp_dir/shadow.json" \
+  SHADOW_TEST_EXIT=37 \
+  node "$temp_dir/scripts/factory_shadow_harness.cjs" fixture-cli --prompt "$prompt" \
+  > "$temp_dir/output" 2>&1 || shadow_status=$?
+[[ "$shadow_status" == 37 ]] || fail "native harness exit status was not preserved"
+jq -e --arg prompt "$prompt" '
+  .args == ["fixture-cli","--reasoning-effort","max","--context","long_context","--prompt",$prompt] and
+  .budget == "30" and
+  ((.deadline | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601) * 1000 - .now |
+    . > 1790000 and . <= 1800000)
+' "$temp_dir/shadow.json" > /dev/null || fail 'profile, prompt or absolute deadline changed'
+jq -Rse 'split("\u0000")[:3] == ["--verbose","--kill-after=30s","30m"]' \
+  "$temp_dir/timeout-args" > /dev/null || fail 'hard timeout or termination grace changed'
+
+case_name='shadow missing profile fails before native invocation'
+: > "$temp_dir/timeout-args"
+shadow_status=0
+PATH="$temp_dir/bin:$PATH" SHADOW_REVIEW_EFFORT= SHADOW_REVIEW_CONTEXT=long_context \
+  SHADOW_TEST_TIMEOUT="$temp_dir/timeout-args" \
+  node "$temp_dir/scripts/factory_shadow_harness.cjs" fixture-cli \
+  > "$temp_dir/output" 2>&1 || shadow_status=$?
+(( shadow_status != 0 )) || fail 'missing profile succeeded'
+[[ ! -s "$temp_dir/timeout-args" ]] || fail 'missing profile invoked the native harness'
+printf 'PASS: shadow profile arguments, absolute deadline, hard timeout and failure propagation\n'
