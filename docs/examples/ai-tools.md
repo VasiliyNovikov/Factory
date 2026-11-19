@@ -76,10 +76,11 @@ share `review`. Implementation stays on `implement` and binds its
 pre-publication pass; it does not install another CLI or replace independent
 PR review.
 
-Every profile passes `--disable-builtin-mcps` for `github-mcp-server` and
-`githubiq`, and `--excluded-tools semantic_code_search` for native indexed
-GitHub code search. Even if a native task advertises that tool, do not use it.
-Search checked-out code locally and use `gh` for GitHub API calls under the
+For every profile, the launcher passes `--disable-builtin-mcps` for
+`github-mcp-server` and `githubiq`, and
+`--excluded-tools semantic_code_search lexical_code_search` for native indexed
+GitHub code search. If the root or a native task offers such a tool, do not use
+it. Search the checked-out revision locally and use `gh` for GitHub API calls under the
 [endpoint credential rules](../factory/github-app.md#api-evidence-credentials).
 Tool filters do not isolate credentials or enforce `gh`-only access.
 

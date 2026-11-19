@@ -113,7 +113,7 @@ assert_args() {
 }
 
 cd -- "$temp_dir"
-shared_args=(--disable-builtin-mcps --excluded-tools semantic_code_search
+shared_args=(--disable-builtin-mcps --excluded-tools semantic_code_search lexical_code_search
   --enable-memory --prompt "$prompt" --yolo)
 default_args=(copilot --model fixture-default --reasoning-effort medium
   --context default "${shared_args[@]}")
