@@ -113,12 +113,12 @@ assert_args() {
 }
 
 cd -- "$temp_dir"
+shared_args=(--disable-builtin-mcps --excluded-tools semantic_code_search lexical_code_search
+  --enable-memory --prompt "$prompt" --yolo)
 default_args=(copilot --model fixture-default --reasoning-effort medium
-  --context default --disable-builtin-mcps --enable-memory
-  --prompt "$prompt" --yolo)
+  --context default "${shared_args[@]}")
 extended_args=(copilot --model fixture-extended --reasoning-effort high
-  --context long_context --disable-builtin-mcps --enable-memory
-  --prompt "$prompt" --yolo)
+  --context long_context "${shared_args[@]}")
 
 case_name='copilot default profile and literal prompt'
 run_launcher 0
@@ -141,16 +141,14 @@ for selection in 'standard default' 'high long_context' 'max default'; do
   run_launcher 0 --profile "fusion-$tier"
   assert_status 0
   assert_args copilot --model fusion --fusion-tier "$tier" \
-    --context "$context" --disable-builtin-mcps --enable-memory \
-    --prompt "$prompt" --yolo
+    --context "$context" "${shared_args[@]}"
 done
 
 case_name='copilot Fusion CLI failure'
 run_launcher 37 --profile fusion-max
 assert_status 37
 assert_args copilot --model fusion --fusion-tier max \
-  --context default --disable-builtin-mcps --enable-memory \
-  --prompt "$prompt" --yolo
+  --context default "${shared_args[@]}"
 grep -qx 'fixture CLI failure' "$temp_dir/output" \
   || fail 'CLI error was not preserved'
 

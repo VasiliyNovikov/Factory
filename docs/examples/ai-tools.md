@@ -76,11 +76,13 @@ share `review`. Implementation stays on `implement` and binds its
 pre-publication pass; it does not install another CLI or replace independent
 PR review.
 
-The launcher passes `--disable-builtin-mcps` for every profile, disabling the
-built-in GitHub MCP servers (`github-mcp-server` and `githubiq`). GitHub access
-uses `gh` with the caller's `GH_TOKEN`, subject to the
+For every profile, the launcher passes `--disable-builtin-mcps` for
+`github-mcp-server` and `githubiq`, and
+`--excluded-tools semantic_code_search lexical_code_search` for native indexed
+GitHub code search. If the root or a native task offers such a tool, do not use
+it. Search the checked-out revision locally and use `gh` for GitHub API calls under the
 [endpoint credential rules](../factory/github-app.md#api-evidence-credentials).
-This is not credential or write isolation.
+Tool filters do not isolate credentials or enforce `gh`-only access.
 
 The Copilot launcher passes `--enable-memory` to opt into native Memory in
 non-interactive prompt mode; see [Copilot Memory](../factory/copilot-memory.md)
@@ -138,9 +140,10 @@ workflow-schema validation; model IDs/settings and guide prose are not checked.
 
 An unchanged copy of the launcher runs with fixed profile fixtures and a stub
 Copilot CLI. It checks direct-model profiles and all three Fusion tiers, both
-context tiers, disabled built-in MCPs, Memory opt-in, exact argument boundaries
-and literal multiline prompts, CLI error/exit-status propagation, and rejection
-of unknown profiles, invalid context values, or arguments without invoking Copilot.
+context tiers, the MCP and native-search flags, Memory opt-in, exact argument
+boundaries and literal multiline prompts, CLI error/exit-status propagation, and
+rejection of unknown profiles, invalid context values, or arguments without invoking
+Copilot. These argument checks do not inspect live root or native-task toolsets.
 Fixtures keep the checks independent of live model choices; the production
 configuration is not modified.
 
