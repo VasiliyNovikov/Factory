@@ -23,6 +23,8 @@ the shared [AI action](../examples/ai-tools.md#shared-factory-action) with `revi
   owner's contribution, not surrounding text.
 - Read full relevant discussions, threads, and edit/deletion histories, including
   older context and later replies, under the [pagination rules](../../AGENTS.md#github-cli-pagination).
+  If a read shows only excerpts, inspect the omitted relevant text before calling
+  the discussion fully read.
 - Read current remote default guidance and linked decisions/outcomes in
   `TARGET_REPOSITORY` with `gh`, not the setup snapshot. Keep active tooling and
   policy in `FACTORY_ROOT`; read target project instructions at the evaluated revision.
@@ -57,6 +59,9 @@ Include:
   and evaluated default SHA, owner ID, UTC window, discovery methods, terminal
   pages, counts by surface, coverage of both owner-authored material and owner
   edits to others' content, and unavailable history.
+- Report discussion coverage separately from discovery counts and terminal pages.
+  Link each partially read discussion and say what remains unread and how that
+  limits the conclusion.
 - Patterns, supporting/contrary feedback, guidance assessment, provider evidence
   and limits, existing work, checks, and publication failures/uncertain outcomes.
 
