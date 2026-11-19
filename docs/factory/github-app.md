@@ -97,7 +97,7 @@ event without an Actions-write grant.
 
 ## Token names and identities
 
-App jobs expose **two credentials through three standard variables**:
+In App jobs, the shared action launches Copilot with **two credentials in three variables**:
 
 | Variable | Value in App-based jobs | Purpose |
 |---|---|---|
@@ -164,7 +164,14 @@ and allowed mutations.
   Actions-token override to a subprocess that also makes non-Actions calls.
   A denied request is a failure to report, not permission to try another
   credential or widen access.
-- Keep `COPILOT_GITHUB_TOKEN` bound to the built-in token for model requests.
+- When launching Copilot or a [separately authorized model client](model-profile-improvement.md#permissions-and-trust),
+  bind `COPILOT_GITHUB_TOKEN` to the built-in token for that invocation. A tool
+  shell's environment does not prove which credential the parent CLI used.
+
+Run each repository check with its prescribed credential and report its own
+result. Do not require `COPILOT_GITHUB_TOKEN` to be visible in the shell or to
+match `GITHUB_TOKEN`, or export a token just to pass that check. If the live
+model binding matters but cannot be verified, report it as unknown.
 
 Retain non-secret API invocation evidence in the run log and summary: exercised
 workflow revision, endpoint/operation, credential role, and outcome, including the
