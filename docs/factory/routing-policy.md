@@ -113,25 +113,33 @@ local-only stage, but must not be inferred from the current directory.
 - API errors and unavailable required evidence are failures or verification gaps,
   not proof that there is no work.
 
+## Evidence for routing decisions
+
+Direct and delegated assessments need the same evidence. Verify the applicable
+head and default-branch revisions and [approval for the current scope](participant-approval.md).
+Inspect relevant bodies, comments, reviews, thread replies and edit/deletion
+histories in full, through each collection's terminal page. If a revision or
+relevant discussion changes before dispatch, recheck the affected evidence and
+approval, even at the same head. If evidence is missing, hold that target and
+name the gap; other verified targets may proceed. A later worker check cannot
+authorize an earlier dispatch.
+
+When deciding not to dispatch, identify any reused primary evidence and show
+why it still applies. A verified posted-review receipt for the exact attempt
+and reviewed SHA need not be fetched again; check that the assessment still
+covers the current discussion. A prior conclusion or an excerpt that omits a
+required receipt or history does not verify it. Report what remains unverified
+rather than treating zero dispatches as complete coverage.
+
 ### Delegated assessments
 
 Delegates are native Copilot subagents that the coordinator may start to assess
 evidence, not dispatched GitHub Actions workers. The coordinator owns dispatch.
 Use the [shared nested launch rule](../examples/ai-tools.md#nested-ai-invocations)
 with the coordinator's workflow profile (`route` for both router and maintenance).
-Before accepting eligibility:
-
-- Read each target's completed assessment: checked head and default-branch
-  revisions, sources, full inspection of bodies, discussions and edit/deletion
-  histories, terminal pagination, scope and approval decisions, and any failures
-  or gaps.
-- Confirm fresh evidence and completed inspection close known gaps. An "eligible"
-  answer, counts, or a finished delegate are not proof. Recheck affected evidence
-  when revisions or discussions change; a head lookup does not refresh old history.
-- Complete missing checks within existing permissions, then reconcile live state
-  before dispatch as required below. Otherwise, hold that target and report the
-  gap. Promised follow-up or worker checks cannot replace verification;
-  independently verified targets may proceed.
+Before accepting eligibility, read each target's completed assessment, its
+sources, failures and gaps. Close gaps within existing permissions; counts,
+an "eligible" answer, task completion and promised checks are not verification.
 
 ## Dispatch contract
 
