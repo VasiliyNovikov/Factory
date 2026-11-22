@@ -163,6 +163,14 @@ maintenance still applies. The main worker stays on `implement`; independent
   The implementer owns fixes and reruns relevant validation.
   Obtain review of subsequent changes so the final candidate is covered; reuse
   unchanged coverage rather than repeating the entire review unnecessarily.
+- Credit an optional check only if the reviewer's tool record shows it ran on
+  the reviewed candidate under the [shared safeguards](review-checks.md). Task
+  completion and profile binding do not show how a check ran. When first
+  reporting the candidate, name any unsupported check and explain why in both
+  the new or updated PR description and the result reply. Credit a verified
+  rerun separately: it establishes only its own result, not how the original
+  check ran. Keep supported findings; an omitted or unsupported optional check
+  alone does not block publication.
 - Recheck eligibility and remote head/base before publication as usual. After
   drift, reconcile changes and refresh affected review coverage and checks.
   Fix confirmed actionable findings before publication; if blocked, report the
