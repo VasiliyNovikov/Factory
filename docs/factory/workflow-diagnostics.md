@@ -207,6 +207,19 @@ recording intended findings before creation and verified issue links afterwards.
 Preserve earlier evidence and make each checkpoint's phase clear. These are
 partial reports, not proof that the final CLI response reached the log.
 
+For the runner log, use `report="$RUNNER_TEMP/diagnostics-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.md"`.
+Append a copy of each summary checkpoint to `$report.checkpoints`. Write the
+complete final Markdown to a temporary file beside `$report` and append it to
+`GITHUB_STEP_SUMMARY`. After both writes succeed, rename that file to `$report`
+before sending the final CLI response. A final report may describe incomplete
+analysis.
+
+After a successful AI exit, a native workflow step prints that copy even if the
+CLI stopped mid-response. Without a finalized copy it reports unverified
+retention, prints any available checkpoints, and fails the reporting step
+without repeating assessments or writes. Neither local copies nor a successful
+step prove that the hosted summary and downloaded log agree.
+
 If the coordinator can still act after an error, request outstanding assessments
 to stop, consolidate available evidence, and report the failure and coverage gaps
 without claiming unverified cancellation or replaying mutations. On any earlier
