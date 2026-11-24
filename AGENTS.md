@@ -92,6 +92,11 @@ rather than claiming a clean result.
   bodies, triage assessments, and other longer comments, reviews, or reports with
   a `## TL;DR` section: one or two short, plain-language sentences before supporting
   detail. Already-brief replies do not need a separate summary.
+- When follow-up is in question, end the prose of an AI-written report,
+  assessment, or decision with the recommended next step and who takes it, or
+  say that nothing remains. If the owner must act, explain how Factory resumes
+  afterward. A recommendation does not authorize extra work, new issues, or
+  other changes.
 - Retain required links, markers, checked revisions, verification results, and
   failure details. Concision must not hide uncertainty.
 - Use descriptive headings and focused bullets when they help scanning. Group
