@@ -11,6 +11,20 @@ code, and their default branch belong to `TARGET_REPOSITORY`; worker workflows
 and their dispatch branch belong to `FACTORY_REPOSITORY`. They are equal in this
 local-only stage, but must not be inferred from the current directory.
 
+## REST discovery
+
+Use the [shared CLI guidance](../../AGENTS.md#github-cli-pagination) to read
+the target issue branch's full PR history and worker files at the Factory host's
+live default-branch ref:
+
+```sh
+gh api --method GET --paginate --slurp "repos/$TARGET_REPOSITORY/pulls" \
+  -f state=all -f head="$TARGET_OWNER:$issue_branch" -F per_page=100
+
+gh api --method GET "repos/$FACTORY_REPOSITORY/contents/.github/workflows/$worker_file" \
+  -f ref="$factory_default_branch"
+```
+
 ## Worker selection and eligibility
 
 ### Issue triage
@@ -110,8 +124,9 @@ local-only stage, but must not be inferred from the current directory.
 - CI failure/timeout evidence must belong to the PR's current head or merge
   revision. Router outcomes and runs triggered by `workflow_dispatch` or
   `schedule`, including maintenance and Factory workers, are not PR-code CI feedback.
-- API errors and unavailable required evidence are failures or verification gaps,
-  not proof that there is no work.
+- Report verification as incomplete until a successful read covers the missing
+  evidence. A failed read does not establish an empty PR history, a missing
+  workflow file, or no eligible work.
 
 ## Evidence for routing decisions
 
