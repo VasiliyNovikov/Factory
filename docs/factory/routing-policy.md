@@ -168,13 +168,15 @@ Before accepting eligibility:
   relying on the discovery snapshot.
 - Reconcile native workflow runs, coordinator logs/summaries, worker receipts, and
   current GitHub outcomes across ordinary routing, sweeps, and reruns:
-  - Match worker, target, revision, and outstanding request/source; include the
+  - Paginate the host worker workflow's `workflow_dispatch` runs, including queued,
+    pending, requested, waiting, and running jobs. Run `head_sha` is the host
+    default-branch revision at dispatch; do not filter it by the target PR head.
+  - Match the worker's assigned target repository, issue or PR number, PR head
+    (`head_sha` input for PR work), and outstanding request/source. Include the
     default-branch revision for base updates and review ID/source attempt for findings.
     For same-head review follow-up, match the relevant correction or finding
     disposition too: a metadata edit and its result reply can describe the same
     work. A run for that head alone does not establish context coverage.
-  - Paginate relevant run history. Include queued, pending, requested, waiting,
-    and running jobs, not just completed runs.
   - Run titles help locate assignments but do not prove feedback coverage or
     completion. An older-head run does not prove current work is covered.
 - Do not redispatch equivalent active or already-handled work. Jobs waiting for
