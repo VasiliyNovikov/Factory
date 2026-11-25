@@ -151,6 +151,9 @@ snippets, not installed workflows.
 
 ## GitHub CLI pagination
 
+For `gh api` REST reads with `-f`/`--raw-field` or `-F`/`--field`, pass
+`--method GET` from the first request. [Fields otherwise select POST](https://cli.github.com/manual/gh_api).
+
 When using `gh api --paginate --slurp`, filter the collected pages with external
 `jq`. Do not combine `--slurp` with gh's `--jq` or `--template`; these options are
 incompatible.
