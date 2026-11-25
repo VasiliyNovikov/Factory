@@ -86,11 +86,9 @@ and keep the executing Factory checkout unchanged.
   target repository/head/default revisions separately from the Factory revision,
   source evidence, chosen workers, verified dispatch acceptance, returned host
   worker links or reconciliation gaps, skipped/blocked reasons, and outstanding work.
-- Report unresolved requests separately from the related PR's review status.
-  When the current head and review context are covered, say no repeat review is
-  needed. In the same summary, link any external suggestion still awaiting
-  [scoped owner approval](participant-approval.md) and state that no one acts
-  on it without that approval. A later sweep can reassess it if the owner responds.
+- When a PR needs no repeat review, report that outcome alongside any unresolved
+  requests, such as an external suggestion awaiting
+  [scoped owner approval](participant-approval.md).
 - The router ignores maintenance completions; worker events retain their ordinary
   routing. There is no receipt/report workflow or new feedback loop.
 
