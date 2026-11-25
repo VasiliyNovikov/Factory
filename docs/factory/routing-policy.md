@@ -184,8 +184,8 @@ Before accepting eligibility:
 - Reconcile native workflow runs, coordinator logs/summaries, worker receipts, and
   current GitHub outcomes across ordinary routing, sweeps, and reruns:
   - Paginate the host worker workflow's `workflow_dispatch` runs, including queued,
-    pending, requested, waiting, and running jobs. Run `head_sha` is the host
-    default-branch revision at dispatch; do not filter it by the target PR head.
+    pending, requested, waiting, and running jobs. Do not filter runs by
+    `head_sha`: it identifies the host default-branch revision at dispatch.
   - Match the worker's assigned target repository, issue or PR number, PR head
     (`head_sha` input for PR work), and outstanding request/source. Include the
     default-branch revision for base updates and review ID/source attempt for findings.
