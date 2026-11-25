@@ -13,10 +13,9 @@ local-only stage, but must not be inferred from the current directory.
 
 ## REST discovery
 
-For `gh api` REST reads with `-f`/`--raw-field` or `-F`/`--field`, specify
-`--method GET` from the first request: [adding fields otherwise selects POST](https://cli.github.com/manual/gh_api).
-For example, read the target issue branch's full PR history and each needed
-worker file at the Factory host's live default-branch ref:
+Use the [shared CLI guidance](../../AGENTS.md#github-cli-pagination) to read
+the target issue branch's full PR history and worker files at the Factory host's
+live default-branch ref:
 
 ```sh
 gh api --method GET --paginate --slurp "repos/$TARGET_REPOSITORY/pulls" \
