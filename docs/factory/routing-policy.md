@@ -203,10 +203,14 @@ Before accepting eligibility:
   discussion and outstanding feedback.
 - Worker concurrency is not dispatch deduplication; independent coordinators can
   race, so recheck and retain worker freshness guards.
-- Verify dispatch acceptance from the response and record its worker link: the
-  URL returned by `gh workflow run`, or REST `workflow_run_id`, `run_url`, and
-  `html_url`. Use that link in reports instead of searching run history for it.
+- Verify dispatch acceptance from the response. Before checking the worker,
+  record the URL returned by `gh workflow run`, or the REST `workflow_run_id`,
+  `run_url`, and `html_url`. Use the returned link directly in reports.
   Acceptance is not successful worker execution or completed recovery.
+- Distinguish what dispatch returned, any local check failure, and what a later
+  lookup confirmed. If a combined command fails without showing the response
+  or which step failed, say what is unknown. Carry the verified worker link
+  into later reports, not an unsupported explanation.
 - If dispatch preceded required verification, report the ordering failure with
   the affected target/revisions, acceptance evidence, and checks still missing at
   acceptance. Record later verification separately; it cannot retroactively
