@@ -77,6 +77,12 @@ Use the findings path below; adoption remains separate, normally triaged work.
 ## Reporting and verification
 
 Follow the [shared final-report and retention rule](actions-logs.md#final-reports-and-retention).
+In both the step summary and final CLI response, report **incomplete** if any
+required work is unfinished or unverified, even if every file was read or issues
+were published. Name the gap, such as unfinished feature research, and link any
+verified findings. Otherwise report **completed with findings** or
+**completed with no new findings**.
+
 Include:
 
 - Target repository and reviewed commit link, separately from the Factory
@@ -86,15 +92,11 @@ Include:
   not just a list of intended reads.
 - Prior-work inspection: distinguish retrieved evidence from content actually
   inspected. Record processing failures and recovery, or the missing discussions
-  and affected findings. Complete source-file counts or successful publication
-  do not establish completed prior-work assessment.
+  and affected findings.
 - Feature research: dated sources, capabilities considered, applicability, and
-  decisions. Report unavailable research or unfinished assessment as incomplete,
-  not evidence that no opportunity exists.
+  decisions. Missing research is not evidence that no opportunity exists.
 - Executed checks/experiments, inputs, observed results, and limitations.
-- Existing findings/PRs and verified new issue links.
-- Outcome: completed with findings, completed with no new findings, or incomplete,
-  including publication failures and outstanding work.
+- Existing findings/PRs, verified new issue links, and any publication failures.
 
 Later coverage checks must reconcile reported counts and completion claims with
 the exact reviewed tree and retained read evidence. Local report writes, `cat`,
