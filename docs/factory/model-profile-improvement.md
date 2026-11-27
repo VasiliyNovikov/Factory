@@ -30,6 +30,9 @@ active work.
   [Copilot models](https://docs.github.com/en/copilot/reference/ai-models/supported-models),
   [OpenAI reasoning](https://developers.openai.com/api/docs/guides/reasoning), and
   [Anthropic effort](https://platform.claude.com/docs/en/build-with-claude/effort).
+  Earlier assessments can point to sources but cannot replace reading them in
+  this run. The live CLI catalog reports availability and capabilities, not
+  provider guidance.
   Cite URLs, retrieval dates, and publication/update dates when available.
   Distinguish provider advice, measured results, and inference.
 - For optional timing evidence, follow the
@@ -82,8 +85,10 @@ Include:
 - **Outcome:** distinguish new findings, already covered, no change after a
   complete assessment, and incomplete/partial results. Empty/failed discovery,
   missing capabilities, research gaps, API errors, and verification failures are
-  not no-change results. Publish no speculative findings or no-op comments;
-  verify and report partial publication.
+  not no-change results. If required provider guidance is unverified, report
+  **partial**, name the unanswered question, and keep independently supported
+  profile decisions. Publish no speculative findings or no-op comments; verify
+  and report partial publication.
 - **Evidence:** host run-attempt link, trusted `FACTORY_REPOSITORY@FACTORY_SHA`,
   target repository and exact evaluated SHA, CLI version, discovery time, model IDs
   and policy/capability evidence, dated sources, unavailable models, conflicts, gaps,
