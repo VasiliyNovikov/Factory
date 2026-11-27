@@ -39,6 +39,27 @@ Keep private keys and tokens out of source code, logs, and conversations.
 Approve permission changes under **GitHub Settings → Applications → Installed
 GitHub Apps → Configure**. Editing the App alone does not update installation grants.
 
+## Router event policy
+
+GitHub's [default event policy](https://docs.github.com/en/actions/reference/security/securely-using-pull_request_target#default-policy-for-pull_request_target)
+blocks `pull_request_target` in public repositories when enforced. The repository
+owner must [configure an active Actions event policy](https://docs.github.com/en/actions/how-tos/administer/control-workflow-execution)
+under **Settings > Actions > Policies** that explicitly allows this event for
+**`.github/workflows/factory-router.yml` only**. Preserve the router's other allowed
+events and leave other workflows under the default rule. This is repository
+configuration; the Factory App has no permission to change it.
+
+The router needs this event for PR lifecycle and metadata changes. For these
+events it runs default-branch code and job-filters fork PRs before checkout.
+These controls do not make fetched content trusted or remove the separate
+[submitted-review risk](factory-router.md#accepted-risk-router-changes-can-run-before-merge).
+
+Verify the policy is active, targets only the router, and allows its events.
+Confirm a same-repository `pull_request_target` router job executes. An applicable
+explicit event policy is not replaced by GitHub's default, so verification need
+not wait for default-policy enforcement. A successful run alone does not prove
+policy configuration; skipped jobs and static checks do not prove execution.
+
 ## Use the App in a workflow
 
 For [PR creation](../examples/create-pull-request.md), generate the token before
