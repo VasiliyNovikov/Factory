@@ -1,0 +1,68 @@
+name: Owner feedback shadow
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Current default SHA from the comparison baseline
+        required: true
+        type: string
+      window_end:
+        description: Baseline analysis start, in UTC (YYYY-MM-DDTHH:MM:SSZ)
+        required: true
+        type: string
+
+concurrency:
+  group: owner-feedback
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  profile:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    outputs:
+      model: ${{ steps.profile.outputs.model }}
+      effort: ${{ steps.profile.outputs.effort }}
+      context: ${{ steps.profile.outputs.context }}
+    steps:
+      - name: Check out Factory workflow revision
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: factory
+          persist-credentials: false
+      - name: Set Factory target context
+        uses: ./factory/.github/actions/target-context
+        with:
+          target-repository: ${{ github.repository }}
+      - name: Read the review profile
+        id: profile
+        run: |
+          jq -er '.review | select(
+            .model != "fusion" and
+            (.model | test("^[a-zA-Z0-9._-]+$")) and
+            (.reasoningEffort | IN("none","minimal","low","medium","high","xhigh","max")) and
+            (.longContext | type == "boolean")
+          ) | "model=\(.model)\neffort=\(.reasoningEffort)\ncontext=\(if .longContext then "long_context" else "default" end)"' \
+            "$FACTORY_ROOT/.github/model-config.json" >> "$GITHUB_OUTPUT" || {
+              echo "::error::The review profile must specify a direct model, effort and context."
+              exit 1
+            }
+  shadow:
+    needs: profile
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+      actions: read
+      copilot-requests: write
+    uses: ./.github/workflows/owner-feedback-shadow.lock.yml
+    with:
+      expected_sha: ${{ inputs.expected_sha }}
+      window_end: ${{ inputs.window_end }}
+      model: ${{ needs.profile.outputs.model }}
+      effort: ${{ needs.profile.outputs.effort }}
+      context: ${{ needs.profile.outputs.context }}
