@@ -29,9 +29,15 @@ instructions without substituting them for Factory worker policy.
   scope and individual requests throughout the discussion. Only authorized
   requests count as outstanding feedback; a trusted triggering comment does not
   adopt unrelated external feedback.
-- Tie review-worker findings to the source review's
-  [verified reviewed SHA](routing-policy.md#feedback-verification), not a
-  later API `commit_id` or the run's default-branch `head_sha`.
+- Tie each review-worker assessment to its source attempt's
+  [verified reviewed SHA](routing-policy.md#feedback-verification), not a later
+  API `commit_id` or the run's default-branch `head_sha`. Before and after a
+  push, compare reviews by ID using that receipt. If only `commit_id` moves to
+  the expected new head, the freshness check still passes: this is neither new
+  feedback nor approval of that head.
+  Still check for new, edited, deleted or dismissed reviews, changed feedback
+  or authorization, and changes to ownership or expected refs. Missing or
+  conflicting source evidence is a verification failure.
 - CI evidence must match the current PR head or merge revision.
 
 ## Commit identity
