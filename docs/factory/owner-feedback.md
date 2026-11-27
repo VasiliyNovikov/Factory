@@ -36,14 +36,18 @@ the shared [AI action](../examples/ai-tools.md#shared-factory-action) with `revi
 ## Publish
 
 - Before each finding, reread cited feedback and recheck the default SHA; reconcile
-  edits, deletions, and drift. Incomplete recurrence, applicability, research, or
-  duplicate evidence blocks publication; do not claim unread revisions.
+  edits, deletions, and drift. Incomplete recurrence, applicability, or duplicate
+  evidence blocks publication; do not claim unread revisions.
+- When provider research applies, cite current sources with dates in the draft
+  finding and explain why they support the proposed change. General advice can
+  suffice if you show why it applies to the affected models. If required evidence
+  is missing, withhold that finding and name the gap in the run report rather
+  than deferring the research to implementation.
 - Follow the [shared findings-publication rules](../../AGENTS.md#github-issue-creation).
 - Create one issue per cohesive finding in `TARGET_REPOSITORY` as
   `FACTORY_LOGIN`. Include preference, original feedback links/dates, context and
   contrary evidence, gap, owning files and source permalinks at the evaluated SHA,
-  scope, acceptance criteria, dependencies (or "none"), applicable dated provider evidence,
-  and run-attempt URL.
+  scope, acceptance criteria, dependencies (or "none"), and run-attempt URL.
 - Workflow completions are ignored by the [router](factory-router.md).
 
 ## Report
