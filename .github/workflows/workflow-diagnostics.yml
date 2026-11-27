@@ -77,3 +77,24 @@ jobs:
               'This notice cannot reconstruct a lost final report or prove summary/log agreement or process cleanup.' \
               'Before rerunning the original invocation, reconcile findings in all states and earlier attempts; do not blindly replay issue creation.'
           } | tee -a "${GITHUB_STEP_SUMMARY:?summary path is required}"
+
+      - name: Log the coordinator's diagnostics report
+        if: ${{ success() && steps.diagnostics.outcome == 'success' }}
+        shell: bash
+        run: |
+          report="$RUNNER_TEMP/diagnostics-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.md"
+          print_copy() { [[ -f "$1" && ! -L "$1" && -s "$1" ]] && cat -- "$1"; }
+
+          token=$(uuidgen)
+          printf '::stop-commands::%s\n' "$token"
+          trap 'printf "\n::%s::\n" "$token"' EXIT
+          if print_copy "$report"; then
+            exit 0
+          fi
+
+          printf '\n%s\n' 'Final report unavailable or unreadable; complete log retention is unverified.'
+          printf '%s\n' 'Checkpoints are partial evidence. Unverified writes remain unknown; do not replay them.'
+          if ! print_copy "$report.checkpoints"; then
+            printf '%s\n' 'No complete checkpoint copy is available. Consult the coordinator summary for any verified publication.'
+          fi
+          exit 1
