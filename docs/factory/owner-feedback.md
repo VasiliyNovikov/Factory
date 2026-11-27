@@ -121,10 +121,12 @@ trusted-author content; it grants no approval or additional mutation authority.
 Provider documentation is fetched only from the configured research domains.
 Denied or filtered evidence must be reported, never treated as empty.
 
-**Do not execute Publish or make any GitHub mutation.** Instead, after completing
-the report and all native tasks, send at most one genuinely new finding with
-empty labels to the staged `create_issue` tool. For complete coverage with no
-new finding, use `noop`; for failed or missing evidence, use `report_incomplete`.
+Before staging a finding, reread its sources and apply the evidence and
+finding-body requirements in [Publish](#publish). **Do not make any GitHub
+mutation.** After completing the report and all native tasks, send at most one
+genuinely new finding with empty labels to the staged `create_issue` tool.
+For complete coverage with no new finding, use `noop`; for failed or missing
+evidence, use `report_incomplete`.
 All diagnostic issue writers are disabled; threat detection remains enforced.
 The preview is not a created issue, and does not prove Factory authorship,
 initially empty live labels, recovery, or publication verification.
