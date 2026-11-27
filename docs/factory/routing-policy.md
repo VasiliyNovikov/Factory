@@ -66,8 +66,10 @@ gh api --method GET "repos/$FACTORY_REPOSITORY/contents/.github/workflows/$worke
   [review context](pr-review.md#review-coverage). This includes verified same-head
   corrections or already-addressed findings, without requiring a new commit or
   explicit human review request.
-- Apply that coverage rule to both event routing and periodic recovery.
-  A review object or green workflow alone does not establish coverage.
+- For both routing and recovery, [verify the source attempt](#feedback-verification)
+  and its [posted-review receipt](../../.github/workflows/pr-review.yml). The receipt
+  matches the attempt's exact `REVIEW_MARKER` text in the raw review body, with or
+  without an HTML comment. Neither a marker nor a green run alone proves coverage.
 - Prior approval does not cover a new head. Only the review worker may choose
   [scoped reassessment](pr-review.md#clean-default-branch-merges).
 
