@@ -58,6 +58,6 @@ else
   model_args+=(--reasoning-effort "$reasoning")
 fi
 
-exec copilot "${model_args[@]}" \
-  --context "$context" --disable-builtin-mcps --enable-memory \
-  --prompt "$prompt" --yolo
+exec copilot "${model_args[@]}" --context "$context" \
+  --disable-builtin-mcps --excluded-tools semantic_code_search lexical_code_search \
+  --enable-memory --prompt "$prompt" --yolo
