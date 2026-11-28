@@ -175,10 +175,10 @@ see [token roles](../factory/github-app.md#token-names-and-identities).
 ## Shared Factory action
 
 Factory workflows use [`.github/actions/ai`](../../.github/actions/ai/action.yml)
-to install and invoke Copilot. The installation step retries failures; AI invocation
-is not retried and runs only after setup succeeds. Settings live in the action and
-[installer](../../scripts/install-tools.sh). Only bootstrap downloads have a time
-limit; a hung vendor installer or version check waits for the caller's job timeout.
+to run the [installer](../../scripts/install-tools.sh) up to three times, waiting
+5 and 10 seconds between attempts. Each attempt gets `TERM` after 5 minutes and
+`KILL` if still running 30 seconds later. The timeouts and backoff total at most
+16 minutes 45 seconds. AI runs only after installation succeeds and is not retried.
 
 ```yaml
 - name: Run a prompt
