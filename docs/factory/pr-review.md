@@ -160,10 +160,11 @@ does not erase an earlier failed attempt.
 ## Skip and report
 
 - Write literal Markdown, preserving backticks and resolved environment values.
-- In the review, distinguish static inspection from runtime evidence. For each
-  check or experiment, report its inputs, checked revision, result, and limits.
-  Attribute the result to the invocation and workspace that produced it. Claim a
-  safeguard only when that invocation shows it was used.
+- In the review and job summary, distinguish static inspection from runtime
+  evidence. For each check or experiment, report its inputs, checked revision,
+  result, and limits. Attribute the result to the invocation and workspace that
+  produced it. Claim a safeguard only when that invocation shows it was used.
+  The summary may link to the posted review instead of repeating check details.
 - Append every write to `GITHUB_STEP_SUMMARY`, preserving existing content.
   Record the target-qualified review URL, checked target head, decision, evidence,
   and outstanding work, including any required owner-decision link and scope or
