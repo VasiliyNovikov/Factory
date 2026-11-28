@@ -186,14 +186,17 @@ Before accepting eligibility:
   - Paginate the host worker workflow's `workflow_dispatch` runs, including queued,
     pending, requested, waiting, and running jobs. Do not filter runs by
     `head_sha`: it identifies the host default-branch revision at dispatch.
+  - Find candidates by matching the start of `display_title` to the deployed
+    worker's `run-name`: `Issue implementation: OWNER/REPO#ISSUE (coordinator`
+    (likewise for `Issue triage`) or `PR review: OWNER/REPO#PR:` before the head
+    SHA. Include the delimiter after the number and accept any coordinator ID.
   - Match the worker's assigned target repository, issue or PR number, PR head
     (`head_sha` input for PR work), and outstanding request/source. Include the
     default-branch revision for base updates and review ID/source attempt for findings.
     For same-head review follow-up, match the relevant correction or finding
     disposition too: a metadata edit and its result reply can describe the same
-    work. A run for that head alone does not establish context coverage.
-  - Run titles help locate assignments but do not prove feedback coverage or
-    completion. An older-head run does not prove current work is covered.
+    work. Neither the title nor the head SHA alone proves current coverage or
+    completion.
 - Do not redispatch equivalent active or already-handled work. Jobs waiting for
   required approval are holds, not permission to bypass approval with a new run.
 - Review jobs serialize per PR/head, preserving the active assessment and its
