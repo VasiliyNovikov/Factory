@@ -178,9 +178,12 @@ Before accepting eligibility:
 
 ## Dispatch reconciliation and retries
 
-- Immediately before dispatch, recheck eligibility, relevant discussion/source,
-  current head/default branch, and equivalent work. Reassess drift instead of
-  relying on the discovery snapshot.
+- Immediately before each dispatch, recheck eligibility, relevant discussion/source,
+  and equivalent work. After any worker-schema and ancestry checks, finish with a
+  fresh read of the target and current default-branch revision. For PR work, read
+  the PR itself for its state and head. Do not dispatch a closed or merged PR,
+  even if its head commit is reachable. If the head, default branch, or other
+  relevant evidence changed, reassess before dispatch.
 - Reconcile native workflow runs, coordinator logs/summaries, worker receipts, and
   current GitHub outcomes across ordinary routing, sweeps, and reruns:
   - Paginate the host worker workflow's `workflow_dispatch` runs, including queued,
