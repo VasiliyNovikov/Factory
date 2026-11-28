@@ -36,6 +36,11 @@ run.
 - Run code, tests, or focused experiments when useful to verify a concrete
   question, including copied/adapted snippets and synthetic-input probes.
   Ordinary queries over fetched evidence remain allowed.
+- Use authenticated coordinator reads to gather relevant evidence, not to test
+  access. Name the credential role and operation behind each access claim:
+  one App's result does not establish another's access. Without authorized
+  evidence from the role in question, report its access as unverified. Do not
+  probe unrelated jobs, switch credentials, or request broader permissions.
 - Before publishing, check the current default revision. If it advanced, confirm
   each finding still applies; do not claim coverage of newer commits.
 
