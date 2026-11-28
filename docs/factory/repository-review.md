@@ -84,10 +84,12 @@ Include:
   counts, with remaining paths/ranges, exclusions, and evidence gaps. Tie coverage
   claims to the invocation's read operations and returned content/ranges,
   not just a list of intended reads.
-- Prior-work inspection: distinguish retrieved evidence from content actually
-  inspected. Record processing failures and recovery, or the missing discussions
-  and affected findings. Complete source-file counts or successful publication
-  do not establish completed prior-work assessment.
+- Prior-work inspection: if you saw only an excerpt, even from a successful
+  fetch, inspect the rest or report a partial read. Identify what remains
+  unread and which conclusions depend on it. Count inspected conversation
+  comments, reviews, and inline replies separately. Record processing failures
+  and recovery. Complete source-file counts or successful publication do not
+  establish completed prior-work assessment.
 - Feature research: dated sources, capabilities considered, applicability, and
   decisions. Report unavailable research or unfinished assessment as incomplete,
   not evidence that no opportunity exists.
