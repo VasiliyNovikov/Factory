@@ -150,15 +150,17 @@ Before accepting eligibility:
 
 ## Dispatch contract
 
+- Read the worker's input schema from `.github/workflows/$worker_file` on the
+  host's current default revision, not a PR copy. Use that filename for both
+  run discovery and dispatch. Use a numeric workflow ID only after verifying
+  that its `path` in `FACTORY_REPOSITORY` matches the inspected file.
 - Dispatch existing workers in `FACTORY_REPOSITORY` on its current default branch.
-  Use `gh workflow run --repo "$FACTORY_REPOSITORY"` or an explicit host API
-  endpoint, not an implicit checkout repository. `gh workflow run` requests run
+  Use `gh workflow run "$worker_file" --repo "$FACTORY_REPOSITORY"` or the
+  corresponding host API endpoint. `gh workflow run` requests run
   details on GitHub.com; direct REST dispatches using API `2022-11-28` need
   top-level `return_run_details: true`, not an extra workflow input.
-- Worker YAML on the host's current default revision owns the input schema, not
-  a PR-revision copy. Read that schema before dispatch and always set
-  `target_repository=TARGET_REPOSITORY`. Never send unknown inputs, invent a new
-  routing protocol, or downgrade external work to a local assignment.
+- Always set `target_repository=TARGET_REPOSITORY`. Never send unknown inputs,
+  invent a new routing protocol, or downgrade external work to a local assignment.
 - Supply the selected issue/PR IDs and current expected PR head:
   - Review uses `pr_number` and `head_sha`.
   - Implementation pairs `source_pr` with `head_sha` for PR work; omit both for
