@@ -32,13 +32,13 @@ This guide owns event selection, push fan-out, and event-specific provenance.
 
 ## Default-branch maintenance
 
-- A non-deletion default-branch push routes **all**
+- On a non-deletion default-branch push, consider **all**
   [eligible Factory PRs](routing-policy.md#issue--pr-implementation), not just those
-  referenced by pushed commits. No feedback or CI failure is required. Include
-  already-current PRs; implementation owns the verified no-op decision.
-- Dispatch one implementation worker per PR for
-  [PR-scoped base maintenance](issue-implementation.md#default-branch-maintenance).
-  Mergeability does not gate routing.
+  referenced by pushed commits. No feedback or CI failure is required.
+- After [reconciling equivalent work](routing-policy.md#dispatch-reconciliation-and-retries),
+  dispatch one [base-maintenance worker](issue-implementation.md#default-branch-maintenance)
+  per uncovered PR, even if its head already contains the base. Implementation
+  verifies any no-op; mergeability does not gate routing.
 - Include discovery, dispatch verification, and complete/partial reporting in the budget.
 - The push trigger lists `master`; update that filter if the default branch is
   renamed. Ordinary Factory-branch pushes do not match. This filter is not an
