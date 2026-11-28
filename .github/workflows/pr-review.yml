@@ -71,7 +71,7 @@ jobs:
         with:
           gh-token: ${{ steps.reviewer-token.outputs.token }}
           profile: review
-          budget: 30
+          budget: 15
           prompt: >-
             Review PR ${{ env.PR_NUMBER }} in target ${{ env.TARGET_REPOSITORY }} at ${{ env.PR_HEAD_SHA }}.
             Read and follow AGENTS.md and docs/factory/pr-review.md in FACTORY_ROOT. Use gh to review or skip this
