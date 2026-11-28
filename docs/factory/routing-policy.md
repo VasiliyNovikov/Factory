@@ -192,6 +192,11 @@ Before accepting eligibility:
     For same-head review follow-up, match the relevant correction or finding
     disposition too: a metadata edit and its result reply can describe the same
     work. A run for that head alone does not establish context coverage.
+  - For completed base updates, compare the worker's verified result, not its
+    dispatch revisions: match the base it incorporated and the resulting PR head
+    to the live default and PR head. Do not exclude workers by creation time;
+    a worker started before a push can still deliver its base. This covers the
+    base update, not new feedback.
   - Run titles help locate assignments but do not prove feedback coverage or
     completion. An older-head run does not prove current work is covered.
 - Do not redispatch equivalent active or already-handled work. Jobs waiting for
